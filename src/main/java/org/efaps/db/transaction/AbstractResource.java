@@ -17,8 +17,7 @@
 
 package org.efaps.db.transaction;
 
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
+
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -26,6 +25,9 @@ import org.efaps.db.Context;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.SystemException;
 
 /**
  * Abstract class used to given an easy interface to implemented XA resources

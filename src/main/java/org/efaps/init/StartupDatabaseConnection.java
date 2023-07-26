@@ -23,24 +23,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-import javax.naming.spi.ObjectFactory;
-import javax.sql.DataSource;
-import javax.transaction.TransactionManager;
-import javax.transaction.TransactionSynchronizationRegistry;
-
 import org.apache.commons.lang3.StringUtils;
-import org.efaps.db.databases.AbstractDatabase;
-import org.efaps.db.transaction.DelegatingUserTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public final class StartupDatabaseConnection
-    implements INamingBinds
-{
+  {
 
     /**
      * Logging instance used to give logging information of this class.
@@ -325,184 +311,6 @@ public final class StartupDatabaseConnection
             StartupDatabaseConnection.LOG.info("Initialise Database Connection");
         }
 
-        final Context compCtx;
-        try {
-            final InitialContext context = new InitialContext();
-            compCtx = (javax.naming.Context) context.lookup("java:/comp");
-
-            StartupDatabaseConnection.configureEFapsProperties(compCtx, _eFapsProps);
-            StartupDatabaseConnection.configureDBType(compCtx, _classDBType);
-            StartupDatabaseConnection.configureDataSource(compCtx, _classDSFactory, _propConnection);
-            StartupDatabaseConnection.configureTransactionManager(compCtx, _classTM);
-            StartupDatabaseConnection.configureTransactionSynchronizationRegistry(compCtx, _classTSR);
-        } catch (final NamingException e) {
-            throw new StartupException("Could not initialize JNDI", e);
-        }
-    }
-
-    /**
-     * Add the eFaps Properties to the JNDI binding.
-     * @param _compCtx      Java root naming context
-     * @param _eFapsProps   Properties to bind
-     * @throws StartupException on error
-     */
-    protected static void configureEFapsProperties(final Context _compCtx,
-                                                   final Map<String, String> _eFapsProps)
-        throws StartupException
-    {
-        try {
-            Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_CONFIGPROPERTIES, _eFapsProps);
-        } catch (final NamingException e) {
-            throw new StartupException("could not bind eFaps Properties '" + _eFapsProps + "'", e);
-            // CHECKSTYLE:OFF
-        } catch (final Exception e) {
-            // CHECKSTYLE:ON
-            throw new StartupException("could not bind eFaps Properties '" + _eFapsProps + "'", e);
-        }
-    }
-
-    /**
-     * The class defined with parameter <code>_classDSFactory</code> initialized and bind to
-     * {@link #RESOURCE_DATASOURCE}. The initialized class must implement interface {@link DataSource}. As JDBC
-     * connection properties the map <code>_propConneciton</code> is used.
-     *
-     * @param _compCtx Java root naming context
-     * @param _classDSFactory class name of the SQL data source factory
-     * @param _propConnection map of properties for the JDBC connection
-     * @throws StartupException on error
-     */
-    protected static void configureDataSource(final Context _compCtx,
-                                              final String _classDSFactory,
-                                              final Map<String, String> _propConnection)
-        throws StartupException
-    {
-        final Reference ref = new Reference(DataSource.class.getName(), _classDSFactory, null);
-        for (final Entry<String, String> entry : _propConnection.entrySet()) {
-            ref.add(new StringRefAddr(entry.getKey(), entry.getValue()));
-        }
-        try {
-            Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_DATASOURCE, ref);
-            Util.bind(_compCtx, "test", ref);
-        } catch (final NamingException e) {
-            throw new StartupException("could not bind JDBC pooling class '" + _classDSFactory + "'", e);
-            // CHECKSTYLE:OFF
-        } catch (final Exception e) {
-            // CHECKSTYLE:ON
-            throw new StartupException("coud not get object instance of factory '" + _classDSFactory + "'", e);
-        }
-    }
-
-    /**
-     * The class defined with parameter _classDBType initialized and bind to {@link #RESOURCE_DBTYPE}. The initialized
-     * class must be extended from class {@link AbstractDatabase}.
-     *
-     * @param _compCtx Java root naming context
-     * @param _classDBType class name of the database type
-     * @throws StartupException if the database type class could not be found, initialized, accessed or bind to the
-     *             context
-     */
-    protected static void configureDBType(final Context _compCtx,
-                                          final String _classDBType)
-        throws StartupException
-    {
-        try {
-            final AbstractDatabase<?> dbType = (AbstractDatabase<?>) Class.forName(_classDBType).newInstance();
-            if (dbType == null) {
-                throw new StartupException("could not initaliase database type '" + _classDBType + "'");
-            } else {
-                Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_DBTYPE, dbType);
-            }
-        } catch (final ClassNotFoundException e) {
-            throw new StartupException("could not found database description class '" + _classDBType + "'", e);
-        } catch (final InstantiationException e) {
-            throw new StartupException("could not initialise database description class '" + _classDBType + "'", e);
-        } catch (final IllegalAccessException e) {
-            throw new StartupException("could not access database description class '" + _classDBType + "'", e);
-        } catch (final NamingException e) {
-            throw new StartupException("could not bind database description class '" + _classDBType + "'", e);
-        }
-    }
-
-    /**
-     * The class defined with parameter _classTM initialized and bind to {@link #RESOURCE_TRANSMANAG}. The initialized
-     * class must implement interface {@link TransactionManager}.
-     *
-     * @param _compCtx Java root naming context
-     * @param _classTM class name of the transaction manager
-     * @throws StartupException if the transaction manager class could not be found, initialized, accessed or bind to
-     *             the context
-     */
-    protected static void configureTransactionManager(final Context _compCtx,
-                                                      final String _classTM)
-        throws StartupException
-    {
-        try {
-            final Object tm = Class.forName(_classTM).newInstance();
-            if (tm == null) {
-                throw new StartupException("could not initialise TransactionManager ");
-            } else {
-                if (tm instanceof TransactionManager) {
-                    Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_TRANSMANAG, tm);
-                    Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_USERTRANSACTION,
-                                    new DelegatingUserTransaction((TransactionManager) tm));
-                } else {
-                    throw new StartupException("could not initialise TransactionManager with object:" + tm);
-                }
-            }
-        } catch (final ClassNotFoundException e) {
-            throw new StartupException("could not find transaction manager class '" + _classTM + "'", e);
-        } catch (final InstantiationException e) {
-            throw new StartupException("could not initialise transaction manager class '" + _classTM + "'", e);
-        } catch (final IllegalAccessException e) {
-            throw new StartupException("could not access transaction manager class '" + _classTM + "'", e);
-        } catch (final NamingException e) {
-            throw new StartupException("could not bind transaction manager class '" + _classTM + "'", e);
-        }
-    }
-
-
-    /**
-     * The class defined with parameter _classTM initialized and bind to {@link #RESOURCE_TRANSSYNREG}. The initialized
-     * class must implement interface {@link TransactionSynchronizationRegistry}.
-     *
-     * @param _compCtx Java root naming context
-     * @param _classTSR class name of the transaction SynchronizationRegistry
-     * @throws StartupException if the transaction manager class could not be found, initialized, accessed or bind to
-     *             the context
-     */
-    protected static void configureTransactionSynchronizationRegistry(final Context _compCtx,
-                                                                      final String _classTSR)
-        throws StartupException
-    {
-        try {
-
-            final Object clzz = Class.forName(_classTSR).newInstance();
-            if (clzz == null) {
-                throw new StartupException("could not initaliase database type");
-            } else {
-                if (clzz instanceof TransactionSynchronizationRegistry) {
-                    Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_TRANSSYNREG, clzz);
-                    Util.bind(_compCtx, "TransactionSynchronizationRegistry", clzz);
-                } else if (clzz instanceof ObjectFactory) {
-                    final Reference ref = new Reference(TransactionSynchronizationRegistry.class.getName(), clzz
-                                    .getClass().getName(), null);
-                    Util.bind(_compCtx, "env/" + INamingBinds.RESOURCE_TRANSSYNREG, ref);
-                    Util.bind(_compCtx, "TransactionSynchronizationRegistry", ref);
-                }
-            }
-
-        } catch (final ClassNotFoundException e) {
-            throw new StartupException("could not found TransactionSynchronizationRegistry '" + _classTSR + "'", e);
-        } catch (final InstantiationException e) {
-            throw new StartupException("could not initialise TransactionSynchronizationRegistry class '" + _classTSR
-                            + "'", e);
-        } catch (final IllegalAccessException e) {
-            throw new StartupException("could not access TransactionSynchronizationRegistry class '" + _classTSR + "'",
-                            e);
-        } catch (final NamingException e) {
-            throw new StartupException("could not bind Transaction Synchronization Registry class '"
-                            + _classTSR + "'", e);
-        }
     }
 
     /**
@@ -552,20 +360,6 @@ public final class StartupDatabaseConnection
     public static void shutdown()
         throws StartupException
     {
-        final Context compCtx;
-        try {
-            final InitialContext context = new InitialContext();
-            compCtx = (javax.naming.Context) context.lookup("java:comp");
-        } catch (final NamingException e) {
-            throw new StartupException("Could not initialize JNDI", e);
-        }
-        try {
-            Util.unbind(compCtx, "env/" + INamingBinds.RESOURCE_DATASOURCE);
-            Util.unbind(compCtx, "env/" + INamingBinds.RESOURCE_DBTYPE);
-            Util.unbind(compCtx, "env/" + INamingBinds.RESOURCE_CONFIGPROPERTIES);
-            Util.unbind(compCtx, "env/" + INamingBinds.RESOURCE_TRANSMANAG);
-        } catch (final NamingException e) {
-            throw new StartupException("unbind of the database connection failed", e);
-        }
+
     }
 }

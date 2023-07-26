@@ -45,7 +45,7 @@ public interface Resource
         ZIP,
         /** File should  be compressed using gzip.*/
         GZIP
-    };
+    }
 
     /**
      * The store resource could handle three different
@@ -68,7 +68,7 @@ public interface Resource
         READ,
         /** not known yet.    **/
         UNKNOWN;
-    };
+    }
 
     /**
      * Method to open the Resource.
@@ -158,5 +158,5 @@ public interface Resource
      * @throws EFapsException on error
      */
     boolean exists()
-        throws EFapsException;;
+        throws EFapsException;
 }

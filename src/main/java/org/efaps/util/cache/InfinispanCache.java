@@ -19,11 +19,6 @@ package org.efaps.util.cache;
 
 import java.io.IOException;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.xml.stream.FactoryConfigurationError;
-
-import org.efaps.init.INamingBinds;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -47,14 +42,6 @@ public final class InfinispanCache
      * Logger for this class.
      */
     private static final Logger LOG = LoggerFactory.getLogger(InfinispanCache.class);
-
-    /**
-     * Sequence used to search for the CacheManager inside JNDI.
-     */
-    private static final String[] KNOWN_JNDI_KEYS = new String[] {
-        "java:/" + INamingBinds.INFINISPANMANGER,
-        "java:jboss/" + INamingBinds.INFINISPANMANGER,
-        "java:comp/env/" + INamingBinds.INFINISPANMANGER };
 
     /**
      * Key to the Counter Cache.
@@ -95,8 +82,6 @@ public final class InfinispanCache
                 final Cache<String, Integer> cache = this.container
                                 .<String, Integer>getCache(InfinispanCache.COUNTERCACHE);
                 cache.put(InfinispanCache.COUNTERCACHE, 1);
-            } catch (final FactoryConfigurationError e) {
-                InfinispanCache.LOG.error("FactoryConfigurationError", e);
             } catch (final IOException e) {
                 InfinispanCache.LOG.error("IOException", e);
             }
@@ -233,13 +218,7 @@ public final class InfinispanCache
      */
     private static void bindCacheContainer(final CacheContainer _container)
     {
-        InitialContext context = null;
-        try {
-            context = new InitialContext();
-            context.bind(InfinispanCache.KNOWN_JNDI_KEYS[0], _container);
-        } catch (final NamingException ex) {
-            InfinispanCache.LOG.error("Could not initialise JNDI InitialContext", ex);
-        }
+
     }
 
     /**
@@ -247,26 +226,6 @@ public final class InfinispanCache
      */
     private static EmbeddedCacheManager findCacheContainer()
     {
-        EmbeddedCacheManager ret = null;
-        InitialContext context = null;
-        try {
-            context = new InitialContext();
-        } catch (final NamingException ex) {
-            InfinispanCache.LOG.error("Could not initialise JNDI InitialContext", ex);
-        }
-        for (final String lookup : InfinispanCache.KNOWN_JNDI_KEYS) {
-            if (lookup != null) {
-                try {
-                    ret = (EmbeddedCacheManager) context.lookup(lookup);
-                    InfinispanCache.LOG.info("CacheContainer found in JNDI under '{}'", lookup);
-                } catch (final NamingException e) {
-                    InfinispanCache.LOG.debug("CacheContainer not found in JNDI under '{}'", lookup);
-                }
-            }
-        }
-        if (ret == null) {
-            InfinispanCache.LOG.debug("No CacheContainer found under known names");
-        }
-        return ret;
+        return null;
     }
 }

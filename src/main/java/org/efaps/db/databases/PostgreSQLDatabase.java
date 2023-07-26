@@ -32,6 +32,7 @@ import org.efaps.db.databases.information.TableInformation;
 import org.efaps.db.transaction.ConnectionResource;
 import org.joda.time.ReadableDateTime;
 import org.joda.time.format.ISODateTimeFormat;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +43,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @author The eFaps Team
  */
+@Service
 public class PostgreSQLDatabase
-    extends AbstractDatabase<PostgreSQLDatabase>
+    extends AbstractDatabase<PostgreSQLDatabase> implements IDatabase
 {
     /**
      * Logging instance used in this class.
@@ -56,19 +58,20 @@ public class PostgreSQLDatabase
      *
      * @see #initTableInfoUniqueKeys(Connection, String, Map)
      */
-    private static final String SQL_UNIQUE_KEYS = "select "
-            + "a.constraint_name as INDEX_NAME, "
-            + "a.table_name as TABLE_NAME, "
-            + "b.column_name as COLUMN_NAME, "
-            + "b.ordinal_position as ORDINAL_POSITION "
-        + "from "
-            + "information_schema.table_constraints a,"
-            + "information_schema.key_column_usage b "
-        + "where "
-            + "a.constraint_type='UNIQUE' "
-            + "and a.table_schema=b.table_schema "
-            + "and a.table_name=b.table_name "
-            + "and a.constraint_name=b.constraint_name";
+    private static final String SQL_UNIQUE_KEYS = """
+        select\s\
+        a.constraint_name as INDEX_NAME,\s\
+        a.table_name as TABLE_NAME,\s\
+        b.column_name as COLUMN_NAME,\s\
+        b.ordinal_position as ORDINAL_POSITION\s\
+        from\s\
+        information_schema.table_constraints a,\
+        information_schema.key_column_usage b\s\
+        where\s\
+        a.constraint_type='UNIQUE'\s\
+        and a.table_schema=b.table_schema\s\
+        and a.table_name=b.table_name\s\
+        and a.constraint_name=b.constraint_name""";
 
     /**
      * Select statement for all foreign keys for current logged in PostgreSQL

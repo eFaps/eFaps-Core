@@ -18,16 +18,9 @@
 package org.efaps.admin.common;
 
 import java.util.Properties;
-import java.util.UUID;
-
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
-import org.efaps.admin.user.Person;
-import org.efaps.db.transaction.DelegatingUserTransaction;
-import org.efaps.init.INamingBinds;
 import org.efaps.message.MessageStatusHolder;
 import org.efaps.util.EFapsException;
 import org.quartz.JobBuilder;
@@ -94,34 +87,6 @@ public final class Quartz
             final Properties props = config.getAttributeValueAsProperties(KernelSettings.QUARTZPROPS);
 
             final StdSchedulerFactory schedFact = new StdSchedulerFactory();
-            javax.naming.Context envCtx = null;
-            String lookup = "java:global/";
-            try {
-                final InitialContext initCtx = new InitialContext();
-                envCtx = (javax.naming.Context) initCtx.lookup(lookup);
-            } catch (final NamingException e) {
-                Quartz.LOG.info("Catched NamingException on evaluation for Quartz");
-            }
-            // for a build the context might be different, try this before surrender
-            if (envCtx == null) {
-                try {
-                    lookup = "java:comp/env";
-                    final InitialContext initCtx = new InitialContext();
-                    envCtx = (javax.naming.Context) initCtx.lookup(lookup);
-                } catch (final NamingException e) {
-                    Quartz.LOG.info("Catched NamingException on evaluation for Quartz");
-                }
-            }
-            try {
-                final DelegatingUserTransaction trans = (DelegatingUserTransaction) envCtx
-                                .lookup(INamingBinds.RESOURCE_USERTRANSACTION);
-                // QuartzTrigger
-                trans.setUserName(Person.get(UUID.fromString("df2f02a7-c556-49ad-b019-e13db66e1cbf")).getName());
-            } catch (final NamingException e) {
-                Quartz.LOG.info("Catched NamingException on evaluation for Quartz");
-            }
-
-            props.put(StdSchedulerFactory.PROP_SCHED_USER_TX_URL, lookup + "/" + INamingBinds.RESOURCE_USERTRANSACTION);
             props.put(StdSchedulerFactory.PROP_SCHED_WRAP_JOB_IN_USER_TX, "true");
             props.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
             props.put(StdSchedulerFactory.PROP_SCHED_JOB_FACTORY_CLASS, SimpleJobFactory.class.getName());

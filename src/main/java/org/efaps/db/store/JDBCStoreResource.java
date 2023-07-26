@@ -24,12 +24,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 
 import javax.transaction.xa.Xid;
 
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.databases.AbstractDatabase;
+import org.efaps.db.store.Resource.Compress;
 import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
@@ -333,7 +335,7 @@ public class JDBCStoreResource
      *
      * TODO:  avaible must be long! (because of max integer value!)
      */
-    private class BlobInputStream
+    private static class BlobInputStream
         extends InputStream
     {
         /**

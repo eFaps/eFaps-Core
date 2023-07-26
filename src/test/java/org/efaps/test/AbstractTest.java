@@ -17,18 +17,17 @@
 
 package org.efaps.test;
 
-import com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionManagerImple;
-import com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionSynchronizationRegistryImple;
-import com.zaxxer.hikari.HikariJNDIFactory;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.efaps.db.Context;
+import org.efaps.db.databases.AbstractDatabase;
 import org.efaps.init.StartupDatabaseConnection;
 import org.efaps.init.StartupException;
 import org.efaps.jaas.AppAccessHandler;
@@ -39,16 +38,26 @@ import org.efaps.mock.db.MockDatabase;
 import org.efaps.mock.esjp.AccessCheck;
 import org.efaps.mock.esjp.TriggerEvent;
 import org.efaps.util.EFapsException;
+import org.glassfish.hk2.api.DescriptorType;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
+import org.glassfish.hk2.utilities.DescriptorImpl;
+import org.glassfish.hk2.utilities.FactoryDescriptorsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionManagerImple;
+import com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionSynchronizationRegistryImple;
+import com.zaxxer.hikari.HikariJNDIFactory;
+
 import acolyte.jdbc.CompositeHandler;
 import acolyte.jdbc.StatementHandler;
 import acolyte.jdbc.UpdateResult;
-
+import jakarta.transaction.TransactionManager;
 /**
  * The Class AbstractTest.
  *
@@ -72,6 +81,46 @@ public abstract class AbstractTest
     public void prepareSuite()
         throws StartupException
     {
+        final var factory = ServiceLocatorFactory.getInstance();
+        final var locator = factory.create("eFaps-Core");
+        final var dcs = locator.getService(DynamicConfigurationService.class);
+        final var dynConfig = dcs.createDynamicConfiguration();
+
+        final DescriptorImpl retVal = new DescriptorImpl();
+
+        retVal.addAdvertisedContract(AbstractDatabase.class.getName());
+        retVal.setImplementation(MockDatabase.class.getName());
+        retVal.setScope("jakarta.inject.Singleton");
+        dynConfig.bind(retVal);
+
+        final DescriptorImpl retVal2 = new DescriptorImpl();
+        retVal2.addAdvertisedContract(TransactionManager.class.getName());
+        retVal2.setImplementation(TransactionManagerImple.class.getName());
+       // retVal.setScope("org.glassfish.api.PerLookup");
+        dynConfig.bind(retVal2);
+/**
+        final DescriptorImpl retVal3 = new DescriptorImpl();
+        retVal3.addAdvertisedContract(DataSource.class.getName());
+        retVal3.setImplementation(DatasourceProvider.class.getName());
+        retVal3.setDescriptorType(DescriptorType.PROVIDE_METHOD);
+        retVal3.setScope("jakarta.inject.Singleton");
+        dynConfig.bind(retVal3);
+**/
+
+        final DescriptorImpl retVal4 = new DescriptorImpl();
+        retVal4.addAdvertisedContract(Factory.class.getName());
+        retVal4.setImplementation(DatasourceProvider.class.getName());
+
+        final DescriptorImpl retVal5 = new DescriptorImpl();
+        retVal5.addAdvertisedContract(DataSource.class.getName());
+        retVal5.setImplementation(DatasourceProvider.class.getName());
+        retVal5.setDescriptorType(DescriptorType.PROVIDE_METHOD);
+        final var fac = new FactoryDescriptorsImpl(retVal4, retVal5);
+
+        dynConfig.bind(fac);
+
+        dynConfig.commit();
+
         Person.builder()
             .withId(1L)
             .withName("Administrator")

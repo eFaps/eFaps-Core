@@ -31,9 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.apache.commons.dbutils.RowProcessor;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.db.Context;
@@ -45,8 +42,6 @@ import org.efaps.db.wrapper.SQLInsert;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLUpdate;
-import org.efaps.init.INamingBinds;
-import org.efaps.init.IeFapsProperties;
 import org.efaps.update.util.InstallationException;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.AbstractCache;
@@ -96,33 +91,6 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * Logging instance used in this class.
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabase.class);
-
-    static {
-        try {
-            final InitialContext initCtx = new InitialContext();
-            javax.naming.Context envCtx = null;
-            try {
-                envCtx = (javax.naming.Context) initCtx.lookup("java:comp/env");
-            } catch (final NamingException e) {
-                AbstractDatabase.LOG.info("Catched NamingException on evaluation for DataBase.");
-            }
-            // for a build the context might be different, try this before surrender
-            if (envCtx == null) {
-                envCtx = (javax.naming.Context) initCtx.lookup("java:/comp/env");
-            }
-            try {
-                final Map<?, ?> props = (Map<?, ?>) envCtx.lookup(INamingBinds.RESOURCE_CONFIGPROPERTIES);
-                if (props != null) {
-                    AbstractDatabase.SCHEMAPATTERN = (String) props.get(IeFapsProperties.DBSCHEMAPATTERN);
-                    AbstractDatabase.CATALOG = (String) props.get(IeFapsProperties.DBCATALOG);
-                }
-            } catch (final NamingException e) {
-                AbstractDatabase.LOG.info("Catched NamingException on evaluation for Properties.");
-            }
-        } catch (final NamingException e) {
-            AbstractDatabase.LOG.error("NamingException", e);
-        }
-    }
 
     /**
      * The enumeration defines the known column types in the database.

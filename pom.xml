@@ -28,13 +28,21 @@
     </parent>
 
     <packaging>jar</packaging>
-    <artifactId>efaps-kernel</artifactId>
+    <artifactId>efaps-core</artifactId>
 
-    <description>eFaps is a framework used to map objects with or without attached files to
-a relational database and optional file systems (only for attaches files). Configurable access control can be provided down to object and attribute level depending on implementation and use case. Depending on requirements, events (like triggers) allow to implement business logic and to separate business logic from user interface.
-The framework includes integrations (e.g. webdav, full text search) and a web application as 'simple' configurable user interface. Some best practises, example web application modules (e.g. team work module) support administrators and implementers using this framework.
+    <description>eFaps is a framework used to map objects with or without
+        attached files to
+        a relational database and optional file systems (only for attaches
+        files). Configurable access control can be provided down to object and
+        attribute level depending on implementation and use case. Depending on
+        requirements, events (like triggers) allow to implement business logic
+        and to separate business logic from user interface.
+        The framework includes integrations (e.g. webdav, full text search) and
+        a web application as 'simple' configurable user interface. Some best
+        practises, example web application modules (e.g. team work module)
+        support administrators and implementers using this framework.
     </description>
-    <name>eFaps Kernel</name>
+    <name>eFaps Core</name>
     <url>http://maven-efaps-plugin.efaps.org</url>
     <licenses>
         <license>
@@ -214,7 +222,8 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
         </dependency>
 
         <!-- easy XML reader
-            using version 2.XX leads to problems on creation of the FactoryParser if different
+            using version 2.XX leads to problems on creation of the FactoryParser if
+        different
             Xerces versions are on the OS.
         -->
         <dependency>
@@ -337,7 +346,7 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
                     <artifactId>jdtcore</artifactId>
                     <groupId>eclipse</groupId>
                 </exclusion>
-                 <!-- Exclude because it brings version 2.x -->
+                <!-- Exclude because it brings version 2.x -->
                 <exclusion>
                     <artifactId>servlet-api</artifactId>
                     <groupId>javax.servlet</groupId>
@@ -379,7 +388,8 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <artifactId>batik-bridge</artifactId>
             <version>1.9.1</version>
         </dependency>
-        <!--  replacing the lucene from Jasperreport with the one used by infinispan-->
+        <!--  replacing the lucene from Jasperreport with the one used by
+        infinispan-->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-queryparser</artifactId>
@@ -439,43 +449,6 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <artifactId>commons-email</artifactId>
             <version>1.5</version>
         </dependency>
-
-        <!-- dependencies for REST-->
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
-            <version>${jersey.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-
         <!-- timer for background prozesses -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
@@ -579,7 +552,8 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <artifactId>ical4j</artifactId>
             <version>3.0.13</version>
         </dependency>
-        <!-- to not accidently use any of the jaxb implementation code only provide with runtime scope.
+        <!-- to not accidently use any of the jaxb implementation code only
+        provide with runtime scope.
         Can be replaced on deployment with any other -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
@@ -599,18 +573,6 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jndi</artifactId>
-            <version>${jetty.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -636,10 +598,10 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.jbossts.jta</groupId>
+       <dependency>
+            <groupId>org.jboss.narayana.jta</groupId>
             <artifactId>narayana-jta</artifactId>
-            <version>${jboss.jta.version}</version>
+            <version>7.0.0.Final</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -664,5 +626,35 @@ The framework includes integrations (e.g. webdav, full text search) and a web ap
             <version>1.2.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+<dependency>
+    <groupId>jakarta.xml.bind</groupId>
+    <artifactId>jakarta.xml.bind-api</artifactId>
+    <version>4.0.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.glassfish.hk2</groupId>
+    <artifactId>hk2</artifactId>
+    <version>3.0.4</version>
+</dependency>
+
+
+
     </dependencies>
 </project>

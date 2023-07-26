@@ -29,17 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.efaps.admin.user.Company;
@@ -47,27 +37,36 @@ import org.efaps.admin.user.Person;
 import org.efaps.admin.user.UserAttributesSet;
 import org.efaps.admin.user.UserAttributesSet.UserAttributesDefinition;
 import org.efaps.db.databases.AbstractDatabase;
-import org.efaps.db.databases.DataBaseFactory;
 import org.efaps.db.store.Resource;
 import org.efaps.db.store.Store;
 import org.efaps.db.transaction.ConnectionResource;
-import org.efaps.init.INamingBinds;
-import org.efaps.init.IeFapsProperties;
 import org.efaps.init.StartupException;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeZone;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import jakarta.inject.Inject;
+import jakarta.transaction.HeuristicMixedException;
+import jakarta.transaction.HeuristicRollbackException;
+import jakarta.transaction.NotSupportedException;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
+
 /**
  * @author The eFaps Team
  */
+@Service
 public final class Context
-    implements INamingBinds
 {
 
     /**
@@ -81,73 +80,9 @@ public final class Context
     private static final Logger LOG = LoggerFactory.getLogger(Context.class);
 
     /**
-     * Static variable storing the database type.
-     */
-    private static AbstractDatabase<?> DBTYPE;
-
-    /**
-     * SQL data source to the database.
-     */
-    private static DataSource DATASOURCE;
-
-    /**
-     * Stores the transaction manager.
-     *
-     * @see #setTransactionManager
-     */
-    private static TransactionManager TRANSMANAG;
-
-    /**
      * STore the timeout for the transaction manager.
      */
     private static int TRANSMANAGTIMEOUT = 0;
-
-    static {
-        try {
-            final InitialContext initCtx = new InitialContext();
-            javax.naming.Context envCtx = null;
-            try {
-                envCtx = (javax.naming.Context) initCtx.lookup("java:/comp/env");
-            } catch (final NamingException e) {
-                Context.LOG.info("Expected NamingException during evaluation for Context, No action required");
-            }
-            // for a build the context might be different, try this before surrender
-            if (envCtx == null) {
-                envCtx = (javax.naming.Context) initCtx.lookup("java:comp/env");
-            }
-
-            Context.DATASOURCE = (DataSource) envCtx.lookup(INamingBinds.RESOURCE_DATASOURCE);
-            try {
-                final AbstractDatabase<?> dbType  = (AbstractDatabase<?>) envCtx.lookup(INamingBinds.RESOURCE_DBTYPE);
-                Context.DBTYPE = dbType;
-            } catch (final NamingException e) {
-                Context.LOG.info("Expected NamingException during evaluation for Context, No action required");
-                Context.DBTYPE = DataBaseFactory.getDatabase(Context.DATASOURCE.getConnection());
-            }
-
-            Context.TRANSMANAG = (TransactionManager) envCtx.lookup(INamingBinds.RESOURCE_TRANSMANAG);
-
-            try {
-                Context.TRANSMANAGTIMEOUT = 0;
-                final Map<?, ?> props = (Map<?, ?>) envCtx.lookup(INamingBinds.RESOURCE_CONFIGPROPERTIES);
-                if (props != null) {
-                    final String transactionTimeoutString = (String) props.get(IeFapsProperties.TRANSACTIONTIMEOUT);
-                    if (transactionTimeoutString != null) {
-                        Context.TRANSMANAGTIMEOUT = Integer.parseInt(transactionTimeoutString);
-                    }
-                }
-            } catch (final NamingException e) {
-                // this is actual no error, so nothing is presented
-                Context.TRANSMANAGTIMEOUT = 0;
-            }
-        } catch (final NamingException e) {
-            Context.LOG.error("NamingException", e);
-            throw new Error(e);
-        } catch (final SQLException e) {
-            Context.LOG.error("SQLException", e);
-            throw new Error(e);
-        }
-    }
 
     /**
      * Each thread has his own context object. The value is automatically
@@ -155,6 +90,7 @@ public final class Context
      * for every Users which is connect to the WebApp Server. For the case that
      * a thread creates a child threat the context is inherited to this new
      * thread. This is needed e.g. in JasperReport for SubReports.
+     *
      * @see #inherit
      */
     private static ThreadLocal<Context> INHERITTHREADCONTEXT = new InheritableThreadLocal<>();
@@ -265,13 +201,27 @@ public final class Context
     private final boolean inherit;
 
     /**
-     * Id of the request (means normally this instance of the context).
-     * Used for cacheing during a request.
+     * Id of the request (means normally this instance of the context). Used for
+     * cacheing during a request.
      */
     private final String requestId;
 
     /** The connections. */
     private ConnectionResource connectionResource;
+
+    @Inject
+    private TransactionManager transactionManager;
+    /**
+     * SQL data source to the database.
+     */
+    @Inject
+    private DataSource datasource;
+
+    /**
+     * Static variable storing the database type.
+     */
+    @Inject
+    private AbstractDatabase<?> database;
 
     /**
      * Private Constructor.
@@ -283,11 +233,10 @@ public final class Context
      * @param _sessionAttributes attributes belonging to this session
      * @param _parameters parameters beloonging to this session
      * @param _fileParameters paramters for file up/download
-     * @param _inherit              must the context be inherited to child threads
+     * @param _inherit must the context be inherited to child threads
      * @throws EFapsException on error
      */
-    private Context(final Transaction _transaction,
-                    final Locale _locale,
+    private Context(final Locale _locale,
                     final Map<String, Object> _sessionAttributes,
                     final Map<String, String[]> _parameters,
                     final Map<String, FileParameter> _fileParameters,
@@ -295,7 +244,6 @@ public final class Context
         throws EFapsException
     {
         inherit = _inherit;
-        transaction = _transaction;
         requestId = RandomStringUtils.randomAlphanumeric(8);
         parameters = _parameters == null ? new HashMap<>() : _parameters;
         fileParameters = _fileParameters == null ? new HashMap<>() : _fileParameters;
@@ -369,7 +317,7 @@ public final class Context
     {
         try {
             if (connectionResource == null) {
-                connectionResource = new ConnectionResource(Context.DATASOURCE.getConnection());
+                connectionResource = new ConnectionResource(datasource.getConnection());
             }
         } catch (final SQLException e) {
             throw new EFapsException(getClass(), "getConnectionResource.SQLException", e);
@@ -381,7 +329,7 @@ public final class Context
      * Method to get the sore resource.
      *
      * @param _instance Instance to get the StoreResource for
-     * @param _event    StorEvent the store is wanted for
+     * @param _event StorEvent the store is wanted for
      * @throws EFapsException on error
      * @return StoreResource
      * @see #getStoreResource(Type,long)
@@ -529,6 +477,7 @@ public final class Context
 
     /**
      * Remove a attribute form the request.
+     *
      * @param _key key of the session attribute to be removed.
      */
     public void removeRequestAttribute(final String _key)
@@ -600,6 +549,7 @@ public final class Context
 
     /**
      * Remove a attribute form the Session.
+     *
      * @param _key key of the session attribute to be removed.
      */
     public void removeSessionAttribute(final String _key)
@@ -750,11 +700,12 @@ public final class Context
     public Company getCompany()
         throws CacheReloadException
     {
-        return companyId == null ?  null : Company.get(companyId);
+        return companyId == null ? null : Company.get(companyId);
     }
 
     /**
      * Set the Company currently valid for this context.
+     *
      * @param _company Company to set
      * @throws CacheReloadException on error
      */
@@ -790,7 +741,8 @@ public final class Context
         return timezone;
     }
 
-    public ZoneId getZoneId() {
+    public ZoneId getZoneId()
+    {
         return getTimezone().toTimeZone().toZoneId();
     }
 
@@ -860,7 +812,7 @@ public final class Context
     {
         Connection con = null;
         try {
-            con = Context.DATASOURCE.getConnection();
+            con = Context.getThreadContext().datasource.getConnection();
             con.setAutoCommit(false);
         } catch (final SQLException e) {
             throw new EFapsException(Context.class, "getConnection.SQLException", e);
@@ -871,8 +823,8 @@ public final class Context
     /**
      * Is a Thread active.
      *
-     * @return true if either the ThreadContext or the
-     *              Inherited ThreadContext is no null
+     * @return true if either the ThreadContext or the Inherited ThreadContext
+     *         is no null
      */
     public static boolean isThreadActive()
     {
@@ -947,11 +899,11 @@ public final class Context
     /**
      * For current thread a new context object must be created.
      *
-     * @param _user                 name or UIID of current user to set
-     * @param _locale               locale instance (which language settings has the user)
-     * @param _sessionAttributes    attributes for this session
-     * @param _parameters           map with parameters for this thread context
-     * @param _fileParameters       map with file parameters
+     * @param _user name or UIID of current user to set
+     * @param _locale locale instance (which language settings has the user)
+     * @param _sessionAttributes attributes for this session
+     * @param _parameters map with parameters for this thread context
+     * @param _fileParameters map with file parameters
      * @param _inheritance the inheritance
      * @return new context of thread
      * @throws EFapsException if a new transaction could not be started or if
@@ -966,32 +918,37 @@ public final class Context
                                 final Inheritance _inheritance)
         throws EFapsException
     {
-        if (Inheritance.Inheritable.equals(_inheritance)  && Context.INHERITTHREADCONTEXT.get() != null
-                        || Inheritance.Local.equals(_inheritance)  && Context.THREADCONTEXT.get() != null) {
+        if (Inheritance.Inheritable.equals(_inheritance) && Context.INHERITTHREADCONTEXT.get() != null
+                        || Inheritance.Local.equals(_inheritance) && Context.THREADCONTEXT.get() != null) {
             throw new EFapsException(Context.class, "begin.Context4ThreadAlreadSet");
         }
-        try {
-            // the timeout set is reseted on creation of a new Current object in
-            // the transaction manager,
-            // so if the default must be overwritten it must be set explicitly
-            // again
-            if (Context.TRANSMANAGTIMEOUT > 0) {
-                Context.TRANSMANAG.setTransactionTimeout(Context.TRANSMANAGTIMEOUT);
-            }
-            Context.TRANSMANAG.begin();
-        } catch (final SystemException e) {
-            throw new EFapsException(Context.class, "begin.beginSystemException", e);
-        } catch (final NotSupportedException e) {
-            throw new EFapsException(Context.class, "begin.beginNotSupportedException", e);
-        }
-        final Transaction transaction;
-        try {
-            transaction = Context.TRANSMANAG.getTransaction();
-        } catch (final SystemException e) {
-            throw new EFapsException(Context.class, "begin.getTransactionSystemException", e);
-        }
-        final Context context = new Context(transaction, _locale, _sessionAttributes, _parameters,
+        /**
+         * try { // the timeout set is reseted on creation of a new Current
+         * object in // the transaction manager, // so if the default must be
+         * overwritten it must be set explicitly // again if
+         * (Context.TRANSMANAGTIMEOUT > 0) {
+         * Context.TRANSMANAG.setTransactionTimeout(Context.TRANSMANAGTIMEOUT);
+         * } Context.TRANSMANAG.begin(); } catch (final SystemException e) {
+         * throw new EFapsException(Context.class, "begin.beginSystemException",
+         * e); } catch (final NotSupportedException e) { throw new
+         * EFapsException(Context.class, "begin.beginNotSupportedException", e);
+         * } final Transaction transaction; try { transaction =
+         * Context.TRANSMANAG.getTransaction(); } catch (final SystemException
+         * e) { throw new EFapsException(Context.class,
+         * "begin.getTransactionSystemException", e); }
+         **/
+        final Context context = new Context(_locale, _sessionAttributes, _parameters,
                         _fileParameters, Inheritance.Inheritable.equals(_inheritance));
+
+        final var factory = ServiceLocatorFactory.getInstance();
+        factory.create("eFaps-Core").inject(context);
+        try {
+            context.transactionManager.begin();
+            context.setTransaction(context.transactionManager.getTransaction());
+        } catch (final SystemException | NotSupportedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         switch (_inheritance) {
             case Inheritable:
                 Context.INHERITTHREADCONTEXT.set(context);
@@ -1024,7 +981,8 @@ public final class Context
                         context.setUserAttribute(Context.CURRENTCOMPANY, "0");
                     }
                 }
-                // if no current company is set in the UserAttributes, the first one found is set
+                // if no current company is set in the UserAttributes, the first
+                // one found is set
                 if (context.companyId == null && context.person.getCompanies().size() > 0) {
                     final Long compID = context.person.getCompanies().iterator().next();
                     context.setUserAttribute(Context.CURRENTCOMPANY, compID.toString());
@@ -1037,17 +995,18 @@ public final class Context
 
     /**
      * Save the Context by committing and beginning a new Transaction.
+     *
      * @throws EFapsException on error
      */
     public static void save()
         throws EFapsException
     {
         try {
-            Context.TRANSMANAG.commit();
-            Context.TRANSMANAG.begin();
             final Context context = Context.getThreadContext();
+            context.transactionManager.commit();
+            context.transactionManager.begin();
             context.connectionResource = null;
-            context.setTransaction(Context.TRANSMANAG.getTransaction());
+            context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SecurityException e) {
             throw new EFapsException(Context.class, "save.SecurityException", e);
         } catch (final IllegalStateException e) {
@@ -1067,6 +1026,7 @@ public final class Context
 
     /**
      * Commit the context.
+     *
      * @throws EFapsException if commit of the transaction manager failed
      */
     public static void commit()
@@ -1083,7 +1043,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            Context.TRANSMANAG.commit();
+            Context.getThreadContext().transactionManager.commit();
         } catch (final IllegalStateException e) {
             throw new EFapsException(Context.class, "commit.IllegalStateException", e);
         } catch (final SecurityException e) {
@@ -1110,7 +1070,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            Context.TRANSMANAG.rollback();
+            Context.getThreadContext().transactionManager.rollback();
         } catch (final IllegalStateException e) {
             throw new EFapsException(Context.class, "rollback.IllegalStateException", e);
         } catch (final SecurityException e) {
@@ -1135,7 +1095,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            return Context.TRANSMANAG.getStatus() == Status.STATUS_ACTIVE;
+            return Context.getThreadContext().transactionManager.getStatus() == Status.STATUS_ACTIVE;
         } catch (final SystemException e) {
             throw new EFapsException(Context.class, "isTMActive.SystemException", e);
         }
@@ -1153,7 +1113,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            return Context.TRANSMANAG.getStatus() == Status.STATUS_NO_TRANSACTION;
+            return Context.getThreadContext().transactionManager.getStatus() == Status.STATUS_NO_TRANSACTION;
         } catch (final SystemException e) {
             throw new EFapsException(Context.class, "isTMNoTransaction.SystemException", e);
         }
@@ -1172,7 +1132,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            return Context.TRANSMANAG.getStatus() == Status.STATUS_MARKED_ROLLBACK;
+            return Context.getThreadContext().transactionManager.getStatus() == Status.STATUS_MARKED_ROLLBACK;
         } catch (final SystemException e) {
             throw new EFapsException(Context.class, "isTMMarkedRollback.SystemException", e);
         }
@@ -1184,10 +1144,17 @@ public final class Context
      *
      * @see #DBTYPE
      * @return AbstractDatabase
+     * @throws EFapsException
      */
     public static AbstractDatabase<?> getDbType()
     {
-        return Context.DBTYPE;
+        try {
+            return Context.getThreadContext().database;
+        } catch (final EFapsException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -1203,28 +1170,6 @@ public final class Context
     public static void reset()
         throws StartupException
     {
-        try {
-            final InitialContext initCtx = new InitialContext();
-            final javax.naming.Context envCtx = (javax.naming.Context) initCtx.lookup("java:comp/env");
-            Context.DBTYPE = (AbstractDatabase<?>) envCtx.lookup(INamingBinds.RESOURCE_DBTYPE);
-            Context.DATASOURCE = (DataSource) envCtx.lookup(INamingBinds.RESOURCE_DATASOURCE);
-            Context.TRANSMANAG = (TransactionManager) envCtx.lookup(INamingBinds.RESOURCE_TRANSMANAG);
-            try {
-                Context.TRANSMANAGTIMEOUT = 0;
-                final Map<?, ?> props = (Map<?, ?>) envCtx.lookup(INamingBinds.RESOURCE_CONFIGPROPERTIES);
-                if (props != null) {
-                    final String transactionTimeoutString = (String) props.get(IeFapsProperties.TRANSACTIONTIMEOUT);
-                    if (transactionTimeoutString != null) {
-                        Context.TRANSMANAGTIMEOUT = Integer.parseInt(transactionTimeoutString);
-                    }
-                }
-            } catch (final NamingException e) {
-                // this is actual no error, so nothing is presented
-                Context.TRANSMANAGTIMEOUT = 0;
-            }
-        } catch (final NamingException e) {
-            throw new StartupException("eFaps context could not be initialized", e);
-        }
     }
 
     /**
