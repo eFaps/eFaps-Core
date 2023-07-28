@@ -922,21 +922,7 @@ public final class Context
                         || Inheritance.Local.equals(_inheritance) && Context.THREADCONTEXT.get() != null) {
             throw new EFapsException(Context.class, "begin.Context4ThreadAlreadSet");
         }
-        /**
-         * try { // the timeout set is reseted on creation of a new Current
-         * object in // the transaction manager, // so if the default must be
-         * overwritten it must be set explicitly // again if
-         * (Context.TRANSMANAGTIMEOUT > 0) {
-         * Context.TRANSMANAG.setTransactionTimeout(Context.TRANSMANAGTIMEOUT);
-         * } Context.TRANSMANAG.begin(); } catch (final SystemException e) {
-         * throw new EFapsException(Context.class, "begin.beginSystemException",
-         * e); } catch (final NotSupportedException e) { throw new
-         * EFapsException(Context.class, "begin.beginNotSupportedException", e);
-         * } final Transaction transaction; try { transaction =
-         * Context.TRANSMANAG.getTransaction(); } catch (final SystemException
-         * e) { throw new EFapsException(Context.class,
-         * "begin.getTransactionSystemException", e); }
-         **/
+
         final Context context = new Context(_locale, _sessionAttributes, _parameters,
                         _fileParameters, Inheritance.Inheritable.equals(_inheritance));
 
@@ -1043,7 +1029,9 @@ public final class Context
         throws EFapsException
     {
         try {
-            Context.getThreadContext().transactionManager.commit();
+            if (isTMActive()) {
+                Context.getThreadContext().transactionManager.commit();
+            }
         } catch (final IllegalStateException e) {
             throw new EFapsException(Context.class, "commit.IllegalStateException", e);
         } catch (final SecurityException e) {
@@ -1070,7 +1058,9 @@ public final class Context
         throws EFapsException
     {
         try {
-            Context.getThreadContext().transactionManager.rollback();
+            if (isTMActive()) {
+                Context.getThreadContext().transactionManager.rollback();
+            }
         } catch (final IllegalStateException e) {
             throw new EFapsException(Context.class, "rollback.IllegalStateException", e);
         } catch (final SecurityException e) {
