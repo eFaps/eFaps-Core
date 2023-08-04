@@ -19,6 +19,7 @@ package org.efaps.admin.common;
 
 import java.util.Properties;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.message.MessageStatusHolder;
@@ -50,7 +51,6 @@ public final class Quartz
      */
     public static final String QUARTZGROUP = "eFapsQuartzGroup";
 
-
     /**
      * Logging instance used in this class.
      */
@@ -66,80 +66,90 @@ public final class Quartz
      */
     private Scheduler scheduler;
 
+    private final boolean active;
+
     /**
      * Private Constructor.
      */
     private Quartz()
     {
+        final var config = ConfigProvider.getConfig();
+        active = config.getValue("core.quartz.active", Boolean.class);
     }
 
     /**
      * Method to initialize the Quartz.
+     *
      * @throws EFapsException on error
      */
     public static void initialize()
         throws EFapsException
     {
         Quartz.QUARTZ = new Quartz();
-        try {
-            //Kernel-Configuration
-            final SystemConfiguration config = EFapsSystemConfiguration.get();
-            final Properties props = config.getAttributeValueAsProperties(KernelSettings.QUARTZPROPS);
+        if (Quartz.QUARTZ.active) {
+            try {
+                // Kernel-Configuration
+                final SystemConfiguration config = EFapsSystemConfiguration.get();
+                final Properties props = config.getAttributeValueAsProperties(KernelSettings.QUARTZPROPS);
 
-            final StdSchedulerFactory schedFact = new StdSchedulerFactory();
-            //props.put(StdSchedulerFactory.PROP_SCHED_WRAP_JOB_IN_USER_TX, "true");
-            props.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-            props.put(StdSchedulerFactory.PROP_SCHED_JOB_FACTORY_CLASS, SimpleJobFactory.class.getName());
-            props.put("org.quartz.plugin.jobInitializer.class", "org.efaps.admin.common.QuartzSchedulerPlugin");
+                final StdSchedulerFactory schedFact = new StdSchedulerFactory();
+                // props.put(StdSchedulerFactory.PROP_SCHED_WRAP_JOB_IN_USER_TX,
+                // "true");
+                props.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
+                props.put(StdSchedulerFactory.PROP_SCHED_JOB_FACTORY_CLASS, SimpleJobFactory.class.getName());
+                props.put("org.quartz.plugin.jobInitializer.class", "org.efaps.admin.common.QuartzSchedulerPlugin");
 
-            if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON)) {
-                props.put(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON, "true");
-            }
-            if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME)) {
-                props.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "eFapsScheduler");
-            }
-            if (!props.containsKey("org.quartz.threadPool.threadCount")) {
-                props.put("org.quartz.threadPool.threadCount", "2");
-            }
-
-            if (!props.containsKey("org.quartz.plugin.triggHistory.class")) {
-                props.put("org.quartz.plugin.triggHistory.class",
-                                "org.quartz.plugins.history.LoggingTriggerHistoryPlugin");
-                props.put("org.quartz.plugin.triggHistory.triggerFiredMessage",
-                            "Trigger {1}.{0} fired job {6}.{5} at: {4, date, HH:mm:ss MM/dd/yyyy}");
-                props.put("org.quartz.plugin.triggHistory.triggerCompleteMessage",
-                            "Trigger {1}.{0} completed firing job {6}.{5} at {4, date, HH:mm:ss MM/dd/yyyy}.");
-            }
-            Quartz.LOG.info("Sheduling Quartz with properties {}", props);
-
-            schedFact.initialize(props);
-            Quartz.QUARTZ.scheduler = schedFact.getScheduler("eFapsScheduler");
-            if (Quartz.QUARTZ.scheduler != null) {
-                Quartz.QUARTZ.scheduler.shutdown();
-            }
-            Quartz.QUARTZ.scheduler =  schedFact.getScheduler();
-
-            if (config.getAttributeValueAsBoolean(KernelSettings.MSGTRIGGERACTIVE)) {
-                final int interval = config.getAttributeValueAsInteger(KernelSettings.MSGTRIGGERINTERVAL);
-                final Trigger trigger = TriggerBuilder.newTrigger()
-                                .withIdentity("SystemMessageTrigger")
-                                .withSchedule(SimpleScheduleBuilder.repeatMinutelyForever(interval > 0 ? interval : 1))
-                                .build();
-
-                JobDetail jobDetail = Quartz.QUARTZ.scheduler.getJobDetail(new JobKey("SystemMessage",
-                                Quartz.QUARTZGROUP));
-                if (jobDetail == null) {
-                    jobDetail = JobBuilder.newJob(MessageStatusHolder.class)
-                                    .withIdentity("SystemMessage", Quartz.QUARTZGROUP).build();
-                    Quartz.QUARTZ.scheduler.scheduleJob(jobDetail, trigger);
-                } else {
-                    Quartz.QUARTZ.scheduler.rescheduleJob(new TriggerKey("SystemMessageTrigger", Quartz.QUARTZGROUP),
-                                    trigger);
+                if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON)) {
+                    props.put(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON, "true");
                 }
+                if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME)) {
+                    props.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "eFapsScheduler");
+                }
+                if (!props.containsKey("org.quartz.threadPool.threadCount")) {
+                    props.put("org.quartz.threadPool.threadCount", "2");
+                }
+
+                if (!props.containsKey("org.quartz.plugin.triggHistory.class")) {
+                    props.put("org.quartz.plugin.triggHistory.class",
+                                    "org.quartz.plugins.history.LoggingTriggerHistoryPlugin");
+                    props.put("org.quartz.plugin.triggHistory.triggerFiredMessage",
+                                    "Trigger {1}.{0} fired job {6}.{5} at: {4, date, HH:mm:ss MM/dd/yyyy}");
+                    props.put("org.quartz.plugin.triggHistory.triggerCompleteMessage",
+                                    "Trigger {1}.{0} completed firing job {6}.{5} at {4, date, HH:mm:ss MM/dd/yyyy}.");
+                }
+                Quartz.LOG.info("Sheduling Quartz with properties {}", props);
+
+                schedFact.initialize(props);
+                Quartz.QUARTZ.scheduler = schedFact.getScheduler("eFapsScheduler");
+                if (Quartz.QUARTZ.scheduler != null) {
+                    Quartz.QUARTZ.scheduler.shutdown();
+                }
+                Quartz.QUARTZ.scheduler = schedFact.getScheduler();
+
+                if (config.getAttributeValueAsBoolean(KernelSettings.MSGTRIGGERACTIVE)) {
+                    final int interval = config.getAttributeValueAsInteger(KernelSettings.MSGTRIGGERINTERVAL);
+                    final Trigger trigger = TriggerBuilder.newTrigger()
+                                    .withIdentity("SystemMessageTrigger")
+                                    .withSchedule(SimpleScheduleBuilder
+                                                    .repeatMinutelyForever(interval > 0 ? interval : 1))
+                                    .build();
+
+                    JobDetail jobDetail = Quartz.QUARTZ.scheduler.getJobDetail(new JobKey("SystemMessage",
+                                    Quartz.QUARTZGROUP));
+                    if (jobDetail == null) {
+                        jobDetail = JobBuilder.newJob(MessageStatusHolder.class)
+                                        .withIdentity("SystemMessage", Quartz.QUARTZGROUP).build();
+                        Quartz.QUARTZ.scheduler.scheduleJob(jobDetail, trigger);
+                    } else {
+                        Quartz.QUARTZ.scheduler.rescheduleJob(
+                                        new TriggerKey("SystemMessageTrigger", Quartz.QUARTZGROUP),
+                                        trigger);
+                    }
+                }
+                Quartz.QUARTZ.scheduler.start();
+            } catch (final SchedulerException e) {
+                throw new EFapsException(Quartz.class, "Quartz.SchedulerException", e);
             }
-            Quartz.QUARTZ.scheduler.start();
-        } catch (final SchedulerException e) {
-            throw new EFapsException(Quartz.class, "Quartz.SchedulerException", e);
         }
     }
 
