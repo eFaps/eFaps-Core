@@ -38,12 +38,8 @@ import org.efaps.mock.db.MockDatabase;
 import org.efaps.mock.esjp.AccessCheck;
 import org.efaps.mock.esjp.TriggerEvent;
 import org.efaps.util.EFapsException;
-import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
-import org.glassfish.hk2.utilities.DescriptorImpl;
-import org.glassfish.hk2.utilities.FactoryDescriptorsImpl;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,44 +83,8 @@ public abstract class AbstractTest
         final var dcs = locator.getService(DynamicConfigurationService.class);
         final var dynConfig = dcs.createDynamicConfiguration();
 
-        final DescriptorImpl retVal = new DescriptorImpl();
+        new MockCoreBinder().bind(dynConfig);
 
-        retVal.addAdvertisedContract(AbstractDatabase.class.getName());
-        retVal.setImplementation(MockDatabase.class.getName());
-        retVal.setScope("jakarta.inject.Singleton");
-        dynConfig.bind(retVal);
-
-        final DescriptorImpl retVal2 = new DescriptorImpl();
-        retVal2.addAdvertisedContract(TransactionManager.class.getName());
-        retVal2.setImplementation(TransactionManagerImple.class.getName());
-       // retVal.setScope("org.glassfish.api.PerLookup");
-        dynConfig.bind(retVal2);
-
-
-        /**
-        final DescriptorImpl retVal3 = new DescriptorImpl();
-        retVal3.addAdvertisedContract(DataSource.class.getName());
-        retVal3.setImplementation(DatasourceProvider.class.getName());
-        retVal3.setDescriptorType(DescriptorType.PROVIDE_METHOD);
-        retVal3.setScope("jakarta.inject.Singleton");
-        dynConfig.bind(retVal3);
-**/
-
-        final DescriptorImpl retVal4 = new DescriptorImpl();
-        retVal4.addAdvertisedContract(Factory.class.getName());
-        retVal4.setImplementation(DatasourceProvider.class.getName());
-
-        final DescriptorImpl retVal5 = new DescriptorImpl();
-        retVal5.addAdvertisedContract(DataSource.class.getName());
-        retVal5.setImplementation(DatasourceProvider.class.getName());
-        retVal5.setDescriptorType(DescriptorType.PROVIDE_METHOD);
-        final var fac = new FactoryDescriptorsImpl(retVal4, retVal5);
-
-        dynConfig.bind(fac);
-
-
-
-        new IOCMockRestModule().bind(dynConfig);
         dynConfig.commit();
         Person.builder()
             .withId(1L)
@@ -188,13 +148,15 @@ public abstract class AbstractTest
         TriggerEvent.RESULTS.clear();
     }
 
-    public static class IOCMockRestModule extends AbstractBinder {
+    public static class MockCoreBinder extends AbstractBinder {
 
         @Override
         protected void configure()
         {
             bind(20000).to(Integer.class).named("transactionManagerTimeOut");
-
+            bind(MockDatabase.class).to(AbstractDatabase.class).in(jakarta.inject.Singleton.class);
+            bind(TransactionManagerImple.class).to(TransactionManager.class);
+            bindFactory(DatasourceProvider.class).to(DataSource.class);
         }
     }
 }
