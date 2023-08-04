@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2016 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
  *
  */
 
-
 package org.efaps.admin.common;
+
+import java.lang.reflect.InvocationTargetException;
 
 import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
@@ -39,22 +40,25 @@ import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 
 /**
- * Scheduler for quartz used to get the triggers and esjps for the jobs
- * from the eFaps Database.
+ * Scheduler for quartz used to get the triggers and esjps for the jobs from the
+ * eFaps Database.
  *
  * @author The eFaps Team
  */
 public class QuartzSchedulerPlugin
     implements SchedulerPlugin
 {
+
     /**
-     * On initialization the triggers and related esjp are loaded from the
-     * eFaps Database.
-     * @see org.quartz.spi.SchedulerPlugin#initialize(java.lang.String, org.quartz.Scheduler)
-     * @param _name         Name of the scheduler
-     * @param _scheduler    scheduler
-     * @param _loadHelper   The classLoadHelper the <code>SchedulerFactory</code> is
-     *                      actually using
+     * On initialization the triggers and related esjp are loaded from the eFaps
+     * Database.
+     *
+     * @see org.quartz.spi.SchedulerPlugin#initialize(java.lang.String,
+     *      org.quartz.Scheduler)
+     * @param _name Name of the scheduler
+     * @param _scheduler scheduler
+     * @param _loadHelper The classLoadHelper the <code>SchedulerFactory</code>
+     *            is actually using
      * @throws SchedulerException on error
      */
     @Override
@@ -63,14 +67,15 @@ public class QuartzSchedulerPlugin
                            final ClassLoadHelper _loadHelper)
         throws SchedulerException
     {
+        _scheduler.getListenerManager().addJobListener(new QuartzJobListener());
         try {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.QuartzTriggerAbstract);
             final MultiPrintQuery multi = queryBldr.getPrint();
             multi.addAttribute(CIAdminCommon.QuartzTriggerAbstract.Type,
-                               CIAdminCommon.QuartzTriggerAbstract.Name,
-                               CIAdminCommon.QuartzTriggerAbstract.Parameter1,
-                               CIAdminCommon.QuartzTriggerAbstract.Parameter2,
-                               CIAdminCommon.QuartzTriggerAbstract.Parameter3);
+                            CIAdminCommon.QuartzTriggerAbstract.Name,
+                            CIAdminCommon.QuartzTriggerAbstract.Parameter1,
+                            CIAdminCommon.QuartzTriggerAbstract.Parameter2,
+                            CIAdminCommon.QuartzTriggerAbstract.Parameter3);
             final SelectBuilder sel = new SelectBuilder().linkto(CIAdminCommon.QuartzTriggerAbstract.ESJPLink)
                             .file().label();
             multi.addSelect(sel);
@@ -89,7 +94,7 @@ public class QuartzSchedulerPlugin
                                     .withSchedule(para2 > 0 ? SimpleScheduleBuilder.simpleSchedule()
                                                     .withIntervalInSeconds(para1)
                                                     .withRepeatCount(para2)
-                                                    :  SimpleScheduleBuilder.repeatSecondlyForever(para1))
+                                                    : SimpleScheduleBuilder.repeatSecondlyForever(para1))
                                     .build();
                 } else if (type.isKindOf(CIAdminCommon.QuartzTriggerMinutely.getType())) {
                     trigger = TriggerBuilder.newTrigger()
@@ -97,7 +102,7 @@ public class QuartzSchedulerPlugin
                                     .withSchedule(para2 > 0 ? SimpleScheduleBuilder.simpleSchedule()
                                                     .withIntervalInMinutes(para1)
                                                     .withRepeatCount(para2)
-                                                    :  SimpleScheduleBuilder.repeatMinutelyForever(para1))
+                                                    : SimpleScheduleBuilder.repeatMinutelyForever(para1))
                                     .startAt(new DateTime().plusMinutes(para3).toDate()).build();
                 } else if (type.isKindOf(CIAdminCommon.QuartzTriggerHourly.getType())) {
                     trigger = TriggerBuilder.newTrigger()
@@ -105,7 +110,7 @@ public class QuartzSchedulerPlugin
                                     .withSchedule(para2 > 0 ? SimpleScheduleBuilder.simpleSchedule()
                                                     .withIntervalInHours(para1)
                                                     .withRepeatCount(para2)
-                                                    :  SimpleScheduleBuilder.repeatHourlyForever(para1))
+                                                    : SimpleScheduleBuilder.repeatHourlyForever(para1))
                                     .build();
                 } else if (type.isKindOf(CIAdminCommon.QuartzTriggerDaily.getType())) {
                     trigger = TriggerBuilder.newTrigger()
@@ -124,23 +129,23 @@ public class QuartzSchedulerPlugin
                                     .build();
                 }
                 @SuppressWarnings("unchecked")
-                final Class<?  extends Job> clazz = (Class<? extends Job>) Class.forName(esjp, false,
-                                 EFapsClassLoader.getInstance());
-                // class must be instantiated to force that related esjps are also loaded here
-                clazz.newInstance();
-                final JobDetail jobDetail =  JobBuilder.newJob(clazz)
+                final Class<? extends Job> clazz = (Class<? extends Job>) Class.forName(esjp, false,
+                                EFapsClassLoader.getInstance());
+                // class must be instantiated to force that related esjps are
+                // also loaded here
+                clazz.getConstructor().newInstance();
+
+                final JobDetail jobDetail = JobBuilder.newJob(clazz)
                                 .withIdentity(name + "_" + esjp, Quartz.QUARTZGROUP).build();
                 if (trigger != null) {
                     _scheduler.scheduleJob(jobDetail, trigger);
                 }
             }
-        } catch (final ClassNotFoundException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                        | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException | SchedulerException e) {
             throw new SchedulerException(e);
         } catch (final EFapsException e) {
-            throw new SchedulerException(e);
-        } catch (final InstantiationException e) {
-            throw new SchedulerException(e);
-        } catch (final IllegalAccessException e) {
             throw new SchedulerException(e);
         }
     }
@@ -160,6 +165,6 @@ public class QuartzSchedulerPlugin
     @Override
     public void start()
     {
-     // nothing must be done here
+        // nothing must be done here
     }
 }
