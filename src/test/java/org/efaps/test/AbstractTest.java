@@ -44,6 +44,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.DescriptorImpl;
 import org.glassfish.hk2.utilities.FactoryDescriptorsImpl;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -98,7 +99,9 @@ public abstract class AbstractTest
         retVal2.setImplementation(TransactionManagerImple.class.getName());
        // retVal.setScope("org.glassfish.api.PerLookup");
         dynConfig.bind(retVal2);
-/**
+
+
+        /**
         final DescriptorImpl retVal3 = new DescriptorImpl();
         retVal3.addAdvertisedContract(DataSource.class.getName());
         retVal3.setImplementation(DatasourceProvider.class.getName());
@@ -119,8 +122,10 @@ public abstract class AbstractTest
 
         dynConfig.bind(fac);
 
-        dynConfig.commit();
 
+
+        new IOCMockRestModule().bind(dynConfig);
+        dynConfig.commit();
         Person.builder()
             .withId(1L)
             .withName("Administrator")
@@ -181,5 +186,15 @@ public abstract class AbstractTest
         EFapsQueryHandler.get().cleanUp();
         AccessCheck.RESULTS.clear();
         TriggerEvent.RESULTS.clear();
+    }
+
+    public static class IOCMockRestModule extends AbstractBinder {
+
+        @Override
+        protected void configure()
+        {
+            bind(20000).to(Integer.class).named("transactionManagerTimeOut");
+
+        }
     }
 }

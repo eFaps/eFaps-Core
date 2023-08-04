@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.transaction.HeuristicMixedException;
 import jakarta.transaction.HeuristicRollbackException;
 import jakarta.transaction.NotSupportedException;
@@ -78,11 +79,6 @@ public final class Context
      * Logging instance used in this class.
      */
     private static final Logger LOG = LoggerFactory.getLogger(Context.class);
-
-    /**
-     * STore the timeout for the transaction manager.
-     */
-    private static int TRANSMANAGTIMEOUT = 0;
 
     /**
      * Each thread has his own context object. The value is automatically
@@ -211,6 +207,11 @@ public final class Context
 
     @Inject
     private TransactionManager transactionManager;
+
+    @Inject
+    @Named("transactionManagerTimeOut")
+    private Integer transactionManagerTimeOut;
+
     /**
      * SQL data source to the database.
      */
@@ -929,11 +930,11 @@ public final class Context
         final var factory = ServiceLocatorFactory.getInstance();
         factory.create("eFaps-Core").inject(context);
         try {
+            context.transactionManager.setTransactionTimeout(context.transactionManagerTimeOut);
             context.transactionManager.begin();
             context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SystemException | NotSupportedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+           LOG.error("Catched", e);
         }
         switch (_inheritance) {
             case Inheritable:
