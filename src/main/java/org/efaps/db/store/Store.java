@@ -17,6 +17,7 @@
 
 package org.efaps.db.store;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -47,6 +48,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class Store
     extends AbstractAdminObject
 {
+
     /**
      * Property to get the compress for this store.
      */
@@ -90,7 +92,7 @@ public final class Store
     /**
      * Properties for the StoreResource.
      */
-    private final Map<String, String> resourceProperties = new HashMap<String, String>();
+    private final Map<String, String> resourceProperties = new HashMap<>();
 
     /**
      * @param _id id of this store
@@ -163,15 +165,14 @@ public final class Store
         Resource ret = null;
         try {
             Store.LOG.debug("Getting resource for: {} with properties: {}", this.resource, this.resourceProperties);
-            ret = (Resource) Class.forName(this.resource).newInstance();
+            ret = (Resource) Class.forName(this.resource).getConstructor().newInstance();
             ret.initialize(_instance, this);
-        } catch (final InstantiationException e) {
+        } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException | InstantiationException | IllegalAccessException
+                        | ClassNotFoundException e) {
             throw new EFapsException(Store.class, "getResource.InstantiationException", e, this.resource);
-        } catch (final IllegalAccessException e) {
-            throw new EFapsException(Store.class, "getResource.IllegalAccessException", e, this.resource);
-        } catch (final ClassNotFoundException e) {
-            throw new EFapsException(Store.class, "getResource.ClassNotFoundException", e, this.resource);
         }
+
         return ret;
     }
 
@@ -224,7 +225,7 @@ public final class Store
      *
      * @param _name name of the type to get
      * @return instance of class {@link Store}
-     * @throws CacheReloadException  on error
+     * @throws CacheReloadException on error
      */
     public static Store get(final String _name)
         throws CacheReloadException
@@ -242,7 +243,7 @@ public final class Store
      *
      * @param _uuid uuid of the type to get
      * @return instance of class {@link Store}
-     * @throws CacheReloadException  on error
+     * @throws CacheReloadException on error
      */
     public static Store get(final UUID _uuid)
         throws CacheReloadException
@@ -271,7 +272,7 @@ public final class Store
     }
 
     /**
-     * @param _uUID      CIAttribute
+     * @param _uUID CIAttribute
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
@@ -317,6 +318,6 @@ public final class Store
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 }

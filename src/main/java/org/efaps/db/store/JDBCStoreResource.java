@@ -31,7 +31,6 @@ import javax.transaction.xa.Xid;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.databases.AbstractDatabase;
-import org.efaps.db.store.Resource.Compress;
 import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;

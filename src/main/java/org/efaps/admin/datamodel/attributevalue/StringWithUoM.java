@@ -43,6 +43,6 @@ public class StringWithUoM
     @Override
     public Double getBaseDouble()
     {
-        return new Double(0);
+        return (double) 0;
     }
 }

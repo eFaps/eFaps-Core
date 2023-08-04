@@ -17,6 +17,7 @@
 
 package org.efaps.admin.program.bundle;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -218,19 +219,16 @@ public final class BundleMaker
             }
             ret = builder.toString();
 
-            final BundleInterface bundle =
-                            (BundleInterface) _bundleclass.newInstance();
+            final BundleInterface bundle = (BundleInterface) _bundleclass.getConstructor().newInstance();
             bundle.setKey(ret, oids);
 
             final Cache<String, BundleInterface> cache = InfinispanCache.get()
                             .<String, BundleInterface>getIgnReCache(BundleMaker.CACHE4BUNDLE);
             cache.put(ret, bundle);
-        } catch (final InstantiationException e) {
-            throw new EFapsException(BundleMaker.class,
-                            "createNewKey.InstantiationException", e, _bundleclass);
-        } catch (final IllegalAccessException e) {
-            throw new EFapsException(BundleMaker.class,
-                            "createNewKey.IllegalAccessException", e, _bundleclass);
+        } catch (final InstantiationException | IllegalAccessException
+                        | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException e) {
+            LOG.error("Catched error", e);
         }
         return ret;
     }

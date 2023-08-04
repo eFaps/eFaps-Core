@@ -34,22 +34,28 @@ import org.efaps.db.transaction.ConnectionResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * <p>An easy wrapper for a SQL update statement. To initialize this class use
+ * <p>
+ * An easy wrapper for a SQL update statement. To initialize this class use
  * {@link org.efaps.db.databases.AbstractDatabase#newUpdate(String, String, long)}
- * to get a database specific update.</p>
+ * to get a database specific update.
+ * </p>
  *
- * <p><b>Example:</b><br/>
+ * <p>
+ * <b>Example:</b><br/>
+ *
  * <pre>
+ *
  * SQLUpdate insert = Context.getDbType().newUpdate("MYTABLE", "ID", 12, 14, 15);
- * </pre></p>
+ * </pre>
+ * </p>
  *
  * @author The eFaps Team
  */
 public class SQLUpdate
     extends AbstractSQLInsertUpdate<SQLUpdate>
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -66,13 +72,13 @@ public class SQLUpdate
      * {@link org.efaps.db.databases.AbstractDatabase#newUpdate(String, String, long)}
      * to get the database specific implementation.
      *
-     * @param _tableName    name of the table to update
-     * @param _idCol        name of the column with the id
-     * @param _ids          ids to update
+     * @param _tableName name of the table to update
+     * @param _idCol name of the column with the id
+     * @param _ids ids to update
      */
     public SQLUpdate(final String _tableName,
                      final String _idCol,
-                     final Long...  _ids)
+                     final Long... _ids)
     {
         super(_tableName, _idCol);
         this.ids = _ids;
@@ -81,10 +87,10 @@ public class SQLUpdate
     /**
      * Executes the SQL update.
      *
-     * @param _con      SQL connection
+     * @param _con SQL connection
      * @return the set< string>
      * @throws SQLException if update failed or the row for given {@link #id}
-     *                      does not exists
+     *             does not exists
      */
     public Set<String> execute(final ConnectionResource _con)
         throws SQLException
@@ -92,59 +98,59 @@ public class SQLUpdate
         final Set<String> ret = new HashSet<>();
         if (getIds().length > 1 || checkUpdateRequired(_con)) {
             final StringBuilder cmd = new StringBuilder()
-                .append(Context.getDbType().getSQLPart(SQLPart.UPDATE)).append(" ")
-                .append(Context.getDbType().getTableQuote())
-                .append(getTableName())
-                .append(Context.getDbType().getTableQuote()).append(" ")
-                .append(Context.getDbType().getSQLPart(SQLPart.SET)).append(" ");
+                            .append(Context.getDbType().getSQLPart(SQLPart.UPDATE)).append(" ")
+                            .append(Context.getDbType().getTableQuote())
+                            .append(getTableName())
+                            .append(Context.getDbType().getTableQuote()).append(" ")
+                            .append(Context.getDbType().getSQLPart(SQLPart.SET)).append(" ");
 
             // append SQL values
             boolean first = true;
-            for (final ColumnWithSQLValue col : getColumnWithSQLValues())  {
-                if (first)  {
+            for (final ColumnWithSQLValue col : getColumnWithSQLValues()) {
+                if (first) {
                     first = false;
-                } else  {
+                } else {
                     cmd.append(Context.getDbType().getSQLPart(SQLPart.COMMA));
                 }
                 cmd.append(Context.getDbType().getColumnQuote())
-                    .append(col.getColumnName())
-                    .append(Context.getDbType().getColumnQuote())
-                    .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
-                    .append(col.getSqlValue());
+                                .append(col.getColumnName())
+                                .append(Context.getDbType().getColumnQuote())
+                                .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
+                                .append(col.getSqlValue());
             }
 
             // append values
-            for (final AbstractColumnWithValue<?> col : getColumnWithValues())  {
-                if (first)  {
+            for (final AbstractColumnWithValue<?> col : getColumnWithValues()) {
+                if (first) {
                     first = false;
-                } else  {
+                } else {
                     cmd.append(Context.getDbType().getSQLPart(SQLPart.COMMA));
                 }
                 cmd.append(Context.getDbType().getColumnQuote())
-                    .append(col.getColumnName())
-                    .append(Context.getDbType().getColumnQuote())
-                    .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
-                    .append("?");
+                                .append(col.getColumnName())
+                                .append(Context.getDbType().getColumnQuote())
+                                .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
+                                .append("?");
                 ret.add(col.getColumnName());
             }
 
             // append where clause
             cmd.append(" ").append(Context.getDbType().getSQLPart(SQLPart.WHERE)).append(" ")
-                .append(Context.getDbType().getColumnQuote())
-                .append(getIdColumn())
-                .append(Context.getDbType().getColumnQuote());
+                            .append(Context.getDbType().getColumnQuote())
+                            .append(getIdColumn())
+                            .append(Context.getDbType().getColumnQuote());
 
             if (this.ids.length == 1) {
                 cmd.append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
-                    .append("?");
+                                .append("?");
             } else {
                 cmd.append(" ").append(Context.getDbType().getSQLPart(SQLPart.IN)).append(" ")
-                    .append(Context.getDbType().getSQLPart(SQLPart.PARENTHESIS_OPEN));
+                                .append(Context.getDbType().getSQLPart(SQLPart.PARENTHESIS_OPEN));
                 first = true;
                 for (@SuppressWarnings("unused") final long id : this.ids) {
-                    if (first)  {
+                    if (first) {
                         first = false;
-                    } else  {
+                    } else {
                         cmd.append(Context.getDbType().getSQLPart(SQLPart.COMMA));
                     }
                     cmd.append("?");
@@ -158,7 +164,7 @@ public class SQLUpdate
 
             final PreparedStatement stmt = _con.prepareStatement(cmd.toString());
             int index = 1;
-            for (final AbstractColumnWithValue<?> col : getColumnWithValues())  {
+            for (final AbstractColumnWithValue<?> col : getColumnWithValues()) {
                 if (SQLUpdate.LOG.isDebugEnabled()) {
                     SQLUpdate.LOG.debug("    " + index + " = " + col.getValue());
                 }
@@ -170,13 +176,13 @@ public class SQLUpdate
                 stmt.setLong(index++, id);
             }
 
-            try  {
+            try {
                 final int rows = stmt.executeUpdate();
                 if (rows == 0) {
                     throw new SQLException("Object for SQL table '" + getTableName()
-                            + "' with ids '" + this.ids + "' does not exists and was not updated.");
+                                    + "' with ids '" + this.ids + "' does not exists and was not updated.");
                 }
-            } finally  {
+            } finally {
                 stmt.close();
             }
         }
@@ -184,7 +190,9 @@ public class SQLUpdate
     }
 
     /**
-     * Check if the execution of the update is neccesary by comparing the values.
+     * Check if the execution of the update is neccesary by comparing the
+     * values.
+     *
      * @param _con connection to be used
      * @return true if the execution of the update is necessary
      * @throws SQLException on error
@@ -234,7 +242,8 @@ public class SQLUpdate
                             colIter.remove();
                         }
                     } else if (newValue instanceof Integer) {
-                        if (((BigDecimal) dbValue).compareTo(BigDecimal.valueOf(new Long((Integer) newValue))) == 0) {
+                        if (((BigDecimal) dbValue)
+                                        .compareTo(BigDecimal.valueOf(Long.valueOf((Integer) newValue))) == 0) {
                             colIter.remove();
                         }
                     }

@@ -20,6 +20,7 @@ package org.efaps.db.store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -47,17 +48,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>The class implements the {@link Resource} interface for Apache Jakarta
- * Commons Virtual File System.<p/>
+ * <p>
+ * The class implements the {@link Resource} interface for Apache Jakarta
+ * Commons Virtual File System.
+ * <p/>
  * <p>
  * All different virtual file systems could be used. The algorithm is:
  * <ol>
- *   <li>check if the file already exists</li>
- *   <li></li>
- *   <li></li>
+ * <li>check if the file already exists</li>
+ * <li></li>
+ * <li></li>
  * </ol>
  * The store implements the compress property setting on the type for
- * <code>ZIP</code> and <code>GZIP</code>.</p>
+ * <code>ZIP</code> and <code>GZIP</code>.
+ * </p>
  *
  * For each file id a new VFS store resource must be created.
  *
@@ -66,9 +70,10 @@ import org.slf4j.LoggerFactory;
 public class VFSStoreResource
     extends AbstractStoreResource
 {
+
     /**
-     * Extension of the temporary file in the store used in the transaction
-     * that the original file is not overwritten.
+     * Extension of the temporary file in the store used in the transaction that
+     * the original file is not overwritten.
      */
     private static final String EXTENSION_TEMP = ".tmp";
 
@@ -88,14 +93,12 @@ public class VFSStoreResource
     private static final String PROPERTY_NUMBER_SUBDIRS = "VFSNumberSubDirectories";
 
     /**
-     * Property Name to define if the type if is used to define a sub
-     * directory.
+     * Property Name to define if the type if is used to define a sub directory.
      */
     private static final String PROPERTY_USE_TYPE = "VFSUseTypeIdInPath";
 
     /**
-     * Property Name to define if the type if is used to define a sub
-     * directory.
+     * Property Name to define if the type if is used to define a sub directory.
      */
     private static final String PROPERTY_NUMBER_BACKUP = "VFSNumberBackups";
 
@@ -117,7 +120,7 @@ public class VFSStoreResource
     /**
      * Logging instance used in this class.
      */
-    private static final Logger LOG  = LoggerFactory.getLogger(VFSStoreResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VFSStoreResource.class);
 
     /**
      * Buffer used to copy from the input stream to the output stream.
@@ -141,12 +144,11 @@ public class VFSStoreResource
      */
     private int numberBackup = 1;
 
-
     /**
      * Method called to initialize this StoreResource.
-     * @param _instance     Instance of the object this StoreResource is wanted
-     *                      for
-     * @param _store        Store this resource belongs to
+     *
+     * @param _instance Instance of the object this StoreResource is wanted for
+     * @param _store Store this resource belongs to
      * @throws EFapsException on error
      * @see Resource#initialize(Instance, Map, Compress)
      */
@@ -160,27 +162,27 @@ public class VFSStoreResource
         final StringBuilder fileNameTmp = new StringBuilder();
 
         final String useTypeIdStr = getStore().getResourceProperties().get(VFSStoreResource.PROPERTY_USE_TYPE);
-        if ("true".equalsIgnoreCase(useTypeIdStr))  {
+        if ("true".equalsIgnoreCase(useTypeIdStr)) {
             fileNameTmp.append(getInstance().getType().getId()).append("/");
         }
 
-        final String numberSubDirsStr =  getStore().getResourceProperties().get(
+        final String numberSubDirsStr = getStore().getResourceProperties().get(
                         VFSStoreResource.PROPERTY_NUMBER_SUBDIRS);
-        if (numberSubDirsStr != null)  {
+        if (numberSubDirsStr != null) {
             final long numberSubDirs = Long.parseLong(numberSubDirsStr);
             final String pathFormat = "%0"
-                          + Math.round(Math.log10(numberSubDirs) + 0.5d)
-                          + "d";
+                            + Math.round(Math.log10(numberSubDirs) + 0.5d)
+                            + "d";
             fileNameTmp.append(String.format(pathFormat,
                             getInstance().getId() % numberSubDirs))
-                   .append("/");
+                            .append("/");
         }
         fileNameTmp.append(getInstance().getType().getId()).append(".").append(getInstance().getId());
         this.storeFileName = fileNameTmp.toString();
 
         final String numberBackupStr = getStore().getResourceProperties().get(VFSStoreResource.PROPERTY_NUMBER_BACKUP);
         if (numberBackupStr != null) {
-            this.numberBackup  = Integer.parseInt(numberBackupStr);
+            this.numberBackup = Integer.parseInt(numberBackupStr);
         }
 
         if (this.manager == null) {
@@ -218,8 +220,8 @@ public class VFSStoreResource
     {
         final DefaultFileSystemManager ret = new DefaultFileSystemManager();
 
-        final String baseName =  getProperties().get(VFSStoreResource.PROPERTY_BASENAME);
-        final String provider =  getProperties().get(VFSStoreResource.PROPERTY_PROVIDER);
+        final String baseName = getProperties().get(VFSStoreResource.PROPERTY_BASENAME);
+        final String provider = getProperties().get(VFSStoreResource.PROPERTY_PROVIDER);
         final String filesCacheName;
         if (getProperties().containsKey(VFSStoreResource.PROPERTY_FILESCACHE)) {
             filesCacheName = getProperties().get(VFSStoreResource.PROPERTY_FILESCACHE);
@@ -227,29 +229,17 @@ public class VFSStoreResource
             filesCacheName = LRUFilesCache.class.getName();
         }
         try {
-            final FilesCache filesCache = (FilesCache) Class.forName(filesCacheName).newInstance();
+            final FilesCache filesCache = (FilesCache) Class.forName(filesCacheName).getConstructor().newInstance();
             ret.setFilesCache(filesCache);
-            final FileProvider fileProvider = (FileProvider) Class.forName(provider).newInstance();
+            final FileProvider fileProvider = (FileProvider) Class.forName(provider).getConstructor().newInstance();
             ret.addProvider(baseName, fileProvider);
             final FileObject baseFile = VFS.getManager().resolveFile(baseName);
             ret.setBaseFile(baseFile);
             ret.init();
-        } catch (final FileSystemException e) {
-            throw new EFapsException(VFSStoreResource.class,
-                                     "evaluateFileSystemManager.FileSystemException",
-                                     e, provider, baseName);
-        } catch (final InstantiationException e) {
-            throw new EFapsException(VFSStoreResource.class,
-                                     "evaluateFileSystemManager.InstantiationException",
-                                     e, baseName, provider);
-        } catch (final IllegalAccessException e) {
-            throw new EFapsException(VFSStoreResource.class,
-                                     "evaluateFileSystemManager.IllegalAccessException",
-                                     e, provider);
-        } catch (final ClassNotFoundException e) {
-            throw new EFapsException(VFSStoreResource.class,
-                                     "evaluateFileSystemManager.ClassNotFoundException",
-                                     e, provider);
+        } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException | InstantiationException | IllegalAccessException | ClassNotFoundException
+                        | FileSystemException e) {
+            LOG.error("Catched", e);
         }
         return ret;
     }
@@ -267,10 +257,10 @@ public class VFSStoreResource
      * The method writes the context (from the input stream) to a temporary file
      * (same file URL, but with extension {@link #EXTENSION_TEMP}).
      *
-     * @param _in   input stream defined the content of the file
+     * @param _in input stream defined the content of the file
      * @param _size length of the content (or negative meaning that the length
-     *              is not known; then the content gets the length of readable
-     *              bytes from the input stream)
+     *            is not known; then the content gets the length of readable
+     *            bytes from the input stream)
      * @param _fileName name of the file
      * @return size of the created temporary file object
      * @throws EFapsException on error
@@ -281,49 +271,50 @@ public class VFSStoreResource
                       final String _fileName)
         throws EFapsException
     {
-        try  {
+        try {
             long size = _size;
             final FileObject tmpFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                                            this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
+                            this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
             if (!tmpFile.exists()) {
                 tmpFile.createFile();
             }
             final FileContent content = tmpFile.getContent();
             OutputStream out = content.getOutputStream(false);
-            if (getCompress().equals(Compress.GZIP))  {
+            if (getCompress().equals(Compress.GZIP)) {
                 out = new GZIPOutputStream(out);
-            } else if (getCompress().equals(Compress.ZIP))  {
+            } else if (getCompress().equals(Compress.ZIP)) {
                 out = new ZipOutputStream(out);
             }
 
             // if size is unkown!
-            if (_size < 0)  {
+            if (_size < 0) {
                 int length = 1;
                 size = 0;
-                while (length > 0)  {
+                while (length > 0) {
                     length = _in.read(this.buffer);
-                    if (length > 0)  {
+                    if (length > 0) {
                         out.write(this.buffer, 0, length);
                         size += length;
                     }
                 }
-            } else  {
+            } else {
                 Long length = _size;
                 while (length > 0) {
                     final int readLength = length.intValue() < this.buffer.length
-                                    ? length.intValue()  : this.buffer.length;
+                                    ? length.intValue()
+                                    : this.buffer.length;
                     _in.read(this.buffer, 0, readLength);
                     out.write(this.buffer, 0, readLength);
                     length -= readLength;
                 }
             }
-            if (getCompress().equals(Compress.GZIP) || getCompress().equals(Compress.ZIP))  {
+            if (getCompress().equals(Compress.GZIP) || getCompress().equals(Compress.ZIP)) {
                 out.close();
             }
             tmpFile.close();
             setFileInfo(_fileName, size);
             return size;
-        } catch (final IOException e)  {
+        } catch (final IOException e) {
             VFSStoreResource.LOG.error("write of content failed", e);
             throw new EFapsException(VFSStoreResource.class, "write.IOException", e);
         }
@@ -336,7 +327,7 @@ public class VFSStoreResource
     @Override
     public void delete()
     {
-        //Deletion is done on commit
+        // Deletion is done on commit
     }
 
     /**
@@ -350,14 +341,14 @@ public class VFSStoreResource
         throws EFapsException
     {
         StoreResourceInputStream in = null;
-        try  {
+        try {
             final FileObject file = this.manager.resolveFile(this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
-            if (!file.isReadable())  {
+            if (!file.isReadable()) {
                 VFSStoreResource.LOG.error("file for " + this.storeFileName + " not readable");
                 throw new EFapsException(VFSStoreResource.class, "#####file not readable");
             }
             in = new VFSStoreResourceInputStream(this, file);
-        } catch (final FileSystemException e)  {
+        } catch (final FileSystemException e) {
             VFSStoreResource.LOG.error("read of " + this.storeFileName + " failed", e);
             throw new EFapsException(VFSStoreResource.class, "read.Throwable", e);
         } catch (final IOException e) {
@@ -377,7 +368,7 @@ public class VFSStoreResource
     @Override
     public int prepare(final Xid _xid)
     {
-        if (VFSStoreResource.LOG.isDebugEnabled())  {
+        if (VFSStoreResource.LOG.isDebugEnabled()) {
             VFSStoreResource.LOG.debug("prepare (xid=" + _xid + ")");
         }
         return 0;
@@ -386,8 +377,8 @@ public class VFSStoreResource
     /**
      * Method that deletes the oldest backup and moves the others one up.
      *
-     * @param _backup   file to backup
-     * @param _number         number of backup
+     * @param _backup file to backup
+     * @param _number number of backup
      * @throws FileSystemException on error
      */
     private void backup(final FileObject _backup,
@@ -396,7 +387,7 @@ public class VFSStoreResource
     {
         if (_number < this.numberBackup) {
             final FileObject backFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                    this.storeFileName + VFSStoreResource.EXTENSION_BACKUP + _number);
+                            this.storeFileName + VFSStoreResource.EXTENSION_BACKUP + _number);
             if (backFile.exists()) {
                 backup(backFile, _number + 1);
             }
@@ -412,38 +403,37 @@ public class VFSStoreResource
      * A file in the virtual file system is committed with the algorithms:
      * <ol>
      * <li>any existing backup fill will be moved to an older backup file. The
-     *     maximum number of backups can be defined by setting the property
-     *     {@link #PROPERTY_NUMBER_BACKUP}. Default is one. To disable the
-     *     property must be set to 0.</li>
+     * maximum number of backups can be defined by setting the property
+     * {@link #PROPERTY_NUMBER_BACKUP}. Default is one. To disable the property
+     * must be set to 0.</li>
      * <li>the current file is moved to the backup file (or deleted if property
-     *     {@link #PROPERTY_NUMBER_BACKUP} is 0)</li>
+     * {@link #PROPERTY_NUMBER_BACKUP} is 0)</li>
      * <li>the new file is moved to the original name</li>
      * </ol>
      *
-     * @param _xid      global transaction identifier (not used, because each
-     *                  file with the file id gets a new VFS store resource
-     *                  instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @param _onePhase <i>true</i> if it is a one phase commitment transaction
-     *                  (not used)
+     *            (not used)
      * @throws XAException if any exception occurs (catch on
-     *         {@link java.lang.Throwable})
+     *             {@link java.lang.Throwable})
      */
     @Override
     public void commit(final Xid _xid,
                        final boolean _onePhase)
         throws XAException
     {
-        if (VFSStoreResource.LOG.isDebugEnabled())  {
+        if (VFSStoreResource.LOG.isDebugEnabled()) {
             VFSStoreResource.LOG.debug("transaction commit");
         }
         if (getStoreEvent() == VFSStoreResource.StoreEvent.WRITE) {
             try {
                 final FileObject tmpFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                        this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
+                                this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
                 final FileObject currentFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                        this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
+                                this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
                 final FileObject bakFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                        this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
+                                this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
                 if (bakFile.exists() && this.numberBackup > 0) {
                     backup(bakFile, 0);
                 }
@@ -458,9 +448,9 @@ public class VFSStoreResource
                 tmpFile.close();
                 currentFile.close();
                 bakFile.close();
-            } catch (final FileSystemException e)  {
+            } catch (final FileSystemException e) {
                 VFSStoreResource.LOG.error("transaction commit fails for " + _xid
-                        + " (one phase = " + _onePhase + ")", e);
+                                + " (one phase = " + _onePhase + ")", e);
                 final XAException xa = new XAException(XAException.XA_RBCOMMFAIL);
                 xa.initCause(e);
                 throw xa;
@@ -468,13 +458,13 @@ public class VFSStoreResource
         } else if (getStoreEvent() == VFSStoreResource.StoreEvent.DELETE) {
             try {
                 final FileObject curFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                            this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
+                                this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
                 final FileObject bakFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                        this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
+                                this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
                 if (bakFile.exists()) {
                     bakFile.delete();
                 }
-                if (curFile.exists())  {
+                if (curFile.exists()) {
                     curFile.moveTo(bakFile);
                 }
                 bakFile.close();
@@ -494,26 +484,25 @@ public class VFSStoreResource
      * the created temporary file (created from method {@link #write}) is
      * deleted.
      *
-     * @param _xid      global transaction identifier (not used, because each
-     *                  file with the file id gets a new VFS store resource
-     *                  instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @throws XAException if any exception occurs (catch on
-     *         {@link java.lang.Throwable})
+     *             {@link java.lang.Throwable})
      */
     @Override
     public void rollback(final Xid _xid)
         throws XAException
     {
-        if (VFSStoreResource.LOG.isDebugEnabled())  {
+        if (VFSStoreResource.LOG.isDebugEnabled()) {
             VFSStoreResource.LOG.debug("rollback (xid = " + _xid + ")");
         }
         try {
             final FileObject tmpFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                    this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
+                            this.storeFileName + VFSStoreResource.EXTENSION_TEMP);
             if (tmpFile.exists()) {
                 tmpFile.delete();
             }
-        } catch (final FileSystemException e)  {
+        } catch (final FileSystemException e) {
             VFSStoreResource.LOG.error("transaction rollback fails for " + _xid, e);
             final XAException xa = new XAException(XAException.XA_RBCOMMFAIL);
             xa.initCause(e);
@@ -525,8 +514,8 @@ public class VFSStoreResource
      * Tells the resource manager to forget about a heuristically completed
      * transaction branch.
      *
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      */
     @Override
     public void forget(final Xid _xid)
@@ -587,14 +576,15 @@ public class VFSStoreResource
     private class VFSStoreResourceInputStream
         extends StoreResourceInputStream
     {
+
         /**
          * File to be stored.
          */
         private final FileObject file;
 
         /**
-         * @param _storeRes   storeresource
-         * @param _file       file to store
+         * @param _storeRes storeresource
+         * @param _file file to store
          * @throws IOException on error
          */
         protected VFSStoreResourceInputStream(final AbstractStoreResource _storeRes,
@@ -613,7 +603,8 @@ public class VFSStoreResource
          * @throws IOException on error
          */
         @Override
-        protected void beforeClose() throws IOException
+        protected void beforeClose()
+            throws IOException
         {
             this.file.close();
         }

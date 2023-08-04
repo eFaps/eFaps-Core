@@ -16,6 +16,8 @@
  */
 package org.efaps.admin.index;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.es.SpanishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -69,19 +71,14 @@ public final class Index
                             KernelSettings.INDEXANALYZERPROVCLASS);
             try {
                 final Class<?> clazz = Class.forName(clazzname, false, EFapsClassLoader.getInstance());
-                provider = (IAnalyzerProvider) clazz.newInstance();
-            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                provider = (IAnalyzerProvider) clazz.getConstructor().newInstance();
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
                 throw new EFapsException(Index.class, "Could not instanciate IAnalyzerProvider", e);
             }
         } else {
-            provider = new IAnalyzerProvider()
-            {
-                @Override
-                public Analyzer getAnalyzer()
-                {
-                    return new StandardAnalyzer(SpanishAnalyzer.getDefaultStopSet());
-                }
-            };
+            provider = () -> new StandardAnalyzer(SpanishAnalyzer.getDefaultStopSet());
         }
         return provider.getAnalyzer();
     }
@@ -101,13 +98,16 @@ public final class Index
                             KernelSettings.INDEXDIRECTORYPROVCLASS);
             try {
                 final Class<?> clazz = Class.forName(clazzname, false, EFapsClassLoader.getInstance());
-                provider = (IDirectoryProvider) clazz.newInstance();
-            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                provider = (IDirectoryProvider) clazz.getConstructor().newInstance();
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
                 throw new EFapsException(Index.class, "Could not instanciate IDirectoryProvider", e);
             }
         } else {
             provider = new IDirectoryProvider()
             {
+
                 @Override
                 public Directory getDirectory()
                     throws EFapsException
@@ -126,7 +126,6 @@ public final class Index
         return provider.getDirectory();
     }
 
-
     /**
      * Gets the directory.
      *
@@ -142,13 +141,16 @@ public final class Index
                             KernelSettings.INDEXDIRECTORYPROVCLASS);
             try {
                 final Class<?> clazz = Class.forName(clazzname, false, EFapsClassLoader.getInstance());
-                provider = (IDirectoryProvider) clazz.newInstance();
-            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                provider = (IDirectoryProvider) clazz.getConstructor().newInstance();
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
                 throw new EFapsException(Index.class, "Could not instanciate IDirectoryProvider", e);
             }
         } else {
             provider = new IDirectoryProvider()
             {
+
                 @Override
                 public Directory getDirectory()
                     throws EFapsException
@@ -167,7 +169,6 @@ public final class Index
         return provider.getTaxonomyDirectory();
     }
 
-
     /**
      * Gets the directory.
      *
@@ -183,13 +184,16 @@ public final class Index
                             KernelSettings.INDEXSEARCHCLASS);
             try {
                 final Class<?> clazz = Class.forName(clazzname, false, EFapsClassLoader.getInstance());
-                ret = (ISearch) clazz.newInstance();
-            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                ret = (ISearch) clazz.getConstructor().newInstance();
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
                 throw new EFapsException(Index.class, "Could not instanciate IDirectoryProvider", e);
             }
         } else {
             ret = new ISearch()
             {
+
                 /** The Constant serialVersionUID. */
                 private static final long serialVersionUID = 1L;
 

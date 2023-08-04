@@ -53,7 +53,7 @@ public class ExecStmt
         }
 
         final Class<?> clazz = Class.forName(getESJPName(), false, EFapsClassLoader.getInstance());
-        final IEsjpExecute esjp = (IEsjpExecute) clazz.newInstance();
+        final IEsjpExecute esjp = (IEsjpExecute) clazz.getConstructor().newInstance();
         ExecStmt.LOG.debug("Instantiated class: {}", esjp);
         final List<String> parameters = getParameters();
         final List<Map<String, Object>> ret;

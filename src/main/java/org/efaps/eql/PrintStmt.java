@@ -92,7 +92,7 @@ public class PrintStmt
                 if (entry.getValue() instanceof ExecSelect) {
                     final Class<?> clazz = Class.forName(entry.getValue().getSelect(), false, EFapsClassLoader
                                     .getInstance());
-                    final IEsjpSelect esjp = (IEsjpSelect) clazz.newInstance();
+                    final IEsjpSelect esjp = (IEsjpSelect) clazz.getConstructor().newInstance();
                     final List<String> parameters = ((ExecSelect) entry.getValue()).getParameters();
                     if (parameters.isEmpty()) {
                         esjp.initialize(_instances);

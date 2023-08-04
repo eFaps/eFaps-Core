@@ -17,6 +17,7 @@
 
 package org.efaps.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -78,10 +79,11 @@ public final class MsgFormat
         if (!this.initialized) {
             for (final Class<?> clazz : new EsjpScanner().scan(EFapsFormatFactory.class)) {
                 try {
-                    final FormatFactory factory = (FormatFactory) clazz.newInstance();
+                    final FormatFactory factory = (FormatFactory) clazz.getConstructor().newInstance();
                     final EFapsFormatFactory ano = clazz.getAnnotation(EFapsFormatFactory.class);
                     this.registry.put(ano.name(), factory);
-                } catch (final InstantiationException | IllegalAccessException e) {
+                } catch (final InstantiationException | IllegalAccessException | IllegalArgumentException
+                                | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                     MsgFormat.LOG.error("Catched error on instantiotion", e);
                 }
             }
@@ -103,6 +105,7 @@ public final class MsgFormat
 
     /**
      * Get the MsgFormat.
+     *
      * @return MesgFormat
      * @throws EFapsException on error
      */

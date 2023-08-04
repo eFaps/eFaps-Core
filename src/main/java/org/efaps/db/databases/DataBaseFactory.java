@@ -18,6 +18,7 @@
 
 package org.efaps.db.databases;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public abstract class DataBaseFactory
      * Hyrachical list of clazzNames that will be check in the given
      * sequence if the database is connected.
      */
-    private static final List<String> CLAZZNAMES = new ArrayList<String>();
+    private static final List<String> CLAZZNAMES = new ArrayList<>();
 
     static {
         DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.PostgreSQLDatabase");
@@ -66,19 +67,15 @@ public abstract class DataBaseFactory
         for (final String clazzName : DataBaseFactory.CLAZZNAMES) {
             try {
                 DataBaseFactory.LOG.debug("Checking for DataBase connetion with class: '{}'", clazzName);
-                ret = (AbstractDatabase<?>) Class.forName(clazzName).newInstance();
+                ret = (AbstractDatabase<?>) Class.forName(clazzName).getConstructor().newInstance();
                 if (ret.isConnected(_connection)) {
                     DataBaseFactory.LOG.debug("DataBase found: '{}'", clazzName);
                     break;
                 }
-            } catch (final ClassNotFoundException e) {
-                DataBaseFactory.LOG.error("Error on instanciating of {} {}", clazzName, e);
-            } catch (final InstantiationException e) {
-                DataBaseFactory.LOG.error("Error on instanciating of {} {}", clazzName, e);
-            } catch (final IllegalAccessException e) {
-                DataBaseFactory.LOG.error("Error on instanciating of {} {}", clazzName, e);
-            } catch (final SQLException e) {
-                DataBaseFactory.LOG.warn("Catched Error from DataBase {}, trying next.", clazzName, e);
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException | SQLException e) {
+                LOG.error("Catched error", e);
             }
         }
         return ret;

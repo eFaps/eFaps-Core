@@ -17,6 +17,7 @@
 
 package org.efaps.admin.ui.field;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,10 +49,12 @@ import org.slf4j.LoggerFactory;
 public class Field
     extends AbstractUserInterfaceObject
 {
+
     /**
      * Used to define the different display modes for the Userinterface.
      */
-    public enum Display {
+    public enum Display
+    {
         /** the displayed Field is editabel. */
         EDITABLE,
         /** the displayed Field is read only.. */
@@ -195,8 +198,7 @@ public class Field
     /**
      * Map stores the target mode to display relations for this field.
      */
-    private final Map<AbstractUserInterfaceObject.TargetMode, Field.Display> mode2display =
-        new HashMap<>();
+    private final Map<AbstractUserInterfaceObject.TargetMode, Field.Display> mode2display = new HashMap<>();
 
     /**
      * Stores the select that returns the value for this field.
@@ -224,8 +226,8 @@ public class Field
     private String align = "left";
 
     /**
-     * UUID of the parent collection. It is used to have a lazy low cost
-     * access to the collection this FIeld belongs to.
+     * UUID of the parent collection. It is used to have a lazy low cost access
+     * to the collection this FIeld belongs to.
      */
     private UUID collectionUUID;
 
@@ -256,8 +258,8 @@ public class Field
 
     /**
      * Test, if the value of instance variable
-     * {@link org.efaps.admin.ui.AbstractCommand.target} is
-     * equal to {@link org.efaps.admin.ui.AbstractCommand.TARGET_CONTENT}.
+     * {@link org.efaps.admin.ui.AbstractCommand.target} is equal to
+     * {@link org.efaps.admin.ui.AbstractCommand.TARGET_CONTENT}.
      *
      * @return <i>true</i> if value is equal, otherwise false
      * @see #target
@@ -270,8 +272,8 @@ public class Field
 
     /**
      * Test, if the value of instance variable
-     * {@link org.efaps.admin.ui.AbstractCommand.target} is
-     * equal to {@link org.efaps.admin.ui.AbstractCommand.TARGET_POPUP}.
+     * {@link org.efaps.admin.ui.AbstractCommand.target} is equal to
+     * {@link org.efaps.admin.ui.AbstractCommand.TARGET_POPUP}.
      *
      * @return <i>true</i> if value is equal, otherwise false
      * @see #target
@@ -284,8 +286,8 @@ public class Field
 
     /**
      * Test, if the value of instance variable
-     * {@link org.efaps.admin.ui.AbstractCommand.target} is
-     * equal to {@link org.efaps.admin.ui.AbstractCommand.TARGET_HIDDEN}.
+     * {@link org.efaps.admin.ui.AbstractCommand.target} is equal to
+     * {@link org.efaps.admin.ui.AbstractCommand.TARGET_HIDDEN}.
      *
      * @return <i>true</i> if value is equal, otherwise false
      * @see #target
@@ -460,7 +462,8 @@ public class Field
     }
 
     /**
-     * This is the getter method for the instance variable {@link #showNumbering}.
+     * This is the getter method for the instance variable
+     * {@link #showNumbering}.
      *
      * @return value of instance variable {@link #showNumbering}
      */
@@ -564,7 +567,6 @@ public class Field
     {
         this.collectionUUID = _collectionOID;
     }
-
 
     /**
      * Getter method for instance variable {@link #selectAlternateOID}.
@@ -736,7 +738,7 @@ public class Field
                 multi.executeWithoutAccessCheck();
 
                 if (multi.next()) {
-                    final Long colId = multi.<Long> getAttribute(CIAdminUserInterface.Field.Collection);
+                    final Long colId = multi.<Long>getAttribute(CIAdminUserInterface.Field.Collection);
                     col = Form.get(colId);
                     if (col == null) {
                         col = Table.get(colId);
@@ -800,14 +802,11 @@ public class Field
             this.align = _value;
         } else if ("UIProvider".equals(_name) || "ClassNameUI".equals(_name)) {
             try {
-                this.uiProvider  = (IUIProvider) Class.forName(_value).newInstance();
-            } catch (final ClassNotFoundException e) {
-                throw new CacheReloadException("could not found class '" + _value + "' for '" + getName() + "'", e);
-            } catch (final InstantiationException e) {
-                throw new CacheReloadException("could not instantiate class '" + _value + "' for '" + getName() + "'",
-                                e);
-            } catch (final IllegalAccessException e) {
-                throw new CacheReloadException("could not access class '" + _value + "' for '" + getName() + "'", e);
+                this.uiProvider = (IUIProvider) Class.forName(_value).getConstructor().newInstance();
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
+                LOG.error("Catched error", e);
             }
         } else if ("Columns".equals(_name)) {
             this.cols = Integer.parseInt(_value);

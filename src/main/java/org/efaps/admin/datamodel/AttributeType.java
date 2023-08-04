@@ -17,6 +17,7 @@
 
 package org.efaps.admin.datamodel;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,11 +42,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * @author The eFaps Team
  *
- *          TODO: description
+ *         TODO: description
  */
 public class AttributeType
     extends AbstractDataModelObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -156,26 +158,20 @@ public class AttributeType
         super(_id, _uuid, _name);
 
         try {
-            this.dbAttrType = (IAttributeType) Class.forName(_dbAttrTypeName).newInstance();
-        } catch (final ClassNotFoundException e) {
+            this.dbAttrType = (IAttributeType) Class.forName(_dbAttrTypeName).getConstructor().newInstance();
+        } catch (final InstantiationException | IllegalAccessException
+                        | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException | ClassNotFoundException e) {
             throw new EFapsException(getClass(), "setUIClass.ClassNotFoundException", e, _uiAttrTypeName);
-        } catch (final InstantiationException e) {
-            throw new EFapsException(getClass(), "newInstance.InstantiationException", e);
-        } catch (final IllegalAccessException e) {
-            throw new EFapsException(getClass(), "newInstance.IllegalAccessException", e);
         }
 
         try {
-            this.uiAttrType = (IUIProvider) Class.forName(_uiAttrTypeName).newInstance();
-            this.uiProvider = (IUIProvider) Class.forName(_uiAttrTypeName).newInstance();
-        } catch (final ClassNotFoundException e) {
+            this.uiAttrType = (IUIProvider) Class.forName(_uiAttrTypeName).getConstructor().newInstance();
+            this.uiProvider = (IUIProvider) Class.forName(_uiAttrTypeName).getConstructor().newInstance();
+        } catch (final InstantiationException | IllegalAccessException
+                        | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                        | SecurityException | ClassNotFoundException e) {
             throw new EFapsException(getClass(), "setUIClass.ClassNotFoundException", e, _uiAttrTypeName);
-        } catch (final InstantiationException e) {
-            throw new EFapsException(getClass(), "setUIClass.InstantiationException", e, _uiAttrTypeName);
-        } catch (final IllegalAccessException e) {
-            throw new EFapsException(getClass(), "setUIClass.IllegalAccessException", e, _uiAttrTypeName);
-        } catch (final ClassCastException e) {
-            throw new EFapsException(getClass(), "setUIClass.ClassCastException", e, _uiAttrTypeName);
         }
     }
 
@@ -266,7 +262,7 @@ public class AttributeType
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
@@ -353,7 +349,7 @@ public class AttributeType
     }
 
     /**
-     * @param _sql      SQL Statement to be executed
+     * @param _sql SQL Statement to be executed
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error

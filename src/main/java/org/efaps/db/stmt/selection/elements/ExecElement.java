@@ -17,6 +17,7 @@
 
 package org.efaps.db.stmt.selection.elements;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class ExecElement
     extends InstanceElement
     implements IProxy
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -85,7 +87,8 @@ public class ExecElement
      * @param _className the class name
      * @return the exec element
      */
-    public ExecElement setEsjp(final String _className) {
+    public ExecElement setEsjp(final String _className)
+    {
         this.className = _className;
         return this;
     }
@@ -96,7 +99,8 @@ public class ExecElement
      * @param _parameters the parameters
      * @return the exec element
      */
-    public ExecElement setParameters(final String[] _parameters) {
+    public ExecElement setParameters(final String[] _parameters)
+    {
         this.parameters = _parameters;
         return this;
     }
@@ -108,13 +112,15 @@ public class ExecElement
         if (this.esjp == null) {
             try {
                 final Class<?> clazz = Class.forName(this.className, false, EFapsClassLoader.getInstance());
-                this.esjp = (IEsjpSelect) clazz.newInstance();
+                this.esjp = (IEsjpSelect) clazz.getConstructor().newInstance();
                 if (ArrayUtils.isEmpty(this.parameters)) {
                     this.esjp.initialize(this.instances);
                 } else {
                     this.esjp.initialize(this.instances, this.parameters);
                 }
-            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            } catch (final ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException e) {
                 LOG.error("Catched error", e);
             }
         }

@@ -18,6 +18,7 @@
 package org.efaps.db.print.value;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.attributetype.AbstractWithUoMType;
@@ -60,6 +61,7 @@ public class ValueValueSelect
      * @return value
      * @throws EFapsException on error
      */
+    @Override
     public Object get(final Attribute _attribute,
                       final Object _object)
         throws EFapsException
@@ -86,9 +88,7 @@ public class ValueValueSelect
         throws EFapsException
     {
         Object ret = null;
-        if (_object instanceof Object[]) {
-            final Object[] values = (Object[]) _object;
-
+        if (_object instanceof final Object[] values) {
             BigDecimal numerator;
             if (values[0] instanceof BigDecimal) {
                 numerator = (BigDecimal) values[0];
@@ -113,7 +113,7 @@ public class ValueValueSelect
             }
             ret = numerator.divide(denominator,
                                 numerator.scale() > denominator.scale() ? numerator.scale() : denominator.scale(),
-                                BigDecimal.ROUND_UP);
+                                RoundingMode.HALF_UP);
         }
         return ret;
     }
@@ -125,8 +125,7 @@ public class ValueValueSelect
     protected Object getValueUOM(final Object _object)
     {
         Object ret = null;
-        if (_object instanceof Object[]) {
-            final Object[] values = (Object[]) _object;
+        if (_object instanceof final Object[] values) {
             ret = values[0];
         }
         return ret;

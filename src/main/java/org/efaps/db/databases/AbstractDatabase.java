@@ -17,6 +17,7 @@
 
 package org.efaps.db.databases;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -1125,11 +1126,16 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @throws ClassNotFoundException if class for the DB is not found
      * @throws InstantiationException if DB class could not be instantiated
      * @throws IllegalAccessException if DB class could not be accessed
+     * @throws SecurityException
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
      */
     public static AbstractDatabase<?> findByClassName(final String _dbClassName)
-        throws ClassNotFoundException, InstantiationException, IllegalAccessException
+        throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
+        InvocationTargetException, NoSuchMethodException, SecurityException
     {
-        return (AbstractDatabase<?>) Class.forName(_dbClassName).newInstance();
+        return (AbstractDatabase<?>) Class.forName(_dbClassName).getConstructor().newInstance();
     }
 
     /**
