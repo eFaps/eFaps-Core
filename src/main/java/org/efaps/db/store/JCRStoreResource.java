@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2016 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionException;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
@@ -55,18 +53,23 @@ import org.efaps.db.Instance;
 import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.inject.Inject;
+
 /**
- * Store Resource that uses the Content Repository for Java Technology API (JCR).
+ * Store Resource that uses the Content Repository for Java Technology API
+ * (JCR).
  *
  * @author The eFaps Team
  */
 public class JCRStoreResource
     extends AbstractStoreResource
 {
+
     /**
      * Name of the table the content is stored in.
      */
@@ -80,38 +83,41 @@ public class JCRStoreResource
     /**
      * Logging instance used in this class.
      */
-    private static final Logger LOG  = LoggerFactory.getLogger(JCRStoreResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JCRStoreResource.class);
 
     /**
-     * Property Name to define if the type if is used to define a sub
-     * directory.
+     * Property Name to define if the type if is used to define a sub directory.
      */
     private static final String PROPERTY_WORKSPACENAME = "JCRWorkSpaceName";
 
     /**
-     * Property Name to define if the file will be deleted on deletion of the related object.
+     * Property Name to define if the file will be deleted on deletion of the
+     * related object.
      */
     private static final String PROPERTY_BASEFOLDER = "JCRBaseFolder";
 
     /**
-     * Property Name to define if the file will be deleted on deletion of the related object.
+     * Property Name to define if the file will be deleted on deletion of the
+     * related object.
      */
     private static final String PROPERTY_ENABLEDELETION = "JCREnableDeletion";
 
     /**
-     * Property Name to define if the file will be deleted on deletion of the related object.
+     * Property Name to define if the file will be deleted on deletion of the
+     * related object.
      */
     private static final String PROPERTY_USERNAME = "JCRUserName";
 
     /**
-     * Property Name to define if the file will be deleted on deletion of the related object.
+     * Property Name to define if the file will be deleted on deletion of the
+     * related object.
      */
     private static final String PROPERTY_PASSWORD = "JCRPassword";
-
 
     /**
      * The repository for this JCR Store Resource.
      */
+    @Inject
     private Repository repository;
 
     /**
@@ -133,17 +139,8 @@ public class JCRStoreResource
         throws EFapsException
     {
         super.initialize(_instance, _store);
-        try {
-            final InitialContext ctx = new InitialContext();
-            repository = (Repository) ctx.lookup(getStore().getProperty(Store.PROPERTY_JNDINAME));
-            if (JCRStoreResource.LOG.isDebugEnabled()) {
-                final String name = repository.getDescriptor(Repository.REP_NAME_DESC);
-                JCRStoreResource.LOG.debug("Successfully retrieved '{}' repository from JNDI", new Object[]{ name });
-            }
-
-        } catch (final NamingException e) {
-            throw new EFapsException(JCRStoreResource.class, "initialize.NamingException", e);
-        }
+        final var factory = ServiceLocatorFactory.getInstance();
+        factory.create("eFaps-Core").inject(this);
     }
 
     /**
@@ -185,7 +182,7 @@ public class JCRStoreResource
     protected int add2Select(final SQLSelect _select)
     {
         _select.column(2, "ID").column(2, JCRStoreResource.COLNAME_IDENTIFIER)
-            .leftJoin(JCRStoreResource.TABLENAME_STORE, 2, "ID", 0, "ID");
+                        .leftJoin(JCRStoreResource.TABLENAME_STORE, 2, "ID", 0, "ID");
         return 1;
     }
 
@@ -249,14 +246,14 @@ public class JCRStoreResource
             resNode.setProperty(Property.JCR_LAST_MODIFIED, Calendar.getInstance());
             resNode.setProperty(Property.JCR_LAST_MODIFIED_BY, Context.getThreadContext().getPerson().getName());
             // if size is unkown!
-            if (size < 0)  {
+            if (size < 0) {
                 final byte[] buffer = new byte[1024];
                 int length = 1;
                 size = 0;
                 final OutputStream out = new ByteArrayOutputStream();
-                while (length > 0)  {
+                while (length > 0) {
                     length = _in.read(buffer);
-                    if (length > 0)  {
+                    if (length > 0) {
                         out.write(buffer, 0, length);
                         size += length;
                     }
@@ -317,10 +314,10 @@ public class JCRStoreResource
         return ret;
     }
 
-
     /**
      * Set the identifier in the eFaps DataBase.
-     * @param _identifier   identifer to set
+     *
+     * @param _identifier identifer to set
      * @throws EFapsException on error
      */
     protected void setIdentifer(final String _identifier)
@@ -355,6 +352,7 @@ public class JCRStoreResource
 
     /**
      * A JCR Store resource does not use compression from eFaps Side.
+     *
      * @return Compress.NONE
      */
     @Override
@@ -410,13 +408,12 @@ public class JCRStoreResource
      * The method is called from the transaction manager if the complete
      * transaction is completed.<br/>
      *
-     * @param _xid      global transaction identifier (not used, because each
-     *                  file with the file id gets a new VFS store resource
-     *                  instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @param _onePhase <i>true</i> if it is a one phase commitment transaction
-     *                  (not used)
+     *            (not used)
      * @throws XAException if any exception occurs (catch on
-     *         {@link java.lang.Throwable})
+     *             {@link java.lang.Throwable})
      */
     @Override
     public void commit(final Xid _xid,
@@ -455,8 +452,8 @@ public class JCRStoreResource
      * Tells the resource manager to forget about a heuristically completed
      * transaction branch.
      *
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      */
     @Override
     public void forget(final Xid _xid)
@@ -491,7 +488,7 @@ public class JCRStoreResource
     @Override
     public int prepare(final Xid _xid)
     {
-        if (JCRStoreResource.LOG.isDebugEnabled())  {
+        if (JCRStoreResource.LOG.isDebugEnabled()) {
             JCRStoreResource.LOG.debug("prepare (xid=" + _xid + ")");
         }
         return 0;
@@ -515,11 +512,10 @@ public class JCRStoreResource
     /**
      * On rollback no save is send to the session..
      *
-     * @param _xid      global transaction identifier (not used, because each
-     *                  file with the file id gets a new VFS store resource
-     *                  instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @throws XAException if any exception occurs (catch on
-     *         {@link java.lang.Throwable})
+     *             {@link java.lang.Throwable})
      */
     @Override
     public void rollback(final Xid _xid)
@@ -555,10 +551,10 @@ public class JCRStoreResource
     {
 
         /**
-         * @param _store    Strore this InputStream belongs to
-         * @param _bin      Binary
+         * @param _store Strore this InputStream belongs to
+         * @param _bin Binary
          * @throws IOException on error
-         * @throws RepositoryException  on error
+         * @throws RepositoryException on error
          */
         protected JCRStoreResourceInputStream(final AbstractStoreResource _store,
                                               final Binary _bin)
