@@ -220,5 +220,7 @@ public interface KernelSettings
      */
     String INDEXDEFAULTOP = "org.efaps.kernel.index.DefaultOperator4Search";
 
+    String CLASSPATHS = "deprecated";
+
 }
 
