@@ -44,6 +44,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.ci.CIAdminProgram;
@@ -546,13 +547,20 @@ public class ESJPCompiler
                 final byte[] bytes = new byte[is.available()];
                 is.read(bytes);
                 is.close();
-                ret.append(new String(bytes, "UTF-8"));
+                final var orginalStr = new String(bytes, "UTF-8");
+                if (orginalStr.contains("javax.ws")) {
+                    final var replacementStr = StringUtils.replace(orginalStr, "javax.ws", "jakarta.ws");
+                    ESJPCompiler.LOG.info("content original '{}'", orginalStr);
+                    ESJPCompiler.LOG.info("content replacement '{}'", replacementStr);
+                    ret.append(replacementStr);
+                } else {
+                    ret.append(orginalStr);
+                }
             } catch (final EFapsException e) {
                 throw new IOException("could not checkout class '" + this.javaName + "'", e);
             }
             return ret;
         }
-
         /**
          * Getter method for the instance variable {@link #javaName}.
          *
