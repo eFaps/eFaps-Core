@@ -69,6 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ESJPCompiler
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -89,11 +90,11 @@ public class ESJPCompiler
      *
      * @see #readESJPPrograms()
      */
-    private final Map<String, SourceObject> name2Source  = new HashMap<>();
+    private final Map<String, SourceObject> name2Source = new HashMap<>();
 
     /**
-     * Mapping between already existing compiled ESJP class name and the
-     * related eFaps id in the database.
+     * Mapping between already existing compiled ESJP class name and the related
+     * eFaps id in the database.
      *
      * @see #readESJPClasses()
      */
@@ -105,8 +106,7 @@ public class ESJPCompiler
      *
      * @see StoreObject
      */
-    private final Map<String, ESJPCompiler.StoreObject> classFiles
-        = new HashMap<>();
+    private final Map<String, ESJPCompiler.StoreObject> classFiles = new HashMap<>();
 
     /**
      * Stores the list of class path needed to compile (if needed).
@@ -117,7 +117,7 @@ public class ESJPCompiler
      * The constructor initialize the two type instances {@link #esjpType} and
      * {@link #classType}.
      *
-     * @param _classPathElements  list of class path elements
+     * @param _classPathElements list of class path elements
      * @see #esjpType
      * @see #classType
      */
@@ -128,31 +128,32 @@ public class ESJPCompiler
         this.classPathElements = _classPathElements;
     }
 
-  /**
-   * All stored ESJP programs in eFaps are compiled. The system Java compiler
-   * defined from the {@link ToolProvider tool provider} is used for the
-   * compiler. All old not needed compiled Java classes are automatically
-   * removed. The compiler error and warning are logged (errors are using
-   * error-level, warnings are using info-level).<br>
-   * Debug:<br>
-   * <ul>
-   * <li><code>null</code>: By default, only line number and source file information is generated.</li>
-   * <li><code>"none"</code>: Do not generate any debugging information</li>
-   * <li>Generate only some kinds of debugging information, specified by a comma separated
-   * list of keywords. Valid keywords are:
-   * <ul>
-   * <li><code>"source"</code>: Source file debugging information</li>
-   * <li><code>"lines"</code>: Line number debugging information</li>
-   * <li><code>"vars"</code>: Local variable debugging information</li>
-   * </ul>
-   * </li>
-   * </ul>
-   *
-   * @param _debug                  String for the debug option
-   * @param _addRuntimeClassPath    Must the classpath from the runtime added
-   *                                to the compiler, default: <code>false</code>
-   * @throws InstallationException if the compile failed
-   */
+    /**
+     * All stored ESJP programs in eFaps are compiled. The system Java compiler
+     * defined from the {@link ToolProvider tool provider} is used for the
+     * compiler. All old not needed compiled Java classes are automatically
+     * removed. The compiler error and warning are logged (errors are using
+     * error-level, warnings are using info-level).<br>
+     * Debug:<br>
+     * <ul>
+     * <li><code>null</code>: By default, only line number and source file
+     * information is generated.</li>
+     * <li><code>"none"</code>: Do not generate any debugging information</li>
+     * <li>Generate only some kinds of debugging information, specified by a
+     * comma separated list of keywords. Valid keywords are:
+     * <ul>
+     * <li><code>"source"</code>: Source file debugging information</li>
+     * <li><code>"lines"</code>: Line number debugging information</li>
+     * <li><code>"vars"</code>: Local variable debugging information</li>
+     * </ul>
+     * </li>
+     * </ul>
+     *
+     * @param _debug String for the debug option
+     * @param _addRuntimeClassPath Must the classpath from the runtime added to
+     *            the compiler, default: <code>false</code>
+     * @throws InstallationException if the compile failed
+     */
     public void compile(final String _debug,
                         final boolean _addRuntimeClassPath)
         throws InstallationException
@@ -162,9 +163,9 @@ public class ESJPCompiler
 
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
-        if (compiler == null)  {
+        if (compiler == null) {
             ESJPCompiler.LOG.error("no compiler found for compiler !");
-        } else  {
+        } else {
             // output of used compiler
             ESJPCompiler.LOG.info("    Using compiler {}", compiler.getClass().getName());
 
@@ -175,24 +176,25 @@ public class ESJPCompiler
             // (the list of programs to compile is given to the javac as
             // argument array, so the class path could be set in front of the
             // programs to compile)
-            if (this.classPathElements != null)  {
+            if (this.classPathElements != null) {
                 // different class path separators depending on the OS
                 final String sep = SystemUtils.IS_OS_WINDOWS ? ";" : ":";
 
                 final StringBuilder classPath = new StringBuilder();
-                for (final String classPathElement : this.classPathElements)  {
+                for (final String classPathElement : this.classPathElements) {
                     classPath.append(classPathElement).append(sep);
                 }
                 if (_addRuntimeClassPath) {
                     classPath.append(System.getProperty("java.class.path"));
                 }
                 optionList.addAll(Arrays.asList("-classpath", classPath.toString()));
-            } else  {
+            } else {
                 // set compiler's class path to be same as the runtime's
                 optionList.addAll(Arrays.asList("-classpath", System.getProperty("java.class.path")));
             }
-            //Set the source file encoding name, such as EUCJIS/SJIS. If -encoding is not specified,
-            //the platform default converter is used.
+            // Set the source file encoding name, such as EUCJIS/SJIS. If
+            // -encoding is not specified,
+            // the platform default converter is used.
             optionList.addAll(Arrays.asList("-encoding", "UTF-8"));
 
             if (_debug != null) {
@@ -210,19 +212,19 @@ public class ESJPCompiler
 
             final FileManager fm = new FileManager(compiler.getStandardFileManager(null, null, null));
             final boolean noErrors = compiler.getTask(new ErrorWriter(),
-                                                      fm,
-                                                      null,
-                                                      optionList,
-                                                      null,
-                                                      this.name2Source.values())
-                                             .call();
+                            fm,
+                            null,
+                            optionList,
+                            null,
+                            this.name2Source.values())
+                            .call();
 
-            if (!noErrors)  {
+            if (!noErrors) {
                 throw new InstallationException("error");
             }
 
             // store all compiled ESJP's
-            for (final ESJPCompiler.StoreObject obj : this.classFiles.values())  {
+            for (final ESJPCompiler.StoreObject obj : this.classFiles.values()) {
                 obj.write();
             }
 
@@ -230,7 +232,7 @@ public class ESJPCompiler
             for (final Long id : this.class2id.values()) {
                 try {
                     new Delete(this.classType, id).executeWithoutAccessCheck();
-                } catch (final EFapsException e)  {
+                } catch (final EFapsException e) {
                     throw new InstallationException("Could not delete ESJP class with id " + id, e);
                 }
             }
@@ -247,7 +249,7 @@ public class ESJPCompiler
     protected void readESJPPrograms()
         throws InstallationException
     {
-        try  {
+        try {
             final QueryBuilder queryBldr = new QueryBuilder(this.esjpType);
             final MultiPrintQuery multi = queryBldr.getPrint();
             multi.addAttribute("Name");
@@ -256,7 +258,7 @@ public class ESJPCompiler
                 final String name = multi.<String>getAttribute("Name");
                 final Long id = multi.getCurrentInstance().getId();
                 final String path = "/" + name.replace(".", "/")
-                      + JavaFileObject.Kind.SOURCE.extension;
+                                + JavaFileObject.Kind.SOURCE.extension;
                 final URI uri;
                 try {
                     uri = new URI("efaps", null, path, null, null);
@@ -272,10 +274,10 @@ public class ESJPCompiler
 
     /**
      * All stored compiled ESJP's classes in the eFaps database are stored in
-     * the mapping {@link #class2id}. If a ESJP's program is compiled and
-     * stored with {@link ESJPCompiler.StoreObject#write()}, the class is
-     * removed. After the compile, {@link ESJPCompiler#compile(String)} removes
-     * all stored classes which are not needed anymore.
+     * the mapping {@link #class2id}. If a ESJP's program is compiled and stored
+     * with {@link ESJPCompiler.StoreObject#write()}, the class is removed.
+     * After the compile, {@link ESJPCompiler#compile(String)} removes all
+     * stored classes which are not needed anymore.
      *
      * @throws InstallationException if read of the ESJP classes failed
      * @see #class2id
@@ -283,7 +285,7 @@ public class ESJPCompiler
     protected void readESJPClasses()
         throws InstallationException
     {
-        try  {
+        try {
             final QueryBuilder queryBldr = new QueryBuilder(this.classType);
             final MultiPrintQuery multi = queryBldr.getPrint();
             multi.addAttribute("Name");
@@ -299,12 +301,13 @@ public class ESJPCompiler
     }
 
     /**
-     * Error writer to show all errors to the
-     * {@link ESJPCompiler#LOG compiler logger}.
+     * Error writer to show all errors to the {@link ESJPCompiler#LOG compiler
+     * logger}.
      */
     private static final class ErrorWriter
         extends Writer
     {
+
         /**
          * Stub method because only required to derive from {@link Writer}.
          */
@@ -324,9 +327,9 @@ public class ESJPCompiler
         /**
          * Writes given message to the error log of the compiler.
          *
-         * @param _cbuf     buffer with the message
-         * @param _off      offset within the buffer
-         * @param _len      len of the message within the buffer
+         * @param _cbuf buffer with the message
+         * @param _off offset within the buffer
+         * @param _len len of the message within the buffer
          */
         @Override
         public void write(final char[] _cbuf,
@@ -334,8 +337,8 @@ public class ESJPCompiler
                           final int _len)
         {
             final String msg = new StringBuilder().append(_cbuf, _off, _len).toString().trim();
-            if (!"".equals(msg))  {
-                for (final String line : msg.split("\n"))  {
+            if (!"".equals(msg)) {
+                for (final String line : msg.split("\n")) {
                     ESJPCompiler.LOG.error(line);
                 }
             }
@@ -349,10 +352,11 @@ public class ESJPCompiler
     private final class FileManager
         extends ForwardingJavaFileManager<StandardJavaFileManager>
     {
+
         /**
          * Defined the forwarding Java file manager.
          *
-         * @param _sfm      original Java file manager to forward
+         * @param _sfm original Java file manager to forward
          */
         FileManager(final StandardJavaFileManager _sfm)
         {
@@ -360,13 +364,13 @@ public class ESJPCompiler
         }
 
         /**
-         * The method returns always <code>null</code> to be sure the no file
-         * is written.
+         * The method returns always <code>null</code> to be sure the no file is
+         * written.
          *
-         * @param _location     location for which the file output is searched
-         * @param _packageName  name of the package
+         * @param _location location for which the file output is searched
+         * @param _packageName name of the package
          * @param _relativeName relative name
-         * @param _fileObject   file object to be used as hint for placement
+         * @param _fileObject file object to be used as hint for placement
          * @return always <code>null</code>
          */
         @Override
@@ -382,10 +386,10 @@ public class ESJPCompiler
          * Returns the related Java file object used from the Java compiler to
          * store the compiled ESJP.
          *
-         * @param _location     location (not used)
-         * @param _className    name of the ESJP class
-         * @param _kind         kind of the source (not used)
-         * @param _fileObject   file object to update (used to get the URI)
+         * @param _location location (not used)
+         * @param _className name of the ESJP class
+         * @param _kind kind of the source (not used)
+         * @param _fileObject file object to update (used to get the URI)
          * @return Java file object for ESJP used to store the compiled class
          * @see ESJPCompiler
          */
@@ -404,9 +408,9 @@ public class ESJPCompiler
          * Checks if given <code>_location</code> is handled by this Java file
          * manager.
          *
-         * @param _location     location to prove
-         * @return <i>true</i> if the <code>_location</code> is the source path or
-         *         the forwarding standard Java file manager handles the
+         * @param _location location to prove
+         * @return <i>true</i> if the <code>_location</code> is the source path
+         *         or the forwarding standard Java file manager handles the
          *         <code>_location</code>; otherwise <i>false</i>
          */
         @Override
@@ -421,12 +425,11 @@ public class ESJPCompiler
          * the <code>_javaFileObject</code> and the extension for
          * {@link JavaFileObject.Kind#CLASS Java classes}. If the
          * <code>_location</code> is not the source path, the binary name from
-         * the forwarded
-         * {@link StandardJavaFileManager standard Java file manager} is
-         * returned.
+         * the forwarded {@link StandardJavaFileManager standard Java file
+         * manager} is returned.
          *
-         * @param _location         location
-         * @param _javaFileObject   java file object
+         * @param _location location
+         * @param _javaFileObject java file object
          * @return name of the binary object for the ESJP or from forwarded
          *         {@link StandardJavaFileManager standard Java file manager}
          */
@@ -435,35 +438,38 @@ public class ESJPCompiler
                                       final JavaFileObject _javaFileObject)
         {
             final String ret;
-            if (StandardLocation.SOURCE_PATH.getName().equals(_location.getName()))  {
+            if (StandardLocation.SOURCE_PATH.getName().equals(_location.getName())) {
                 ret = new StringBuilder()
-                        .append(_javaFileObject.getName())
-                        .append(JavaFileObject.Kind.CLASS.extension)
-                        .toString();
-            } else  {
+                                .append(_javaFileObject.getName())
+                                .append(JavaFileObject.Kind.CLASS.extension)
+                                .toString();
+            } else {
                 ret = super.inferBinaryName(_location, _javaFileObject);
             }
             return ret;
         }
 
         /**
-         * <p>If the <code>_location</code> is the source path and the
+         * <p>
+         * If the <code>_location</code> is the source path and the
          * <code>_kinds</code> includes sources an investigation in the cached
-         * {@link ESJPCompiler#name2Source ESJP programs} is done and the list of
-         * ESJP's for given <code>_packageName</code> is returned.</p>
-         * <p>In all other case the list of found Java programs from the
-         * forwarded {@link StandardJavaFileManager standard Java file manager}
-         * is returned.</p>
+         * {@link ESJPCompiler#name2Source ESJP programs} is done and the list
+         * of ESJP's for given <code>_packageName</code> is returned.
+         * </p>
+         * <p>
+         * In all other case the list of found Java programs from the forwarded
+         * {@link StandardJavaFileManager standard Java file manager} is
+         * returned.
+         * </p>
          *
-         * @param _location     location which must be investigated
-         * @param _packageName  name of searched package
-         * @param _kinds        kinds of file object
-         * @param _recurse      must be searched recursive including sub
-         *                      packages (ignored, because not used)
+         * @param _location location which must be investigated
+         * @param _packageName name of searched package
+         * @param _kinds kinds of file object
+         * @param _recurse must be searched recursive including sub packages
+         *            (ignored, because not used)
          * @return list of found ESJP programs for given
-         *         <code>_packageName</code> or if not from source path the
-         *         list of Java classes from forwarded standard Java file
-         *         manager
+         *         <code>_packageName</code> or if not from source path the list
+         *         of Java classes from forwarded standard Java file manager
          * @throws IOException from forwarded standard Java file manager
          */
         @Override
@@ -475,20 +481,20 @@ public class ESJPCompiler
         {
             final Iterable<JavaFileObject> rt;
             if (StandardLocation.SOURCE_PATH.getName().equals(_location.getName())
-                    && _kinds.contains(JavaFileObject.Kind.SOURCE))  {
+                            && _kinds.contains(JavaFileObject.Kind.SOURCE)) {
                 final List<JavaFileObject> pckObjs = new ArrayList<>();
                 final int pckLength = _packageName.length();
-                for (final Map.Entry<String, ESJPCompiler.SourceObject> entry
-                        : ESJPCompiler.this.name2Source.entrySet())  {
+                for (final Map.Entry<String, ESJPCompiler.SourceObject> entry : ESJPCompiler.this.name2Source
+                                .entrySet()) {
 
                     if (entry.getKey().startsWith(_packageName)
-                            && entry.getKey().substring(pckLength + 1).indexOf('.') < 0)  {
+                                    && entry.getKey().substring(pckLength + 1).indexOf('.') < 0) {
 
                         pckObjs.add(entry.getValue());
                     }
                 }
                 rt = pckObjs;
-            } else  {
+            } else {
                 rt = super.list(_location, _packageName, _kinds, _recurse);
             }
             return rt;
@@ -502,6 +508,7 @@ public class ESJPCompiler
     private final class SourceObject
         extends SimpleJavaFileObject
     {
+
         /**
          * Name of the ESJP program.
          */
@@ -515,9 +522,9 @@ public class ESJPCompiler
         /**
          * Initializes the source object.
          *
-         * @param _uri          URI of the ESJP
-         * @param _javaName     Java name of the ESJP
-         * @param _id           id used from eFaps within database
+         * @param _uri URI of the ESJP
+         * @param _javaName Java name of the ESJP
+         * @param _id id used from eFaps within database
          */
         private SourceObject(final URI _uri,
                              final String _javaName,
@@ -531,10 +538,10 @@ public class ESJPCompiler
         /**
          * Returns the char sequence of the ESJP source code.
          *
-         * @param _ignoreEncodingErrors     ignore encoding error (not used)
+         * @param _ignoreEncodingErrors ignore encoding error (not used)
          * @return source code from the ESJP
          * @throws IOException if source could not be read from the eFaps
-         *                     database
+         *             database
          */
         @Override
         public CharSequence getCharContent(final boolean _ignoreEncodingErrors)
@@ -548,8 +555,10 @@ public class ESJPCompiler
                 is.read(bytes);
                 is.close();
                 final var orginalStr = new String(bytes, "UTF-8");
-                if (orginalStr.contains("javax.ws")) {
-                    final var replacementStr = StringUtils.replace(orginalStr, "javax.ws", "jakarta.ws");
+                if (orginalStr.contains("javax.")) {
+                    final var replacementStr1 = StringUtils.replace(orginalStr, "javax.ws", "jakarta.ws");
+                    final var replacementStr = StringUtils.replace(replacementStr1, "javax.xml.soap",
+                                    "jakarta.xml.soap");
                     ESJPCompiler.LOG.info("content original '{}'", orginalStr);
                     ESJPCompiler.LOG.info("content replacement '{}'", replacementStr);
                     ret.append(replacementStr);
@@ -561,6 +570,7 @@ public class ESJPCompiler
             }
             return ret;
         }
+
         /**
          * Getter method for the instance variable {@link #javaName}.
          *
@@ -578,6 +588,7 @@ public class ESJPCompiler
     private final class StoreObject
         extends SimpleJavaFileObject
     {
+
         /**
          * Name of the class to compile.
          */
@@ -593,8 +604,8 @@ public class ESJPCompiler
         /**
          * Initializes this store object.
          *
-         * @param _uri          URI of the class to store
-         * @param _className    name of the class to store
+         * @param _uri URI of the class to store
+         * @param _className name of the class to store
          */
         private StoreObject(final URI _uri,
                             final String _className)
@@ -619,9 +630,9 @@ public class ESJPCompiler
         /**
          * The compiled class in <i>_resourceData</i> is stored with the name
          * <i>_resourceName</i> in the eFaps database (checked in). If the class
-         * instance already exists in eFaps, the class data is updated. Otherwise, the
-         * compiled class is new inserted in eFaps (related to the original Java
-         * program).
+         * instance already exists in eFaps, the class data is updated.
+         * Otherwise, the compiled class is new inserted in eFaps (related to
+         * the original Java program).
          */
         public void write()
         {
@@ -647,11 +658,11 @@ public class ESJPCompiler
 
                 final Checkin checkin = new Checkin(instance);
                 checkin.executeWithoutAccessCheck(this.className,
-                                                  new ByteArrayInputStream(this.out.toByteArray()),
-                                                  this.out.toByteArray().length);
-                //CHECKSTYLE:OFF
+                                new ByteArrayInputStream(this.out.toByteArray()),
+                                this.out.toByteArray().length);
+                // CHECKSTYLE:OFF
             } catch (final Exception e) {
-              //CHECKSTYLE:ON
+                // CHECKSTYLE:ON
                 ESJPCompiler.LOG.error("unable to write to eFaps ESJP class '" + this.className + "'", e);
             }
         }
