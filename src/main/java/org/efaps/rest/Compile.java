@@ -98,7 +98,7 @@ public class Compile
     {
         final List<String> ret = new ArrayList<>();
         final SystemConfiguration config = EFapsSystemConfiguration.get();
-        final String paths = config.getAttributeValue(KernelSettings.CLASSPATHS);
+        final String paths = config.getAttributeValue(KernelSettings.CLASSPATH);
 
         if (paths != null) {
             final File folder = new File(paths);

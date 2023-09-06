@@ -80,20 +80,20 @@ public class CIAdminProgram
         }
     }
 
-    public static final _JavaClass JavaClass = new _JavaClass("9118e1e3-ed4c-425d-8578-8d1f1d385110");
+    public static final _Javaclass Javaclass = new _Javaclass("12c9da04-8085-4d74-a2a8-e211d655e29a");
 
-    public static class _JavaClass
+    public static class _Javaclass
         extends _Compiled
     {
 
-        protected _JavaClass(final String _uuid)
+        protected _Javaclass(final String _uuid)
         {
             super(_uuid);
         }
 
         public final CIAttribute ProgramLink = new CIAttribute(this, "ProgramLink");
-
     }
+
     public static final _CSS CSS = new _CSS("f5a5bcf6-3cc7-4530-a5a0-7808a392381b");
 
     public static class _CSS

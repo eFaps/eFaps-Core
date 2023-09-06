@@ -150,8 +150,8 @@ public class EsjpScanner
             final Set<File> files = new HashSet<>();
             try {
                 // check required during source-install maven target
-                if (CIAdminProgram.JavaClass.getType() != null) {
-                    final QueryBuilder queryBldr = new QueryBuilder(CIAdminProgram.JavaClass);
+                if (CIAdminProgram.Javaclass.getType() != null) {
+                    final QueryBuilder queryBldr = new QueryBuilder(CIAdminProgram.Javaclass);
                     final InstanceQuery query = queryBldr.getQuery();
                     query.executeWithoutAccessCheck();
                     while (query.next()) {

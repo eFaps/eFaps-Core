@@ -179,7 +179,7 @@ public interface KernelSettings
      * compilation of java and Jasperreports. e.g.
      * "/tmp/Jetty_0_0_0_0_8060_efaps.war__efaps__.bo28gn/webapp/WEB-INF/lib/"
      */
-    String CLASSPATHS = "org.efaps.kernel.rest.ClassPaths";
+    String CLASSPATH = "org.efaps.kernel.rest.Classpath";
 
     /**
      * Profiles to be applied on update if not specified explicitly.

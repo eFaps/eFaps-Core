@@ -81,7 +81,7 @@ public final class EFapsClassLoader
     {
         super(_parentClassLoader);
         this.offline = _offline;
-        this.classType = CIAdminProgram.JavaClass;
+        this.classType = CIAdminProgram.Javaclass;
     }
 
     /**
@@ -174,7 +174,7 @@ public final class EFapsClassLoader
             final QueryBuilder queryBuilder = new QueryBuilder(this.classType);
             queryBuilder.addWhereAttrEqValue("Name", _resourceName);
             final InstanceQuery query = queryBuilder.getCachedQuery("esjp");
-            query.execute();
+            query.executeWithoutAccessCheck();
             if (query.next()) {
                 final Checkout checkout = new Checkout(query.getCurrentValue());
                 final InputStream is = checkout.executeWithoutAccessCheck();

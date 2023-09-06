@@ -28,11 +28,11 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -123,7 +123,7 @@ public class ESJPCompiler
     public ESJPCompiler(final List<String> _classPathElements)
     {
         this.esjpType = CIAdminProgram.Java.getType();
-        this.classType = CIAdminProgram.JavaClass.getType();
+        this.classType = CIAdminProgram.Javaclass.getType();
         this.classPathElements = _classPathElements;
     }
 
@@ -201,7 +201,7 @@ public class ESJPCompiler
             // logging of compiling classes
             if (ESJPCompiler.LOG.isInfoEnabled()) {
                 final List<SourceObject> ls = new ArrayList<>(this.name2Source.values());
-                Collections.sort(ls, (_arg0, _arg1) -> _arg0.getJavaName().compareTo(_arg1.getJavaName()));
+                Collections.sort(ls, Comparator.comparing(SourceObject::getJavaName));
                 for (final SourceObject obj : ls) {
                     ESJPCompiler.LOG.info("    Compiling ESJP '{}'", obj.getJavaName());
                 }
@@ -254,7 +254,7 @@ public class ESJPCompiler
             while (multi.next()) {
                 final String name = multi.<String>getAttribute("Name");
                 final Long id = multi.getCurrentInstance().getId();
-                final String path = "/" + name.replaceAll("\\.", Matcher.quoteReplacement("/"))
+                final String path = "/" + name.replace(".", "/")
                       + JavaFileObject.Kind.SOURCE.extension;
                 final URI uri;
                 try {
@@ -301,7 +301,7 @@ public class ESJPCompiler
      * Error writer to show all errors to the
      * {@link ESJPCompiler#LOG compiler logger}.
      */
-    private final class ErrorWriter
+    private static final class ErrorWriter
         extends Writer
     {
         /**
