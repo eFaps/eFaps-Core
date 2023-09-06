@@ -154,13 +154,6 @@
                     <excludes>**/beans/**/*.java</excludes>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.openclover</groupId>
-                <artifactId>clover-maven-plugin</artifactId>
-                <configuration>
-                    <jdk>17</jdk>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <dependencies>
