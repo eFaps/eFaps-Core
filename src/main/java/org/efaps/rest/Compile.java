@@ -25,6 +25,7 @@ import java.util.List;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.admin.common.SystemConfiguration;
+import org.efaps.db.Context;
 import org.efaps.update.schema.program.esjp.ESJPCompiler;
 import org.efaps.update.schema.program.jasperreport.JasperReportCompiler;
 import org.efaps.update.schema.program.staticsource.CSSCompiler;
@@ -80,6 +81,9 @@ public class Compile
                 }
                 success = true;
                 AbstractRest.LOG.info("===Ending Compiler via REST===");
+            } else {
+                AbstractRest.LOG.error("Compile Request from User without necessary accessrights {}",
+                                Context.getThreadContext().getPerson().getName());
             }
         } catch (final InstallationException e) {
             AbstractRest.LOG.error("InstallationException", e);
@@ -105,16 +109,16 @@ public class Compile
             File[] files = null;
             if (folder.isDirectory()) {
                 files = folder.listFiles((FilenameFilter) (_dir,
-                                  _name) -> {
-                                    final boolean ret1;
-                                    if (new File(_dir, _name).isDirectory()) {
-                                        ret1 = false;
-                                    } else {
-                                        final String name = _name.toLowerCase();
-                                        ret1 = name.endsWith(".jar");
-                                    }
-                                    return ret1;
-                                });
+                                                           _name) -> {
+                    final boolean ret1;
+                    if (new File(_dir, _name).isDirectory()) {
+                        ret1 = false;
+                    } else {
+                        final String name = _name.toLowerCase();
+                        ret1 = name.endsWith(".jar");
+                    }
+                    return ret1;
+                });
                 for (final File file : files) {
                     ret.add(file.getAbsolutePath());
                 }
