@@ -55,9 +55,9 @@ public abstract class AbstractRest
     protected boolean hasAccess()
         throws EFapsException
     {
-        //Admin_REST
+        //Administration
         return Context.getThreadContext().getPerson().isAssigned(Role.get(
-                        UUID.fromString("2d142645-140d-46ad-af67-835161a8d732")));
+                        UUID.fromString("1d89358d-165a-4689-8c78-fc625d37aacd")));
     }
 
     /**
