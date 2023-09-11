@@ -340,6 +340,19 @@ public class CIAdminUserInterface
         }
     }
 
+    public static final _Module Module = new _Module("7710c7e4-5e35-4615-8255-2f4c3201c501");
+
+    public static class _Module
+        extends _Collection
+    {
+
+        protected _Module(final String _uuid)
+        {
+            super(_uuid);
+        }
+    }
+
+
     public static final _LinkIsTypeIconFor LinkIsTypeIconFor = new _LinkIsTypeIconFor("74b91e57-e5a3-43df-b0e4-43815ad79fec");
 
     public static class _LinkIsTypeIconFor
