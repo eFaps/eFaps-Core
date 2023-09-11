@@ -265,6 +265,18 @@ public class CIAdminUserInterface
         }
     }
 
+    public static final _LinkTargetModule LinkTargetModule = new _LinkTargetModule("76c0ae4d-c191-4666-83c0-77fafe90c982");
+
+    public static class _LinkTargetModule
+        extends _Link
+    {
+
+        protected _LinkTargetModule(final String _uuid)
+        {
+            super(_uuid);
+        }
+    }
+
     public static final _LinkTargetHelp LinkTargetHelp = new _LinkTargetHelp("28d94899-9998-449d-9bd1-dc4255388cc8");
 
     public static class _LinkTargetHelp
