@@ -539,6 +539,13 @@ public abstract class AbstractUserInterfaceObject
             InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Table.class)).clear();
             InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Table.class))
                             .clear();
+
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Module.class))
+                            .clear();
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Module.class))
+                            .clear();
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Module.class))
+                            .clear();
         } else {
             InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Command.class))
                             .addListener(new CacheLogListener(Command.LOG));
@@ -581,6 +588,13 @@ public abstract class AbstractUserInterfaceObject
                             .addListener(new CacheLogListener(Table.LOG));
             InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Table.class))
                             .addListener(new CacheLogListener(Table.LOG));
+
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Module.class))
+                            .addListener(new CacheLogListener(Module.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Module.class))
+                            .addListener(new CacheLogListener(Module.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Module.class))
+                            .addListener(new CacheLogListener(Module.LOG));
         }
         BundleMaker.initialize();
     }
