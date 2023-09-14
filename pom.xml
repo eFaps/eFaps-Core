@@ -395,6 +395,10 @@
                     <groupId>org.apache.xmlgraphics</groupId>
                     <artifactId>batik-bridge</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish.jaxb</groupId>
+                    <artifactId>jaxb-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
