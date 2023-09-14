@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2018 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class Converter
 {
+
     private static final Logger LOG = LoggerFactory.getLogger(Converter.class);
 
     /**
@@ -43,27 +44,30 @@ public final class Converter
      * @return the string
      * @throws EFapsException
      */
-    public static String convert(final Object _value) throws EFapsException {
+    public static String convert(final Object value)
+        throws EFapsException
+    {
         String ret = null;
-        if (_value instanceof String) {
-            ret = (String) _value;
-        } else if (_value instanceof Instance) {
-            ret = ((Instance) _value).getOid();
-        } else if (_value instanceof Number) {
-            ret = ((Number) _value).toString();
-        } else if (_value instanceof LocalDate) {
-            ret = ((LocalDate) _value).toString();
-        } else if (_value instanceof LocalTime) {
-            ret = ((LocalTime) _value).toString();
-        } else if (_value instanceof OffsetDateTime) {
-            ret = ((OffsetDateTime) _value).toString();
-        } else if (_value instanceof CIStatus) {
-            ret = String.valueOf(Status.find((CIStatus)_value).getId());
-        } else if (_value instanceof IEnum) {
-            ret = String.valueOf(((IEnum)_value).getInt());
+        if (value == null) {
+        } else if (value instanceof String) {
+            ret = (String) value;
+        } else if (value instanceof Instance) {
+            ret = ((Instance) value).getOid();
+        } else if (value instanceof Number) {
+            ret = ((Number) value).toString();
+        } else if (value instanceof LocalDate) {
+            ret = ((LocalDate) value).toString();
+        } else if (value instanceof LocalTime) {
+            ret = ((LocalTime) value).toString();
+        } else if (value instanceof OffsetDateTime) {
+            ret = ((OffsetDateTime) value).toString();
+        } else if (value instanceof CIStatus) {
+            ret = String.valueOf(Status.find((CIStatus) value).getId());
+        } else if (value instanceof IEnum) {
+            ret = String.valueOf(((IEnum) value).getInt());
         } else {
-            LOG.warn("No specific converter defined for: {}", _value);
-            ret = String.valueOf(_value);
+            LOG.warn("No specific converter defined for: {}", value);
+            ret = String.valueOf(value);
         }
         return ret;
     }
