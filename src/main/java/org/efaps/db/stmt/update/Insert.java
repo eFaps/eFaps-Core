@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.access.AccessTypeEnums;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.AttributeType;
+import org.efaps.admin.datamodel.Status;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.datamodel.attributetype.IStatusChangeListener;
 import org.efaps.admin.event.EventDefinition;
@@ -83,6 +84,13 @@ public class Insert
                 if (getType().getStatusAttribute().getName().equals(updateElement.getAttribute())) {
                     if (StringUtils.isNumeric(updateElement.getValue())) {
                         statusId = Long.valueOf(updateElement.getValue());
+                    } else if (updateElement.getValue() != null) {
+                        final var status = Status.find(getType().getStatusAttribute().getLink().getUUID(),
+                                        updateElement.getValue());
+                        if (status != null) {
+                            statusId = status.getId();
+                            updateElement.setValue(String.valueOf(statusId));
+                        }
                     } else {
                         LOG.warn("Cannot convert status value to status ID: {}", updateElement.getValue());
                     }
