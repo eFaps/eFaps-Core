@@ -290,8 +290,6 @@ public interface IDataModel
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
-
-
     Type Admin_Common_Property = Type.builder()
                     .withId(RandomUtils.nextLong())
                     .withName("Admin_Common_Property")
@@ -326,4 +324,17 @@ public interface IDataModel
                     .withSqlTableId(Admin_Common_PropertySQLTable.getId())
                     .withAttributeTypeId(IDataModel.StringType.getId())
                     .build();
+
+    Type Admin_Common_SystemConfigurationAttribute = Type.builder()
+                    .withId(RandomUtils.nextLong())
+                    .withName("Admin_Common_SystemConfigurationAttribute")
+                    .withUuid(CIAdminCommon.SystemConfigurationAttribute.uuid)
+                    .build();
+
+    Type Admin_Common_SystemConfigurationLink = Type.builder()
+                    .withId(RandomUtils.nextLong())
+                    .withName("Admin_Common_SystemConfigurationLink")
+                    .withUuid(CIAdminCommon.SystemConfigurationLink.uuid)
+                    .build();
+
 }

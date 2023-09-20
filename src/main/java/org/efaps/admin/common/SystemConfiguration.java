@@ -65,6 +65,7 @@ import org.slf4j.LoggerFactory;
 public final class SystemConfiguration
     implements CacheObjectInterface, Serializable
 {
+
     /**
      * Used for serialization.
      */
@@ -423,7 +424,6 @@ public final class SystemConfiguration
         return value == null ? 0 : Integer.parseInt(value);
     }
 
-
     /**
      * Returns for given <code>_key</code> the related value as Properties. If
      * no attribute is found an empty Properties is returned.
@@ -479,12 +479,12 @@ public final class SystemConfiguration
 
     /**
      * Returns for given <code>_key</code> the related value as Properties. If
-     * no attribute is found an empty Properties is returned.
-     * Can concatenates Properties for Keys.<br/>
+     * no attribute is found an empty Properties is returned. Can concatenates
+     * Properties for Keys.<br/>
      * e.b. Key, Key01, Key02, Key03
      *
      * @param _key key of searched attribute
-     * @param _concatenate  concatenate or not
+     * @param _concatenate concatenate or not
      * @return map with properties
      * @throws EFapsException on error
      */
@@ -534,7 +534,7 @@ public final class SystemConfiguration
      * @throws EFapsException on error
      */
     private String getValue(final String _key,
-                            final ConfType _type)
+                              final ConfType _type)
         throws EFapsException
     {
         final List<Value> fv = values.stream()
@@ -542,7 +542,8 @@ public final class SystemConfiguration
                         .filter(p -> p.key.equals(_key))
                         .filter(p -> priority(p) > 0)
                         .sorted((_o1,
-                         _o2) -> Integer.compare(priority(_o2), priority(_o1))).collect(Collectors.toList());
+                                 _o2) -> Integer.compare(priority(_o2), priority(_o1)))
+                        .collect(Collectors.toList());
         SystemConfiguration.LOG.debug("Analyzed for key {}: {}", _key, fv);
         final String ret;
         if (fv.isEmpty()) {
@@ -563,24 +564,27 @@ public final class SystemConfiguration
     {
         int ret = 1;
         try {
-            if (StringUtils.isNotEmpty(_value.appKey)
-                            && !_value.appKey.equals(AppAccessHandler.getApplicationKey())) {
-                ret = -1;
-            } else {
-                final long companyId;
-                if (Context.isThreadActive()) {
-                    final Company company = Context.getThreadContext().getCompany();
-                    companyId = company == null ? 0 : company.getId();
+            if (StringUtils.isNotEmpty(_value.appKey)) {
+                if (_value.appKey.equals(AppAccessHandler.getApplicationKey())) {
+                    ret = 100;
                 } else {
-                    companyId = 0;
-                }
-                if (_value.companyId == companyId) {
-                    ret = ret + 100;
-                } else if (_value.companyId == 0) {
-                    ret = ret + 10;
-                } else if (_value.companyId != companyId) {
                     ret = -1;
                 }
+            }
+
+            final long companyId;
+            if (Context.isThreadActive()) {
+                final Company company = Context.getThreadContext().getCompany();
+                companyId = company == null ? 0 : company.getId();
+            } else {
+                companyId = 0;
+            }
+            if (_value.companyId == companyId) {
+                ret = ret + 100;
+            } else if (_value.companyId == 0) {
+                ret = ret + 10;
+            } else if (_value.companyId != companyId) {
+                ret = -1;
             }
         } catch (final EFapsException e) {
             SystemConfiguration.LOG.error("Catched", e);
@@ -600,6 +604,7 @@ public final class SystemConfiguration
 
     /**
      * Read the config.
+     *
      * @throws CacheReloadException on error
      */
     private void readConfig()
@@ -805,13 +810,13 @@ public final class SystemConfiguration
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
      * Value class.
      */
-    private enum ConfType
+    protected enum ConfType
     {
 
         /** The attribute. */
@@ -827,17 +832,17 @@ public final class SystemConfiguration
     /**
      * Value class.
      */
-    private static class Value
+    protected static class Value
         implements Serializable
     {
 
         private static final long serialVersionUID = 1L;
 
         /** The type. */
-        private final ConfType type;
+        final ConfType type;
 
         /** The key. */
-        private final String key;
+        final String key;
 
         /** The value. */
         private final String value;
@@ -884,6 +889,7 @@ public final class SystemConfiguration
     public static final class EFapsPBEConfig
         implements StringPBEConfig, Serializable
     {
+
         private static final long serialVersionUID = 1L;
 
         /**
