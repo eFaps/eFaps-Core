@@ -929,6 +929,27 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
         }
     }
 
+    public void upsertIndex(final Connection con,
+                            final String tableName,
+                            final String indexName,
+                            final String columns)
+        throws SQLException
+    {
+        final StringBuilder cmd = new StringBuilder()
+                        .append("create INDEX IF NOT EXISTS ").append(indexName)
+                        .append(" ON ").append(tableName).append("(")
+                        .append(columns).append(")");
+
+        AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
+        // excecute statement
+        final Statement stmt = con.createStatement();
+        try {
+            stmt.execute(cmd.toString());
+        } finally {
+            stmt.close();
+        }
+    }
+
     /**
      * Returns the quote used to select tables.
      *
