@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2016 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ package org.efaps.admin.event;
  * @author The eFaps Team
  *
  */
-@SuppressWarnings("checkstyle:methodparampad")
 public enum EventType
 {
     /** EventType for checking the access to a type. */
@@ -131,6 +130,7 @@ public enum EventType
     UI_INSTANCEMANAGER    ("Admin_UI_InstanceManagerEvent"),
     /** EventType for evaluating the values for a table. */
     UI_TABLE_EVALUATE     ("Admin_UI_TableEvaluateEvent"),
+    UI_STRCTBRWS_EVALUATE ("Admin_UI_StrctBrwsEvaluateEvent"),
     /**
      * EventType used to validate the values for an attribute.
      */
