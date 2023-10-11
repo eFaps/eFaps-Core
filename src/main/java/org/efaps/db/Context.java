@@ -288,6 +288,7 @@ public final class Context
         if (getThreadLocal().get() != null && getThreadLocal().get() == this) {
             getThreadLocal().set(null);
         }
+        MDC.remove("person");
     }
 
     /**
@@ -1142,8 +1143,7 @@ public final class Context
         try {
             return Context.getThreadContext().database;
         } catch (final EFapsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
         return null;
     }
