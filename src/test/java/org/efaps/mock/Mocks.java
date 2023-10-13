@@ -185,6 +185,14 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.DateTimeType.getId())
                     .build();
 
+    Attribute AllAttrRateAttribute = Attribute.builder()
+                    .withName("AllAttrRateAttribute")
+                    .withDataModelTypeId(AllAttrType.getId())
+                    .withSqlTableId(AllAttrTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.RateType.getId())
+                    .withSqlColumnName("RATE,RATEDENOM")
+                    .build();
+
     Attribute AllAttrCreatedAttribute = Attribute.builder()
                     .withName("AllAttrCreatedAttribute")
                     .withDataModelTypeId(AllAttrType.getId())

@@ -87,6 +87,13 @@ public interface IDataModel
                     .withClassNameUI("org.efaps.admin.datamodel.ui.DateTimeUI")
                     .build();
 
+    AttributeType RateType = AttributeType.builder()
+                    .withName("Rate")
+                    .withUuid(UUID.fromString("ecbf543d-9c56-4ed3-b81c-d5b4918404ae"))
+                    .withClassName("org.efaps.admin.datamodel.attributetype.RateType")
+                    .withClassNameUI("org.efaps.admin.datamodel.ui.RateUI")
+                    .build();
+
     AttributeType CreatedType = AttributeType.builder()
                     .withName("Created")
                     .withUuid(UUID.fromString("513d35f5-58e2-4243-acd2-5fec5359778a"))

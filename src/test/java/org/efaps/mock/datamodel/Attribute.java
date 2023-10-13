@@ -53,6 +53,7 @@ public final class Attribute
     /** The link type id. */
     private final Long linkTypeId;
 
+    private final String sqlColumnName;
     /**
      * Instantiates a new attribute.
      *
@@ -66,6 +67,7 @@ public final class Attribute
         this.attributeTypeId = _builder.attributeTypeId;
         this.typeId = _builder.typeId;
         this.linkTypeId = _builder.linkTypeId;
+        this.sqlColumnName = _builder.sqlColumnName;
     }
 
     @Override
@@ -112,7 +114,7 @@ public final class Attribute
      */
     public String getSQLColumnName()
     {
-        return getName() + "_COL";
+        return sqlColumnName == null ? getName() + "_COL" : sqlColumnName;
     }
 
     /**
@@ -146,6 +148,8 @@ public final class Attribute
 
         /** The link type id. */
         private Long linkTypeId;
+
+        private String sqlColumnName;
 
         /**
          * With data model type id.
@@ -204,6 +208,12 @@ public final class Attribute
         public AttributeBuilder withLinkTypeId(final Long _linkTypeId)
         {
             this.linkTypeId = _linkTypeId;
+            return this;
+        }
+
+        public AttributeBuilder withSqlColumnName(final String sqlColumnName)
+        {
+            this.sqlColumnName = sqlColumnName;
             return this;
         }
 

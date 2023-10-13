@@ -54,6 +54,8 @@ public class ConverterTest
         ret.add(new Object[] { 3, "3" });
         ret.add(new Object[] { LocalDate.of(2018, 8, 22), "2018-08-22" });
         ret.add(new Object[] { new BigDecimal("12.986"), "12.986" });
+        ret.add(new Object[] { new Object[] {1,2}, "[1,2]" });
+
         final Object unknown = new Object();
         ret.add(new Object[] { unknown, unknown.toString() });
         return ret.iterator();

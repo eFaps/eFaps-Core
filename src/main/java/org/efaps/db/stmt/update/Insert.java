@@ -89,7 +89,7 @@ public class Insert
                                         updateElement.getValue());
                         if (status != null) {
                             statusId = status.getId();
-                            updateElement.setValue(String.valueOf(statusId));
+                            updateElement.value(String.valueOf(statusId));
                         }
                     } else {
                         LOG.warn("Cannot convert status value to status ID: {}", updateElement.getValue());

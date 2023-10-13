@@ -65,9 +65,32 @@ public final class Converter
             ret = String.valueOf(Status.find((CIStatus) value).getId());
         } else if (value instanceof IEnum) {
             ret = String.valueOf(((IEnum) value).getInt());
+        } else if (value instanceof Object[]) {
+           ret = "[";
+           final var values = (Object[])value;
+           for (int i = 0; i < values.length; i++) {
+               if (i > 0) {
+                   ret = ret + ",";
+               }
+               ret = ret + convert(values[i]);
+           }
+           ret = ret +  "]";
         } else {
             LOG.warn("No specific converter defined for: {}", value);
             ret = String.valueOf(value);
+        }
+        return ret;
+    }
+
+    public static Object convertEql(final String value)
+    {
+        Object ret = value;
+        if (value instanceof String) {
+            var strValue = ((String) ret).trim();
+            if (strValue.startsWith("[")) {
+                strValue = strValue.substring(1, strValue.length() - 1);
+                ret = strValue.split(",");
+            }
         }
         return ret;
     }

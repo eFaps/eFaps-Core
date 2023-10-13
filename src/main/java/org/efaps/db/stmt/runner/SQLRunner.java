@@ -23,6 +23,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -82,6 +83,7 @@ import org.efaps.db.wrapper.SQLSelect.SQLSelectPart;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.db.wrapper.SQLWhere;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql.builder.Converter;
 import org.efaps.eql2.Comparison;
 import org.efaps.eql2.Connection;
 import org.efaps.eql2.ILimit;
@@ -147,11 +149,9 @@ public class SQLRunner
     private void prepareUpdate()
         throws EFapsException
     {
-        if (runnable instanceof ObjectUpdate) {
-            final ObjectUpdate update = (ObjectUpdate) runnable;
+        if (runnable instanceof final ObjectUpdate update) {
             prepareUpdate(update.getInstance().getType(), update.getInstance());
-        } else if (runnable instanceof ListUpdate) {
-            final ListUpdate update = (ListUpdate) runnable;
+        } else if (runnable instanceof final ListUpdate update) {
             final Map<Type, List<Instance>> types = update.getInstances().stream()
                 .collect(Collectors.groupingBy(Instance::getType));
             for (final Entry<Type, List<Instance>> entry : types.entrySet()) {
@@ -203,14 +203,14 @@ public class SQLRunner
                     attr.getAttributeType().getDbAttrType().validate4Insert(attr, Instance.get(_type, 0),
                                     new Object[] { element.getValue() });
                     final SQLInsert sqlInsert = getSQLInsert(sqlTable);
-                    attr.prepareDBInsert(sqlInsert, element.getValue());
+                    attr.prepareDBInsert(sqlInsert, Converter.convertEql(element.getValue()));
                 } else {
                     for (final Instance instance : _instances) {
                         attr.getAttributeType().getDbAttrType().validate4Update(attr, instance,
-                                        new Object[] { element.getValue() });
+                                        new Object[] { Converter.convertEql(element.getValue()) });
                     }
                     final SQLUpdate sqlUpdate = getSQLUpdate(_type, sqlTable);
-                    attr.prepareDBUpdate(sqlUpdate, element.getValue());
+                    attr.prepareDBUpdate(sqlUpdate, Converter.convertEql(element.getValue()));
                 }
             } catch (final SQLException e) {
                 throw new EFapsException(SQLRunner.class, "prepareUpdate", e);
@@ -244,7 +244,7 @@ public class SQLRunner
             } else if (update instanceof ListUpdate) {
                 ids = ((ListUpdate) update).getInstances().stream()
                                 .filter(instance -> instance.getType().equals(_type))
-                                .map(instance -> instance.getId())
+                                .map(Instance::getId)
                                 .toArray(Long[]::new);
             } else {
                 ids = new Long[] { 0L };
@@ -361,8 +361,7 @@ public class SQLRunner
         throws EFapsException
     {
         final Map<TableIdx, CompanyCriteria> companyCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted((type1, type2) -> Long.compare(type1.getId(), type2
-                        .getId())).collect(Collectors.toList());
+        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId)).collect(Collectors.toList());
         for (final Type type : types) {
             if (type.isCompanyDependent()) {
                 final TableIdx tableIdx = evalTableIdx(type.getCompanyAttribute());
@@ -389,22 +388,20 @@ public class SQLRunner
                                     return Arrays.asList(compId).stream();
                                 }
                             })
-                            .map(id -> String.valueOf(id))
+                            .map(String::valueOf)
                             .collect(Collectors.toList());
                     } else {
                         ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                            .map(id -> String.valueOf(id))
+                            .map(String::valueOf)
                             .collect(Collectors.toList());
                     }
+                } else if (isConsortium) {
+                    ids =  Context.getThreadContext().getCompany().getConsortiums().stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.toList());
                 } else {
-                    if (isConsortium) {
-                        ids =  Context.getThreadContext().getCompany().getConsortiums().stream()
-                                        .map(id -> String.valueOf(id))
-                                        .collect(Collectors.toList());
-                    } else {
-                        ids = new ArrayList<>();
-                        ids.add(String.valueOf(Context.getThreadContext().getCompany().getId()));
-                    }
+                    ids = new ArrayList<>();
+                    ids.add(String.valueOf(Context.getThreadContext().getCompany().getId()));
                 }
                 where.addCriteria(entry.getKey().getIdx(),
                                 Collections.singletonList(entry.getValue().sqlColCompany),
@@ -424,8 +421,7 @@ public class SQLRunner
         throws EFapsException
     {
         final Map<TableIdx, AssociationCriteria> associationCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted((type1, type2) -> Long.compare(type1.getId(), type2
-                        .getId())).collect(Collectors.toList());
+        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId)).collect(Collectors.toList());
         for (final Type type : types) {
             if (type.hasAssociation()) {
                 final TableIdx tableIdx = evalTableIdx(type.getAssociationAttribute());
@@ -766,8 +762,7 @@ public class SQLRunner
         public boolean equals(final Object _obj)
         {
             final boolean ret;
-            if (_obj instanceof CompanyCriteria) {
-                final CompanyCriteria obj = (CompanyCriteria) _obj;
+            if (_obj instanceof final CompanyCriteria obj) {
                 ret = sqlColCompany.equals(obj.sqlColCompany) && id == obj.id;
             } else {
                 ret = super.equals(_obj);
@@ -811,8 +806,7 @@ public class SQLRunner
         public boolean equals(final Object _obj)
         {
             final boolean ret;
-            if (_obj instanceof AssociationCriteria) {
-                final AssociationCriteria obj = (AssociationCriteria) _obj;
+            if (_obj instanceof final AssociationCriteria obj) {
                 ret = sqlColAssociation.equals(obj.sqlColAssociation) && typeId == obj.typeId;
             } else {
                 ret = super.equals(_obj);

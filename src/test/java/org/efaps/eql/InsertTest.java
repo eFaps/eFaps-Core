@@ -47,6 +47,7 @@ import acolyte.jdbc.StatementHandler.Parameter;
 public class InsertTest
     extends AbstractTest
 {
+
     @Test
     public void testInsertOneAttribute()
         throws EFapsException
@@ -57,10 +58,10 @@ public class InsertTest
 
         final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
         EQL.builder()
-            .insert(CI.SimpleType)
-            .set(CI.SimpleType.TestAttr, "A Value")
-            .stmt()
-            .execute();
+                        .insert(CI.SimpleType)
+                        .set(CI.SimpleType.TestAttr, "A Value")
+                        .stmt()
+                        .execute();
         verify.verify();
     }
 
@@ -78,14 +79,14 @@ public class InsertTest
 
         final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
         EQL.builder()
-            .insert(CI.AllAttrType)
-            .set(CI.AllAttrType.StringAttribute, "A String Value")
-            .set(CI.AllAttrType.LongAttribute, 248651L)
-            .set(CI.AllAttrType.IntegerAttribute, 4)
-            .set(CI.AllAttrType.DecimalAttribute, new BigDecimal("12.98"))
-            .set(CI.AllAttrType.DateAttribute, LocalDate.of(2018, 8, 22))
-            .stmt()
-            .execute();
+                        .insert(CI.AllAttrType)
+                        .set(CI.AllAttrType.StringAttribute, "A String Value")
+                        .set(CI.AllAttrType.LongAttribute, 248651L)
+                        .set(CI.AllAttrType.IntegerAttribute, 4)
+                        .set(CI.AllAttrType.DecimalAttribute, new BigDecimal("12.98"))
+                        .set(CI.AllAttrType.DateAttribute, LocalDate.of(2018, 8, 22))
+                        .stmt()
+                        .execute();
         verify.verify();
         final List<Parameter> parameters = verify.getSqlParameters();
         assertEquals(parameters.get(0).getValue(), "A String Value");
@@ -104,16 +105,16 @@ public class InsertTest
                         Mocks.SimpleTypeSQLTable.getSqlTableName());
 
         MockResult.builder().withSql(sql)
-                    .withResult(RowLists.rowList1(Long.class)
-                                    .append(3435L)
-                                    .asResult())
-                    .build();
+                        .withResult(RowLists.rowList1(Long.class)
+                                        .append(3435L)
+                                        .asResult())
+                        .build();
 
         final Instance instance = EQL.builder()
-            .insert(CI.SimpleType)
-            .set(CI.SimpleType.TestAttr, "A Value")
-            .stmt()
-            .execute();
+                        .insert(CI.SimpleType)
+                        .set(CI.SimpleType.TestAttr, "A Value")
+                        .stmt()
+                        .execute();
         assertEquals(instance.getType(), CI.SimpleType.getType());
         assertEquals(instance.getId(), 3435L);
     }
@@ -134,10 +135,10 @@ public class InsertTest
 
         final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
         EQL.builder()
-            .insert(CI.CompanyType)
-            .set(CI.CompanyType.StringAttribute, "A Value")
-            .stmt()
-            .execute();
+                        .insert(CI.CompanyType)
+                        .set(CI.CompanyType.StringAttribute, "A Value")
+                        .stmt()
+                        .execute();
         verify.verify();
     }
 
@@ -147,10 +148,10 @@ public class InsertTest
     {
         AccessCheck.RESULTS.put(Instance.get(Type.get(Mocks.AccessType.getId()), 0L), false);
         EQL.builder()
-            .insert(Mocks.AccessType.getName())
-            .set(Mocks.AccessTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .insert(Mocks.AccessType.getName())
+                        .set(Mocks.AccessTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
     }
 
     @Test
@@ -164,10 +165,10 @@ public class InsertTest
 
         final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
         EQL.builder()
-            .insert(Mocks.AccessType.getName())
-            .set(Mocks.AccessTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .insert(Mocks.AccessType.getName())
+                        .set(Mocks.AccessTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
         verify.verify();
     }
 
@@ -176,10 +177,10 @@ public class InsertTest
         throws EFapsException
     {
         EQL.builder()
-            .insert(Mocks.InsertPreEventType.getName())
-            .set(Mocks.InsertPreEventTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .insert(Mocks.InsertPreEventType.getName())
+                        .set(Mocks.InsertPreEventTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
         assertTrue(TriggerEvent.RESULTS.containsKey(null));
         assertEquals(TriggerEvent.RESULTS.get(null).get(0), EventType.INSERT_PRE);
     }
@@ -189,10 +190,10 @@ public class InsertTest
         throws EFapsException
     {
         EQL.builder()
-            .insert(Mocks.InsertOverrideEventType.getName())
-            .set(Mocks.InsertOverrideEventTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .insert(Mocks.InsertOverrideEventType.getName())
+                        .set(Mocks.InsertOverrideEventTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
         assertTrue(TriggerEvent.RESULTS.containsKey(null));
         assertEquals(TriggerEvent.RESULTS.get(null).get(0), EventType.INSERT_OVERRIDE);
     }
@@ -202,10 +203,10 @@ public class InsertTest
         throws EFapsException
     {
         final Instance inst = EQL.builder()
-            .insert(Mocks.InsertPostEventType.getName())
-            .set(Mocks.InsertPostEventTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .insert(Mocks.InsertPostEventType.getName())
+                        .set(Mocks.InsertPostEventTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
         assertTrue(TriggerEvent.RESULTS.containsKey(inst));
         assertEquals(TriggerEvent.RESULTS.get(inst).get(0), EventType.INSERT_POST);
     }
@@ -215,12 +216,28 @@ public class InsertTest
         throws EFapsException
     {
         EQL.builder()
-            .with(StmtFlag.TRIGGEROFF)
-            .insert(Mocks.AllEventType.getName())
-            .set(Mocks.AllEventTypeStringAttribute.getName(), "A Value")
-            .stmt()
-            .execute();
+                        .with(StmtFlag.TRIGGEROFF)
+                        .insert(Mocks.AllEventType.getName())
+                        .set(Mocks.AllEventTypeStringAttribute.getName(), "A Value")
+                        .stmt()
+                        .execute();
         assertTrue(TriggerEvent.RESULTS.isEmpty());
+    }
+
+    @Test
+    public void testInsertRateAttribute()
+        throws EFapsException
+    {
+        final String sql = String.format("insert into %s (%s,ID)values(?,?,?)",
+                        Mocks.AllAttrTypeSQLTable.getSqlTableName(),
+                        Mocks.AllAttrRateAttribute.getSQLColumnName());
+
+        final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
+        EQL.builder().insert(CI.AllAttrType)
+                        .set(CI.AllAttrType.RateAttribute, new Object[] { 1, 2 })
+                        .stmt()
+                        .execute();
+        verify.verify();
     }
 
 }
