@@ -38,10 +38,10 @@ public class Update
      * @return the insert
      * @throws EFapsException if parsing went wrong
      */
-    public Update set(final CIAttribute _attr, final Object _value)
+    public Update set(final CIAttribute attr, final Object value)
         throws EFapsException
     {
-        return super.set(_attr.name, Converter.convert(_value));
+        return super.set(attr.name, Converter.convert(value, attr.getAttribute()));
     }
 
     /**

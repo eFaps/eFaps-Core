@@ -38,10 +38,10 @@ public class Insert
      * @return the insert
      * @throws EFapsException if parsing went wrong
      */
-    public Insert set(final CIAttribute _attr, final Object _value)
+    public Insert set(final CIAttribute attr, final Object value)
         throws EFapsException
     {
-        return super.set(_attr.name, Converter.convert(_value));
+        return super.set(attr.name, Converter.convert(value, attr.getAttribute()));
     }
 
     /**

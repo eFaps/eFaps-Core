@@ -41,7 +41,7 @@ public class ConverterTest
                         final String _convertedValue)
         throws EFapsException
     {
-        assertEquals(Converter.convert(_value), _convertedValue);
+        assertEquals(Converter.convert(_value, null), _convertedValue);
     }
 
     @DataProvider(name = "DataProvider")

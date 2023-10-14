@@ -45,6 +45,7 @@ import jakarta.xml.bind.Unmarshaller;
 public class JaxbType
     extends AbstractType
 {
+
     private static final long serialVersionUID = 1L;
 
     private static final Map<Long, JAXBContext> JAXBCONTEXTSTORE = new HashMap<>();
@@ -101,30 +102,8 @@ public class JaxbType
         } else if (_value[0] instanceof String && ((String) _value[0]).length() > 0) {
             ret = (String) _value[0];
         } else {
-            try {
-                final Object object = _value[0];
-                if (object != null) {
-                    final JAXBContext jc;
-                    if (JAXBCONTEXTSTORE.containsKey(_attribute.getId())) {
-                        jc = JAXBCONTEXTSTORE.get(_attribute.getId());
-                    } else {
-                        final Class<?> clazz = Class.forName(_attribute.getClassName(), false,
-                                        EFapsClassLoader.getInstance());
-                        final IJaxb jaxb = (IJaxb) clazz.getConstructor().newInstance();
-                        jc = JAXBContext.newInstance(jaxb.getClasses());
-                        JAXBCONTEXTSTORE.put(_attribute.getId(), jc);
-                    }
-                    final Marshaller marshaller = jc.createMarshaller();
-                    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-                    final StringWriter writer = new StringWriter();
-                    marshaller.marshal(_value[0], writer);
-                    ret = writer.toString();
-                }
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-                            | SecurityException | JAXBException e) {
-                throw new SQLException("JaxbType Exception", e);
-            }
+            final Object object = _value[0];
+            ret = toSring(_attribute, object);
         }
         return ret;
     }
@@ -160,6 +139,37 @@ public class JaxbType
                         | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
                         | SecurityException | JAXBException e) {
             throw new EFapsException("JaxbType Exception", e);
+        }
+        return ret;
+    }
+
+    public static String toSring(final Attribute attribute,
+                                 final Object value)
+        throws SQLException
+    {
+        String ret = null;
+        if (value != null) {
+            try {
+                final JAXBContext jc;
+                if (JAXBCONTEXTSTORE.containsKey(attribute.getId())) {
+                    jc = JAXBCONTEXTSTORE.get(attribute.getId());
+                } else {
+                    final Class<?> clazz = Class.forName(attribute.getClassName(), false,
+                                    EFapsClassLoader.getInstance());
+                    final IJaxb jaxb = (IJaxb) clazz.getConstructor().newInstance();
+                    jc = JAXBContext.newInstance(jaxb.getClasses());
+                    JAXBCONTEXTSTORE.put(attribute.getId(), jc);
+                }
+                final Marshaller marshaller = jc.createMarshaller();
+                marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+                final StringWriter writer = new StringWriter();
+                marshaller.marshal(value, writer);
+                ret = writer.toString();
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                            | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                            | SecurityException | JAXBException e) {
+                throw new SQLException("JaxbType Exception", e);
+            }
         }
         return ret;
     }

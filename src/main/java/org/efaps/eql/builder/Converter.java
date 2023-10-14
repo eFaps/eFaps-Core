@@ -17,12 +17,15 @@
 
 package org.efaps.eql.builder;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 
+import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.IEnum;
 import org.efaps.admin.datamodel.Status;
+import org.efaps.admin.datamodel.attributetype.JaxbType;
 import org.efaps.ci.CIStatus;
 import org.efaps.db.Instance;
 import org.efaps.util.EFapsException;
@@ -44,7 +47,7 @@ public final class Converter
      * @return the string
      * @throws EFapsException
      */
-    public static String convert(final Object value)
+    public static String convert(final Object value, final Attribute attribute)
         throws EFapsException
     {
         String ret = null;
@@ -72,9 +75,15 @@ public final class Converter
                if (i > 0) {
                    ret = ret + ",";
                }
-               ret = ret + convert(values[i]);
+               ret = ret + convert(values[i], attribute);
            }
            ret = ret +  "]";
+        } else if (attribute != null && attribute.getAttributeType().getDbAttrType() instanceof JaxbType){
+            try {
+                ret = JaxbType.toSring(attribute, value);
+            } catch (final SQLException e) {
+                throw new EFapsException("catched", e);
+            }
         } else {
             LOG.warn("No specific converter defined for: {}", value);
             ret = String.valueOf(value);

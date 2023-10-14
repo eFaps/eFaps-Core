@@ -15,12 +15,11 @@
  *
  */
 
-
 package org.efaps.ci;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.efaps.admin.datamodel.Attribute;
 import org.efaps.eql2.bldr.ISelectable;
-
 
 /**
  * @author The eFaps Team
@@ -28,7 +27,8 @@ import org.efaps.eql2.bldr.ISelectable;
 public class CIAttribute
     implements ISelectable
 {
-    //CHECKSTYLE:OFF
+
+    // CHECKSTYLE:OFF
     /**
      * Name of the attribute.
      */
@@ -43,11 +43,11 @@ public class CIAttribute
      * Profiles this attribute is related to.
      */
     public final String[] profiles;
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
     /**
-     * @param _type         type this attribute belongs to
-     * @param _name         name of this attribute
+     * @param _type type this attribute belongs to
+     * @param _name name of this attribute
      */
     public CIAttribute(final CIType _type,
                        final String _name)
@@ -56,9 +56,9 @@ public class CIAttribute
     }
 
     /**
-     * @param _type         type this attribute belongs to
-     * @param _name         name of this attribute
-     * @param _profiles     Profiles this attribute is related to.
+     * @param _type type this attribute belongs to
+     * @param _name name of this attribute
+     * @param _profiles Profiles this attribute is related to.
      */
     public CIAttribute(final CIType _type,
                        final String _name,
@@ -79,5 +79,10 @@ public class CIAttribute
     public String getKey()
     {
         return "CIAttribute";
+    }
+
+    public Attribute getAttribute()
+    {
+        return ciType.getType().getAttribute(name);
     }
 }
