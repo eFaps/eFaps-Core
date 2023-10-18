@@ -40,6 +40,12 @@ public final class Converter
 
     private static final Logger LOG = LoggerFactory.getLogger(Converter.class);
 
+    public static String convert(final Object value)
+        throws EFapsException
+    {
+        return convert(value, null);
+    }
+
     /**
      * Convert.
      *
@@ -47,7 +53,8 @@ public final class Converter
      * @return the string
      * @throws EFapsException
      */
-    public static String convert(final Object value, final Attribute attribute)
+    public static String convert(final Object value,
+                                 final Attribute attribute)
         throws EFapsException
     {
         String ret = null;
@@ -69,16 +76,16 @@ public final class Converter
         } else if (value instanceof IEnum) {
             ret = String.valueOf(((IEnum) value).getInt());
         } else if (value instanceof Object[]) {
-           ret = "[";
-           final var values = (Object[])value;
-           for (int i = 0; i < values.length; i++) {
-               if (i > 0) {
-                   ret = ret + ",";
-               }
-               ret = ret + convert(values[i], attribute);
-           }
-           ret = ret +  "]";
-        } else if (attribute != null && attribute.getAttributeType().getDbAttrType() instanceof JaxbType){
+            ret = "[";
+            final var values = (Object[]) value;
+            for (int i = 0; i < values.length; i++) {
+                if (i > 0) {
+                    ret = ret + ",";
+                }
+                ret = ret + convert(values[i], attribute);
+            }
+            ret = ret + "]";
+        } else if (attribute != null && attribute.getAttributeType().getDbAttrType() instanceof JaxbType) {
             try {
                 ret = JaxbType.toSring(attribute, value);
             } catch (final SQLException e) {
