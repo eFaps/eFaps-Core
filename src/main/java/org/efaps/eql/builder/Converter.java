@@ -71,6 +71,8 @@ public final class Converter
             ret = ((LocalTime) value).toString();
         } else if (value instanceof OffsetDateTime) {
             ret = ((OffsetDateTime) value).toString();
+        } else if (value instanceof Boolean) {
+            ret = String.valueOf(value);
         } else if (value instanceof CIStatus) {
             ret = String.valueOf(Status.find((CIStatus) value).getId());
         } else if (value instanceof IEnum) {
