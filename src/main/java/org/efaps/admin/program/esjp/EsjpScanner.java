@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2018 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.efaps.admin.AppConfigHandler;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.efaps.ci.CIAdminProgram;
 import org.efaps.db.Checkout;
 import org.efaps.db.Context;
@@ -78,6 +78,15 @@ public class EsjpScanner
                 return new EsjpDir();
             }
         }));
+        final var config = ConfigProvider.getConfig();
+        final var fileOpt = config.getOptionalValue("core.reflections.storeFile", java.io.File.class);
+        if (fileOpt.isPresent()) {
+            final var xmlFile = fileOpt.get();
+            LOG.info("Reflection store file definition: {} --> exists: {}", xmlFile, xmlFile.exists());
+            if (xmlFile.exists()) {
+                REFLECTIONS = fileOpt.get();
+            }
+        }
     }
 
     @SafeVarargs
@@ -109,7 +118,7 @@ public class EsjpScanner
                     Context.rollback();
                 }
             } else {
-                LOG.info("Loading refelections result.");
+                LOG.info("Loading refelections result from: {}", REFLECTIONS);
                 final ConfigurationBuilder configuration = new ConfigurationBuilder().setScanners(new Scanner[] {});
                 configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
                 reflections = new Reflections(configuration);
@@ -126,12 +135,19 @@ public class EsjpScanner
         return ret;
     }
 
-    private void save(final Reflections _reflections)
+    private void save(final Reflections reflections)
         throws IOException
     {
-        final java.io.File tmpFolder = AppConfigHandler.get().getTempFolder();
-        final java.io.File xmlFile = java.io.File.createTempFile("eFapsReflections-", ".xml", tmpFolder);
-        REFLECTIONS = _reflections.save(xmlFile.getAbsolutePath(), new XmlSerializer());
+        final var config = ConfigProvider.getConfig();
+        final var file = config.getOptionalValue("core.reflections.storeFile", java.io.File.class)
+                        .orElse(java.io.File.createTempFile("eFapsReflections-", ".xml"));
+        REFLECTIONS = reflections.save(file.getAbsolutePath(), new XmlSerializer());
+    }
+
+    public static void reset()
+    {
+        REFLECTIONS.delete();
+        REFLECTIONS = null;
     }
 
     public static class EsjpDir

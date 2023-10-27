@@ -25,6 +25,7 @@ import java.util.List;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.admin.common.SystemConfiguration;
+import org.efaps.admin.program.esjp.EsjpScanner;
 import org.efaps.db.Context;
 import org.efaps.update.schema.program.esjp.ESJPCompiler;
 import org.efaps.update.schema.program.jasperreport.JasperReportCompiler;
@@ -66,6 +67,7 @@ public class Compile
                 if ("java".equalsIgnoreCase(_type)) {
                     AbstractRest.LOG.info("==Compiling Java==");
                     new ESJPCompiler(getClassPathElements()).compile(null, false);
+                    EsjpScanner.reset();
                 } else if ("css".equalsIgnoreCase(_type)) {
                     AbstractRest.LOG.info("==Compiling CSS==");
                     new CSSCompiler().compile();
