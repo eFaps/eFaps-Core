@@ -206,6 +206,7 @@ public final class RunLevel
     public static void execute()
         throws EFapsException
     {
+        LOG.info("Executing RunLevels");
         RunLevel.RUNLEVEL.executeMethods();
         final List<String> allInitializer = RunLevel.RUNLEVEL.getAllInitializers();
         for (final AbstractCache<?> cache : AbstractCache.getCaches()) {
@@ -407,6 +408,7 @@ public final class RunLevel
         public void callMethod()
             throws EFapsException
         {
+            LOG.info("  Calling RunLevel: {} Method: {} ", className, methodName);
             try {
                 final Class<?> cls = Class.forName(className);
                 if (parameter != null) {
