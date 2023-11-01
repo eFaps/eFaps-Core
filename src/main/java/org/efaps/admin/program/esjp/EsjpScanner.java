@@ -146,8 +146,10 @@ public class EsjpScanner
 
     public static void reset()
     {
-        REFLECTIONS.delete();
-        REFLECTIONS = null;
+        if (REFLECTIONS != null) {
+            REFLECTIONS.delete();
+            REFLECTIONS = null;
+        }
     }
 
     public static class EsjpDir
