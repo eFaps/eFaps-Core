@@ -47,6 +47,7 @@ import javax.tools.ToolProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.admin.program.esjp.EsjpScanner;
 import org.efaps.ci.CIAdminProgram;
 import org.efaps.db.Checkin;
 import org.efaps.db.Checkout;
@@ -158,6 +159,7 @@ public class ESJPCompiler
                         final boolean _addRuntimeClassPath)
         throws InstallationException
     {
+        EsjpScanner.reset();
         readESJPPrograms();
         readESJPClasses();
 
