@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2020 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ import org.efaps.admin.datamodel.Type;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.eql2.Comparison;
-import org.efaps.eql2.Connection;
 import org.efaps.eql2.IAttributeSelectElement;
 import org.efaps.eql2.INestedQuery;
 import org.efaps.eql2.ISelect;
 import org.efaps.eql2.ISelectElement;
 import org.efaps.eql2.IWhereElement;
+import org.efaps.eql2.IWhereTerm;
 import org.efaps.util.EFapsException;
 import org.efaps.util.TypeUtil;
 
@@ -45,7 +45,9 @@ public class NestedQuery
         whereElement = _whereElement;
     }
 
-    public void append2SQLSelect(final List<Type> _parentTypes, final SQLSelect _parentSqlSelect)
+    public void append2SQLSelect(final List<Type> _parentTypes,
+                                 final SQLSelect _parentSqlSelect,
+                                 IWhereTerm<?> term)
         throws EFapsException
     {
         final INestedQuery nestedQuery = whereElement.getNestedQuery();
@@ -101,7 +103,7 @@ public class NestedQuery
             attrName = whereElement.getAttribute();
         } else {
             for (final ISelectElement ele : whereElement.getSelect().getElements()) {
-               if (ele instanceof IAttributeSelectElement) {
+                if (ele instanceof IAttributeSelectElement) {
                     attrName = ((IAttributeSelectElement) ele).getName();
                 }
             }
@@ -112,8 +114,8 @@ public class NestedQuery
                 final SQLTable table = attr.getTable();
                 final String tableName = table.getSqlTable();
                 final TableIdx tableidx = _parentSqlSelect.getIndexer().getTableIdx(tableName);
-                _parentSqlSelect.getWhere().addCriteria(tableidx.getIdx(), attr.getSqlColNames().get(0),Comparison.IN,
-                                sqlSelect.toString(), Connection.NONE);
+                _parentSqlSelect.getWhere().addCriteria(tableidx.getIdx(), attr.getSqlColNames().get(0), Comparison.IN,
+                                sqlSelect.toString(), term.getConnection());
             }
             break;
         }

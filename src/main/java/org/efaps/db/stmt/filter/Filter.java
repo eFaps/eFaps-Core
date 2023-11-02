@@ -20,6 +20,7 @@ package org.efaps.db.stmt.filter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,14 +86,16 @@ public class Filter
      * @param _types the types
      * @return the filter
      */
-    private Filter analyze(final IWhere _where, final List<Type> _types)
+    private Filter analyze(final IWhere _where,
+                           final List<Type> _types)
     {
         iWhere = _where;
         types = _types;
         return this;
     }
 
-    public void append2SQLSelect(final SQLSelect _sqlSelect, final Map<Type, TableIdx> _type2tableIdx)
+    public void append2SQLSelect(final SQLSelect _sqlSelect,
+                                 final Map<Type, TableIdx> _type2tableIdx)
         throws EFapsException
     {
         type2tableIdx = _type2tableIdx;
@@ -105,7 +108,8 @@ public class Filter
      * @param _sqlSelect the sql select
      * @throws EFapsException
      */
-    public void append2SQLSelect(final SQLSelect _sqlSelect, final Set<TypeCriterion> _typeCriteria)
+    public void append2SQLSelect(final SQLSelect _sqlSelect,
+                                 final Set<TypeCriterion> _typeCriteria)
         throws EFapsException
     {
         if (iWhere != null) {
@@ -114,7 +118,7 @@ public class Filter
                     final IWhereElement element = ((IWhereElementTerm) term).getElement();
                     if (element.getNestedQuery() != null) {
                         final NestedQuery nestedQuery = new NestedQuery(element);
-                        nestedQuery.append2SQLSelect(types, _sqlSelect);
+                        nestedQuery.append2SQLSelect(types, _sqlSelect, term);
                     } else if (element.getAttribute() != null) {
                         attribute(_sqlSelect, term, element, null, null);
                     } else if (element.getSelect() != null) {
@@ -144,8 +148,11 @@ public class Filter
         addTypeCriteria(_sqlSelect, _typeCriteria);
     }
 
-    protected void attribute(final SQLSelect _sqlSelect, final IWhereTerm<?> _term, final IWhereElement _element,
-                             final ISelectElement _selectElement, final List<ILinktoSelectElement> linktoElementStmts)
+    protected void attribute(final SQLSelect _sqlSelect,
+                             final IWhereTerm<?> _term,
+                             final IWhereElement _element,
+                             final ISelectElement _selectElement,
+                             final List<ILinktoSelectElement> linktoElementStmts)
         throws EFapsException
     {
         final String attrName;
@@ -198,7 +205,9 @@ public class Filter
         }
     }
 
-    protected void status(final SQLSelect _sqlSelect, final IWhereTerm<?> _term, final IWhereElement _element)
+    protected void status(final SQLSelect _sqlSelect,
+                          final IWhereTerm<?> _term,
+                          final IWhereElement _element)
     {
         if (types.isEmpty() && type2tableIdx != null) {
             for (final var entry : type2tableIdx.entrySet()) {
@@ -219,7 +228,8 @@ public class Filter
         }
     }
 
-    protected TableIdx tableIndex4Attr(final SQLSelect _sqlSelect, final Attribute _attr)
+    protected TableIdx tableIndex4Attr(final SQLSelect _sqlSelect,
+                                       final Attribute _attr)
     {
         final SQLTable table = _attr.getTable();
         final TableIdx tableIdx;
@@ -244,8 +254,10 @@ public class Filter
         return tableIdx;
     }
 
-    protected void addAttr(final SQLSelect _sqlSelect, final Attribute _attr,
-                           final IWhereTerm<?> _term, final IWhereElement _element)
+    protected void addAttr(final SQLSelect _sqlSelect,
+                           final Attribute _attr,
+                           final IWhereTerm<?> _term,
+                           final IWhereElement _element)
     {
         if (_attr != null) {
             final var tableIdx = tableIndex4Attr(_sqlSelect, _attr);
@@ -253,8 +265,12 @@ public class Filter
         }
     }
 
-    protected void addAttr(final SQLSelect _sqlSelect, final Attribute _attr, final IWhereTerm<?> _term,
-                           final IWhereElement _element, final TableIdx _tableIdx, final boolean _nullable)
+    protected void addAttr(final SQLSelect _sqlSelect,
+                           final Attribute _attr,
+                           final IWhereTerm<?> _term,
+                           final IWhereElement _element,
+                           final TableIdx _tableIdx,
+                           final boolean _nullable)
     {
         if (_attr != null) {
             final IAttributeType attrType = _attr.getAttributeType().getDbAttrType();
@@ -299,7 +315,8 @@ public class Filter
         }
     }
 
-    protected String convertStatusValue(final Attribute _attr, final String _val)
+    protected String convertStatusValue(final Attribute _attr,
+                                        final String _val)
     {
         String ret;
         if (StringUtils.isNumeric(_val)) {
@@ -340,16 +357,15 @@ public class Filter
     {
         if (!_typeCriteria.isEmpty()) {
             final ComparatorChain<TypeCriterion> chain = new ComparatorChain<>();
-            chain.addComparator((_criterion1,
-                                 _criterion2) -> _criterion1.getTableIndex().compareTo(_criterion2.getTableIndex()));
-            chain.addComparator((_criterion1,
-                                 _criterion2) -> Long.compare(_criterion1.getTypeId(), _criterion2.getTypeId()));
+            chain.addComparator(Comparator.comparing(TypeCriterion::getTableIndex));
+            chain.addComparator(Comparator.comparing(TypeCriterion::getTypeId));
 
             final SQLWhere where = _sqlSelect.getWhere();
             _typeCriteria.stream()
                             .sorted(chain)
                             .collect(Collectors.groupingBy(TypeCriterion::getTableIndex))
-                            .forEach((index, criteria) -> {
+                            .forEach((index,
+                                      criteria) -> {
                                 final boolean nullable = criteria.stream()
                                                 .filter(TypeCriterion::isNullable)
                                                 .findAny()
@@ -398,7 +414,8 @@ public class Filter
      * @return the selection
      * @throws CacheReloadException the cache reload exception
      */
-    public static Filter get(final IWhere _where, final Type... _baseTypes)
+    public static Filter get(final IWhere _where,
+                             final Type... _baseTypes)
         throws CacheReloadException
     {
         return new Filter().analyze(_where, Arrays.asList(_baseTypes));
