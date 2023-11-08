@@ -448,7 +448,8 @@ public final class Evaluator
                         } else {
                             final Iterator<Boolean> iter = ret.iterator();
                             ret = ((List<?>) obj).stream()
-                                            .map(ele -> iter.next() && access.hasAccess((Instance) ele))
+                                            .map(ele -> iter.hasNext()
+                                                            && iter.next() && access.hasAccess((Instance) ele))
                                             .collect(Collectors.toList());
                         }
                         accessTemp = ret.contains(true);
