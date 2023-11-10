@@ -289,6 +289,7 @@ public final class Context
             getThreadLocal().set(null);
         }
         MDC.remove("person");
+        MDC.remove("company");
     }
 
     /**
@@ -976,6 +977,10 @@ public final class Context
                     context.setUserAttribute(Context.CURRENTCOMPANY, compID.toString());
                     context.companyId = compID;
                 }
+            }
+            final var company = context.getCompany();
+            if (company != null) {
+                MDC.put("company",  String.format("'%s' (%s)", company.getUUID(), company.getName()));
             }
         }
         return context;
