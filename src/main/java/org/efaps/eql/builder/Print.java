@@ -198,12 +198,14 @@ public class Print
             String baseSelect = "";
             // check if this is used in a subselect e.g. a linkto
             final var selection = ((IPrintStatement<?>) getStmt()).getSelection();
-            final ISelect select = selection.getSelects(selection.getSelectsLength() - 1);
-            if (ArrayUtils.isNotEmpty(select.getElements())) {
-                final ISelectElement lastElement = select.getElements(select.getElementsLength() - 1);
-                if (connectable(lastElement)) {
-                    baseSelect = select.eqlStmt() + ".";
-                    selection.getSelectsList().remove(selection.getSelectsLength() - 1);
+            if (selection.getSelectsLength()>0) {
+                final ISelect select = selection.getSelects(selection.getSelectsLength() - 1);
+                if (ArrayUtils.isNotEmpty(select.getElements())) {
+                    final ISelectElement lastElement = select.getElements(select.getElementsLength() - 1);
+                    if (connectable(lastElement)) {
+                        baseSelect = select.eqlStmt() + ".";
+                        selection.getSelectsList().remove(selection.getSelectsLength() - 1);
+                    }
                 }
             }
             int idx = 0;
