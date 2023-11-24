@@ -53,8 +53,12 @@ public class SQLWhere
      * @param _values the values
      * @param _escape the escape
      */
-    public Criteria addCriteria(final int _idx, final List<String> _sqlColNames, final Comparison _comparison,
-                            final Set<String> _values, final boolean _escape, final Connection _connection)
+    public Criteria addCriteria(final int _idx,
+                                final List<String> _sqlColNames,
+                                final Comparison _comparison,
+                                final Set<String> _values,
+                                final boolean _escape,
+                                final Connection _connection)
     {
         final Criteria criteria = new Criteria()
                         .tableIndex(_idx)
@@ -67,8 +71,11 @@ public class SQLWhere
         return criteria;
     }
 
-    public Criteria addCriteria(final int _idx, final String _sqlColName, final Comparison _comparison,
-                            final String _value, final Connection _connection)
+    public Criteria addCriteria(final int _idx,
+                                final String _sqlColName,
+                                final Comparison _comparison,
+                                final String _value,
+                                final Connection _connection)
     {
         final Set<String> values = new LinkedHashSet<>();
         values.add(_value);
@@ -85,7 +92,8 @@ public class SQLWhere
         started = _started;
     }
 
-    public SQLWhere select(final SQLSelect _sqlSelect) {
+    public SQLWhere select(final SQLSelect _sqlSelect)
+    {
         sqlSelect = _sqlSelect;
         return this;
     }
@@ -100,9 +108,15 @@ public class SQLWhere
         return sqlSelect;
     }
 
-    public SQLWhere section(final Section _section) {
+    public SQLWhere section(final Section _section)
+    {
         sections.add(_section);
         return this;
+    }
+
+    public List<Section> getSections()
+    {
+        return sections;
     }
 
     /**
@@ -128,7 +142,8 @@ public class SQLWhere
 
     protected void addSectionsSQL(final String _tablePrefix,
                                   final StringBuilder _cmd,
-                                  final List<Section> sections) {
+                                  final List<Section> sections)
+    {
         boolean first = true;
         for (final Section section : sections) {
             if (first) {
@@ -150,8 +165,7 @@ public class SQLWhere
                         break;
                 }
             }
-            if (section instanceof Group) {
-                final Group group = (Group) section;
+            if (section instanceof final Group group) {
                 new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_OPEN).appendSQL(_cmd);
                 addSectionsSQL(_tablePrefix, _cmd, group);
                 new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_CLOSE).appendSQL(_cmd);
@@ -166,12 +180,10 @@ public class SQLWhere
                             if (criteria.values == null) {
                                 new SQLSelect.SQLSelectPart(SQLPart.IS).appendSQL(_cmd);
                                 new SQLSelect.SQLSelectPart(SQLPart.NULL).appendSQL(_cmd);
+                            } else if (criteria.values.size() > 1) {
+                                new SQLSelect.SQLSelectPart(SQLPart.IN).appendSQL(_cmd);
                             } else {
-                                if (criteria.values.size() > 1) {
-                                    new SQLSelect.SQLSelectPart(SQLPart.IN).appendSQL(_cmd);
-                                } else {
-                                    new SQLSelect.SQLSelectPart(SQLPart.EQUAL).appendSQL(_cmd);
-                                }
+                                new SQLSelect.SQLSelectPart(SQLPart.EQUAL).appendSQL(_cmd);
                             }
                             break;
                         case LIKE:
@@ -249,7 +261,9 @@ public class SQLWhere
         }
     }
 
-    public interface Section {
+    public interface Section
+    {
+
         Connection getConnection();
     }
 

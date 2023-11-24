@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.efaps.db.Context;
 import org.efaps.db.search.section.AbstractQSection;
 import org.efaps.db.stmt.filter.TypeCriterion;
+import org.efaps.db.wrapper.SQLWhere.Criteria;
 import org.efaps.util.EFapsException;
 
 /**
@@ -75,6 +76,8 @@ public class SQLSelect
 
     private int limit;
     private int offset;
+
+    private boolean squash;
 
     /**
      * Instantiates a new SQL select.
@@ -202,6 +205,16 @@ public class SQLSelect
     {
         fromTables.add(new FromTable(tablePrefix, _tableName, _tableIndex));
         return this;
+    }
+
+    public boolean isSquash()
+    {
+        return squash;
+    }
+
+    public void setSquash(boolean squash)
+    {
+        this.squash = squash;
     }
 
     /**
@@ -360,16 +373,69 @@ public class SQLSelect
             where.appendSQL(tablePrefix, cmd);
         }
 
+        if (isSquash()) {
+            addLimit4Squash(cmd, whereAdded);
+        } else {
+            if (order != null) {
+                order.appendSQL(tablePrefix, cmd);
+            }
+            if (limit > 0) {
+                cmd.append(" ").append(SQLPart.LIMIT).append(" ").append(limit);
+            }
+            if (offset > 0) {
+                cmd.append(" ").append(SQLPart.OFFSET).append(" ").append(offset);
+            }
+        }
+
+        return cmd.toString();
+    }
+
+
+    protected void addLimit4Squash(final StringBuilder cmd,
+                                   final boolean whereAdded)
+    {
+        if (limit > 0) {
+            final var limiterTablePrefix = "L";
+            final var limiter = new SQLSelect(limiterTablePrefix);
+            final var maintable = this.getFromTables().get(0);
+            limiter.column(maintable.getTableIndex(), "ID");
+            limiter.addTablePart(maintable.getTableName(), maintable.getTableIndex());
+
+            if (where != null) {
+                where.getSections().forEach(section -> {
+                    if (section instanceof Criteria) {
+                        if (((Criteria) section).getTableIndex() == maintable.getTableIndex()) {
+                            limiter.getWhere().getSections().add(section);
+                        }
+                    }
+                });
+            }
+
+            if (!whereAdded) {
+                new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
+                new SQLSelectPart(SQLPart.AND).appendSQL(cmd);
+                new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
+            } else {
+                new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
+                new SQLSelectPart(SQLPart.WHERE).appendSQL(cmd);
+                new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
+            }
+            cmd.append(maintable.getTablePrefix()).append(maintable.getTableIndex()).append(".")
+                            .append("ID").append(SQLPart.SPACE).append(SQLPart.IN).append(SQLPart.SPACE)
+                            .append(SQLPart.PARENTHESIS_OPEN);
+            cmd.append(limiter.getSQL());
+            if (order != null) {
+                order.appendSQL(limiterTablePrefix, cmd);
+            }
+            cmd.append(" ").append(SQLPart.LIMIT).append(" ").append(limit);
+            if (offset > 0) {
+                cmd.append(" ").append(SQLPart.OFFSET).append(" ").append(offset);
+            }
+            cmd.append(SQLPart.PARENTHESIS_CLOSE);
+        }
         if (order != null) {
             order.appendSQL(tablePrefix, cmd);
         }
-        if (limit > 0) {
-            cmd.append(" ").append(SQLPart.LIMIT).append(" ").append(limit);
-        }
-        if (offset > 0) {
-            cmd.append(" ").append(SQLPart.OFFSET).append(" ").append(offset);
-        }
-        return cmd.toString();
     }
 
     /**

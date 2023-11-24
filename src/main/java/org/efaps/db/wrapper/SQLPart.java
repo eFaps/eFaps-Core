@@ -17,7 +17,6 @@
 
 package org.efaps.db.wrapper;
 
-
 /**
  * Enum is used to write the different standard sql part of a sql statement.
  * This serves to elamintaed problems in future implementation of different
@@ -26,7 +25,9 @@ package org.efaps.db.wrapper;
  * @author The eFaps Team
  *
  */
-public enum SQLPart {
+public enum SQLPart
+{
+
     /** all. */
     ALL("all"),
     /** and. */
@@ -48,8 +49,7 @@ public enum SQLPart {
     /** >. */
     GREATER(">"),
     /** FALSE. */
-    FALSE("FALSE"),
-    ILIKE("ilike"),
+    FALSE("FALSE"), ILIKE("ilike"),
     /** in. */
     IN("in"),
     /** Renders as default: "inner". */
@@ -73,8 +73,7 @@ public enum SQLPart {
     /** null. */
     NULL("null"),
     /** not. */
-    NOT("not"),
-    OFFSET("offset"),
+    NOT("not"), OFFSET("offset"),
     /** on. */
     ON("on"),
     /** or. */
@@ -87,9 +86,9 @@ public enum SQLPart {
     PARENTHESIS_OPEN("("),
     /** select. */
     SELECT("select"),
-    /**  Renders as default: "set". */
+    /** Renders as default: "set". */
     SET("set"),
-    /** .*/
+    /** . */
     SPACE(" "),
     /** TRUE. */
     TRUE("TRUE"),
@@ -128,5 +127,10 @@ public enum SQLPart {
     {
         return defaultValue;
     }
-}
 
+    @Override
+    public String toString()
+    {
+        return getDefaultValue();
+    }
+}

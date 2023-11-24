@@ -102,7 +102,7 @@ public final class Select
      *
      * @return the squash able
      */
-    protected boolean isSquash()
+    public boolean isSquash()
     {
         return !noSquashRequired;
     }

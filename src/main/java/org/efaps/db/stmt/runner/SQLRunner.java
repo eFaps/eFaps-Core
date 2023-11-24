@@ -280,7 +280,11 @@ public class SQLRunner
 
         final Set<TypeCriterion> typeCriteria = new HashSet<>();
         int idx = 1;
+        boolean isSquash = false;
         for (final Select select : _print.getSelection().getAllSelects()) {
+            if (!isSquash) {
+                isSquash = select.isSquash();
+            }
             for (final AbstractElement<?> element : select.getElements()) {
                 if (element instanceof AbstractDataElement) {
                     ((AbstractDataElement<?>) element).append2SQLSelect(sqlSelect);
@@ -340,6 +344,7 @@ public class SQLRunner
             addCompanyCriteria(_print);
             addAssociationCriteria(_print);
         }
+        sqlSelect.setSquash(isSquash);
     }
 
     /**
