@@ -140,7 +140,8 @@ public class SQLSelect
      * @param _columnName the column name
      * @return the int
      */
-    public int columnIndex(final int _tableIndex, final String _columnName)
+    public int columnIndex(final int _tableIndex,
+                           final String _columnName)
     {
         final Optional<Column> colOpt = getColumns().stream()
                         .filter(column -> column.tableIndex == _tableIndex && column.columnName.equals(_columnName))
@@ -554,6 +555,11 @@ public class SQLSelect
             order = new SQLOrder(this);
         }
         return order;
+    }
+
+    public boolean hasOrder()
+    {
+        return this.order != null;
     }
 
     public void limit(final Integer limit)

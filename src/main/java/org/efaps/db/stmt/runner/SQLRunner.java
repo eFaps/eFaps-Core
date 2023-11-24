@@ -133,7 +133,7 @@ public class SQLRunner
             preparePrint((AbstractPrint) _runnable);
         } else if (isInsert()) {
             prepareInsert();
-        } else if (isDelete()){
+        } else if (isDelete()) {
             prepareDelete();
         } else {
             prepareUpdate();
@@ -153,7 +153,7 @@ public class SQLRunner
             prepareUpdate(update.getInstance().getType(), update.getInstance());
         } else if (runnable instanceof final ListUpdate update) {
             final Map<Type, List<Instance>> types = update.getInstances().stream()
-                .collect(Collectors.groupingBy(Instance::getType));
+                            .collect(Collectors.groupingBy(Instance::getType));
             for (final Entry<Type, List<Instance>> entry : types.entrySet()) {
                 prepareUpdate(entry.getKey(), entry.getValue().stream().toArray(Instance[]::new));
             }
@@ -170,7 +170,8 @@ public class SQLRunner
         prepareUpdate(type);
     }
 
-    private void prepareUpdate(final Type _type, final Instance... _instances)
+    private void prepareUpdate(final Type _type,
+                               final Instance... _instances)
         throws EFapsException
     {
         final Iterator<?> iter = _type.getAttributes().entrySet().iterator();
@@ -231,7 +232,8 @@ public class SQLRunner
         return ret;
     }
 
-    private SQLUpdate getSQLUpdate(final Type _type, final SQLTable _sqlTable)
+    private SQLUpdate getSQLUpdate(final Type _type,
+                                   final SQLTable _sqlTable)
     {
         SQLUpdate ret;
         if (updatemap.containsKey(_sqlTable)) {
@@ -240,7 +242,7 @@ public class SQLRunner
             final AbstractUpdate update = (AbstractUpdate) runnable;
             final Long[] ids;
             if (update instanceof AbstractObjectUpdate) {
-                ids = new Long[] { ((AbstractObjectUpdate) update).getInstance().getId()};
+                ids = new Long[] { ((AbstractObjectUpdate) update).getInstance().getId() };
             } else if (update instanceof ListUpdate) {
                 ids = ((ListUpdate) update).getInstances().stream()
                                 .filter(instance -> instance.getType().equals(_type))
@@ -290,15 +292,17 @@ public class SQLRunner
 
             if (order != null) {
                 int orderIdx = 0;
-                for (final IOrderElement orderElement: order.getElementsList()) {
-                    if (orderElement.getKey().equals(select.getAlias()) || orderElement.getKey().equals(String.valueOf(idx))) {
+                for (final IOrderElement orderElement : order.getElementsList()) {
+                    if (orderElement.getKey().equals(select.getAlias())
+                                    || orderElement.getKey().equals(String.valueOf(idx))) {
                         final List<AbstractElement<?>> orderables = select.getElements().stream()
                                         .filter(element -> element instanceof IOrderable)
                                         .collect(Collectors.toList());
                         if (orderables.isEmpty()) {
                             LOG.warn("Cannot add order for Key: {}", orderElement);
                         } else {
-                            ((IOrderable) orderables.get(orderables.size() - 1)).append2SQLOrder(orderIdx, sqlSelect.getOrder(),
+                            ((IOrderable) orderables.get(orderables.size() - 1)).append2SQLOrder(orderIdx,
+                                            sqlSelect.getOrder(),
                                             orderElement.isDesc());
                         }
                         break;
@@ -314,6 +318,10 @@ public class SQLRunner
             }
             idx++;
         }
+        if (order != null && !sqlSelect.hasOrder()) {
+            LOG.warn("Could not add order for: '{}'", order.eqlStmt());
+        }
+
         if (sqlSelect.getColumns().size() > 0) {
             if (_print instanceof ObjectPrint) {
                 addWhere4ObjectPrint((ObjectPrint) _print);
@@ -339,15 +347,18 @@ public class SQLRunner
      *
      * @return true, if is prints the
      */
-    private boolean isPrint() {
+    private boolean isPrint()
+    {
         return runnable instanceof AbstractPrint;
     }
 
-    private boolean isInsert() {
+    private boolean isInsert()
+    {
         return runnable instanceof Insert;
     }
 
-    private boolean isDelete() {
+    private boolean isDelete()
+    {
         return runnable instanceof AbstractDelete;
     }
 
@@ -361,7 +372,8 @@ public class SQLRunner
         throws EFapsException
     {
         final Map<TableIdx, CompanyCriteria> companyCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId)).collect(Collectors.toList());
+        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
+                        .collect(Collectors.toList());
         for (final Type type : types) {
             if (type.isCompanyDependent()) {
                 final TableIdx tableIdx = evalTableIdx(type.getCompanyAttribute());
@@ -380,23 +392,23 @@ public class SQLRunner
                 List<String> ids;
                 if (_print.has(StmtFlag.COMPANYINDEPENDENT)) {
                     if (isConsortium) {
-                       ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                            .map(compId -> {
-                                try {
-                                    return Company.get(compId).getConsortiums().stream();
-                                } catch (final CacheReloadException e) {
-                                    return Arrays.asList(compId).stream();
-                                }
-                            })
-                            .map(String::valueOf)
-                            .collect(Collectors.toList());
+                        ids = Context.getThreadContext().getPerson().getCompanies().stream()
+                                        .map(compId -> {
+                                            try {
+                                                return Company.get(compId).getConsortiums().stream();
+                                            } catch (final CacheReloadException e) {
+                                                return Arrays.asList(compId).stream();
+                                            }
+                                        })
+                                        .map(String::valueOf)
+                                        .collect(Collectors.toList());
                     } else {
                         ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.toList());
+                                        .map(String::valueOf)
+                                        .collect(Collectors.toList());
                     }
                 } else if (isConsortium) {
-                    ids =  Context.getThreadContext().getCompany().getConsortiums().stream()
+                    ids = Context.getThreadContext().getCompany().getConsortiums().stream()
                                     .map(String::valueOf)
                                     .collect(Collectors.toList());
                 } else {
@@ -406,7 +418,7 @@ public class SQLRunner
                 where.addCriteria(entry.getKey().getIdx(),
                                 Collections.singletonList(entry.getValue().sqlColCompany),
                                 ids.size() > 1 ? Comparison.IN : Comparison.EQUAL, new LinkedHashSet<>(ids),
-                                                false, Connection.AND);
+                                false, Connection.AND);
             }
         }
     }
@@ -421,7 +433,8 @@ public class SQLRunner
         throws EFapsException
     {
         final Map<TableIdx, AssociationCriteria> associationCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId)).collect(Collectors.toList());
+        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
+                        .collect(Collectors.toList());
         for (final Type type : types) {
             if (type.hasAssociation()) {
                 final TableIdx tableIdx = evalTableIdx(type.getAssociationAttribute());
@@ -490,7 +503,7 @@ public class SQLRunner
      *
      * @param _print the print
      * @param typeCriteria2
-    */
+     */
     private void addBaseTypeCriteria(final QueryPrint _print,
                                      final Set<TypeCriterion> _typeCriteria)
     {
@@ -509,9 +522,11 @@ public class SQLRunner
 
     /**
      * Adds the where.
+     *
      * @throws CacheReloadException on error
      */
-    private void addWhere4QueryPrint(final QueryPrint _print, final Set<TypeCriterion> _typeCriteria)
+    private void addWhere4QueryPrint(final QueryPrint _print,
+                                     final Set<TypeCriterion> _typeCriteria)
         throws EFapsException
     {
         final Filter filter = _print.getFilter();
@@ -539,12 +554,12 @@ public class SQLRunner
             sqlSelect.addPart(SQLPart.AND);
         }
         sqlSelect.addColumnPart(0, "ID")
-            .addPart(SQLPart.IN)
-            .addPart(SQLPart.PARENTHESIS_OPEN)
-            .addValuePart(_print.getInstances().stream()
-                        .map(instance -> String.valueOf(instance.getId()))
-                        .collect(Collectors.joining(SQLPart.COMMA.getDefaultValue())))
-            .addPart(SQLPart.PARENTHESIS_CLOSE);
+                        .addPart(SQLPart.IN)
+                        .addPart(SQLPart.PARENTHESIS_OPEN)
+                        .addValuePart(_print.getInstances().stream()
+                                        .map(instance -> String.valueOf(instance.getId()))
+                                        .collect(Collectors.joining(SQLPart.COMMA.getDefaultValue())))
+                        .addPart(SQLPart.PARENTHESIS_CLOSE);
     }
 
     @Override
@@ -635,7 +650,8 @@ public class SQLRunner
      *
      * @throws EFapsException the e faps exception
      */
-    private void executeInserts() throws EFapsException
+    private void executeInserts()
+        throws EFapsException
     {
         ConnectionResource con = null;
         try {
@@ -671,7 +687,8 @@ public class SQLRunner
      * @throws EFapsException the e faps exception
      */
     @SuppressWarnings("unchecked")
-    protected boolean executeSQLStmt(final ISelectionProvider _sqlProvider, final String _complStmt)
+    protected boolean executeSQLStmt(final ISelectionProvider _sqlProvider,
+                                     final String _complStmt)
         throws EFapsException
     {
         SQLRunner.LOG.debug("SQL-Statement: {}", _complStmt);
@@ -706,7 +723,8 @@ public class SQLRunner
                 throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
             }
             if (runnable.has(StmtFlag.REQCACHED)) {
-                final ICacheDefinition cacheDefinition = new ICacheDefinition() {
+                final ICacheDefinition cacheDefinition = new ICacheDefinition()
+                {
 
                     @Override
                     public long getLifespan()
@@ -721,7 +739,7 @@ public class SQLRunner
                     }
                 };
                 QueryCache.put(cacheDefinition, QueryKey.get(Context.getThreadContext().getRequestId(), _complStmt),
-                               QueryValue.get(Context.getThreadContext().getRequestId(), rows));
+                                QueryValue.get(Context.getThreadContext().getRequestId(), rows));
             }
         }
         for (final Object[] row : rows) {
@@ -796,7 +814,7 @@ public class SQLRunner
          * @param _id the id
          */
         AssociationCriteria(final String _sqlColAssociation,
-                        final long _typeId)
+                            final long _typeId)
         {
             sqlColAssociation = _sqlColAssociation;
             typeId = _typeId;
