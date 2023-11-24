@@ -177,7 +177,7 @@ public class BuilderTest
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrIntegerAttribute] == 1"
                         + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_AllAttrIntegerAttribute\""
-                        + " order by AllAttrIntegerAttribute asc");
+                        + " order by CIALIAS_AllAttrIntegerAttribute asc");
     }
 
     @Test
