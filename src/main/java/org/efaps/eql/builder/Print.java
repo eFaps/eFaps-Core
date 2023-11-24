@@ -142,7 +142,7 @@ public class Print
 
     public Print orderBy(final CIAttribute _ciAttr)
     {
-        super.orderBy(_ciAttr.name);
+        super.orderBy(getCIAlias(_ciAttr));
         return getThis();
     }
 
