@@ -39,6 +39,7 @@ import org.efaps.db.stmt.selection.elements.AttributeElement;
 import org.efaps.db.stmt.selection.elements.AttributeSetElement;
 import org.efaps.db.stmt.selection.elements.ClassElement;
 import org.efaps.db.stmt.selection.elements.ExecElement;
+import org.efaps.db.stmt.selection.elements.FileElement;
 import org.efaps.db.stmt.selection.elements.FirstElement;
 import org.efaps.db.stmt.selection.elements.FormatElement;
 import org.efaps.db.stmt.selection.elements.IDElement;
@@ -209,6 +210,8 @@ public final class Selection
                         case ID:
                             analyzeIDElement(select, type);
                             break;
+                        case FILE:
+                            select.addElement(new FileElement(currentType));
                         default:
                             break;
                     }

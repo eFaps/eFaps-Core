@@ -27,6 +27,7 @@ public class LabelElement
     extends AbstractElement<LabelElement>
     implements IAuxillary
 {
+
     /** The Constant LOG. */
     private static final Logger LOG = LoggerFactory.getLogger(LabelElement.class);
 
@@ -46,7 +47,8 @@ public class LabelElement
                 object = ((Status) object).getLabel();
             } else if (object instanceof Type) {
                 object = ((Type) object).getLabel();
-            } else {
+            } else if (getPrevious() == null
+                            || getPrevious() != null && !(getPrevious() instanceof FileElement)) {
                 LOG.warn("LabelElement was called with unexpected Object: {}", object);
             }
         }
