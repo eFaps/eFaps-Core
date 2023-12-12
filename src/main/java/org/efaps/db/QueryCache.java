@@ -17,7 +17,7 @@
 
 package org.efaps.db;
 
-import org.efaps.admin.AppConfigHandler;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.InfinispanCache;
 import org.efaps.util.cache.NoOpCache;
@@ -59,6 +59,8 @@ public final class QueryCache
 
     private static boolean INIT;
 
+    private static boolean ACTIVE;
+
     /**
      * Utility class therefore no public Constructor.
      */
@@ -71,7 +73,10 @@ public final class QueryCache
      */
     public static void initialize()
     {
-        if (AppConfigHandler.get().isQueryCacheDeactivated()) {
+        final var config = ConfigProvider.getConfig();
+        ACTIVE = config.getOptionalValue("core.querycache.active", Boolean.class).orElse(true);
+
+        if (!ACTIVE) {
             QueryCache.NOOP = new NoOpQueryCache();
         } else {
             final Cache<QueryKey, Object> sqlCache = InfinispanCache.get()
@@ -89,7 +94,7 @@ public final class QueryCache
      */
     public static void cleanByKey(final String _key)
     {
-        if (!AppConfigHandler.get().isQueryCacheDeactivated()) {
+        if (ACTIVE) {
             final var cache = get();
             if (!cache.isEmpty()) {
                 final var queryFactory = Search.getQueryFactory(cache);
@@ -111,7 +116,7 @@ public final class QueryCache
                            final QueryKey _querykey,
                            final QueryValue _object)
     {
-        if (!AppConfigHandler.get().isQueryCacheDeactivated()) {
+        if (ACTIVE) {
             final Cache<QueryKey, QueryValue> cache = QueryCache.get();
             if (_cacheDef.getMaxIdleTime() != 0) {
                 cache.put(_querykey, _object, _cacheDef.getLifespan(), _cacheDef.getLifespanUnit(),
@@ -131,7 +136,7 @@ public final class QueryCache
     public static Cache<QueryKey, QueryValue> get()
     {
         final Cache<QueryKey, QueryValue> ret;
-        if (AppConfigHandler.get().isQueryCacheDeactivated()) {
+        if (!ACTIVE) {
             ret = QueryCache.NOOP;
         } else {
             ret = InfinispanCache.get().<QueryKey, QueryValue>getCache(QueryCache.CACHE).getAdvancedCache()

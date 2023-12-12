@@ -46,11 +46,6 @@ public final class AppConfigHandler
         ACCESSCACHE_DEACTIVATE("org.efaps.application.config.AccessCache.deactivate"),
 
         /**
-         * Deactivate the AccessCache.
-         */
-        QUERYCACHE_DEACTIVATE("org.efaps.application.config.QueryCache.deactivate"),
-
-        /**
          * The id of this system as needed by the GeneralInstance mechanism.
          */
         SYSTEMID("org.efaps.application.config.SystemID"),
@@ -95,11 +90,6 @@ public final class AppConfigHandler
     private final boolean accessCacheDeactivated;
 
     /**
-     * Possibility to deactivate the AccessCache.
-     */
-    private final boolean queryCacheDeactivated;
-
-    /**
      *  The id of this system as needed by the GeneralInstance mechanism.
      */
     private final int systemID;
@@ -116,7 +106,6 @@ public final class AppConfigHandler
     private AppConfigHandler(final Map<String, String> _values)
     {
         this.accessCacheDeactivated =  "true".equalsIgnoreCase(_values.get(Parameter.ACCESSCACHE_DEACTIVATE.getKey()));
-        this.queryCacheDeactivated =  "true".equalsIgnoreCase(_values.get(Parameter.QUERYCACHE_DEACTIVATE.getKey()));
         if (_values.containsKey(Parameter.SYSTEMID.getKey())) {
             this.systemID = Integer.parseInt(_values.get(Parameter.SYSTEMID.getKey()));
         } else {
@@ -137,16 +126,6 @@ public final class AppConfigHandler
     public boolean isAccessCacheDeactivated()
     {
         return this.accessCacheDeactivated;
-    }
-
-    /**
-     * Getter method for the instance variable {@link #queryCacheDeactivated}.
-     *
-     * @return value of instance variable {@link #queryCacheDeactivated}
-     */
-    public boolean isQueryCacheDeactivated()
-    {
-        return this.queryCacheDeactivated;
     }
 
     /**
