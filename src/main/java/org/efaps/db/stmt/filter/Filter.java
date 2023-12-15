@@ -399,7 +399,7 @@ public class Filter
                                     } else {
                                         where.addCriteria(index.intValue(),
                                                         Collections.singletonList(criteria.get(0).getSqlColType()),
-                                                        Comparison.EQUAL, values, false, Connection.AND);
+                                                        Comparison.EQUAL, values, false, Connection.AND).setMain(true);
                                     }
                                 }
                             });

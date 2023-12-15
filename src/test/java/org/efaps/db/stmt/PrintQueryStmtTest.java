@@ -326,14 +326,65 @@ System.out.println(stmtStr);
         verify.verify();
     }
 
+    @Test(description = "Test specific stmts", dataProvider = "SpecificDataProvider")
+    public void testSpecific(final String _stmt, final String _sql)
+        throws EFapsException
+    {
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final SQLVerify verify = SQLVerify.builder().withSql(_sql).build();
+        printStmt.execute();
+        verify.verify();
+    }
+
+    @DataProvider(name = "SpecificDataProvider")
+    public static Iterator<Object[]> specificDataProvider(final ITestContext _context)
+    {
+        final List<Object[]> ret = new ArrayList<>();
+
+        ret.add(new Object[] {
+                        String.format("""
+                            print query type %s\s\s\
+                            where attribute[%s] like "F988" or attribute[%s] like "F999" \
+                            select attribute[%s]""",
+                                        Mocks.TypedType.getName(), Mocks.TypedTypeTestAttr.getName(),
+                                        Mocks.TypedTypeTestAttr.getName(), Mocks.TypedTypeTestAttr.getName()),
+                        String.format("""
+                            select T0.%s,T0.ID,T0.TYPE\s\
+                            from %s T0\s\
+                            where (T0.%s like 'F988' or T0.%s like 'F999') and T0.TYPE = %s""",
+                                        Mocks.TypedTypeTestAttr.getSQLColumnName(),
+                                        Mocks.AbstractTypeSQLTable.getSqlTableName(),
+                                        Mocks.TypedTypeTestAttr.getSQLColumnName(),
+                                        Mocks.TypedTypeTestAttr.getSQLColumnName(),
+                                        Mocks.TypedType.getId())
+        });
+        ret.add(new Object[] {
+                        String.format("""
+                            print query type %s\s\s\
+                            where attribute[%s] like "F988" or attribute[%s] like "F999" \
+                            select attribute[%s]""",
+                                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(),
+                                        Mocks.TestAttribute.getName(), Mocks.TestAttribute.getName()),
+                        String.format("""
+                            select T0.%s,T0.ID\s\
+                            from %s T0\s\
+                            where T0.%s like 'F988' or T0.%s like 'F999'""",
+                                        Mocks.TestAttribute.getSQLColumnName(),
+                                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                                        Mocks.TestAttribute.getSQLColumnName(),
+                                        Mocks.TestAttribute.getSQLColumnName())
+        });
+        return ret.iterator();
+    }
+
     @DataProvider(name = "TwoWhereDataProvider")
     public static Iterator<Object[]> dataProvider2(final ITestContext _context)
     {
         final List<Object[]> ret = new ArrayList<>();
-        final Iterator<String> stmtIter = getStmtParts2().iterator();
         final Iterator<String> sqlIter = getSQLParts2().iterator();
-        while (stmtIter.hasNext()) {
-            ret.add(new Object[] { stmtIter.next(), sqlIter.next() });
+        for (final String element : getStmtParts2()) {
+            ret.add(new Object[] { element, sqlIter.next() });
         }
         return ret.iterator();
     }
@@ -341,21 +392,15 @@ System.out.println(stmtStr);
     public static List<String> getStmtParts2() {
 
         final List<String> ret = new ArrayList<>();
-        final Iterator<String> iter1 = getStmtWheres(Mocks.TestAttribute.getName()).iterator();
-        while (iter1.hasNext()) {
-            final String val = iter1.next();
+        for (final String val : getStmtWheres(Mocks.TestAttribute.getName())) {
             ret.add(String.format("print query type %s where %s and %s select attribute[%s]",
                             Mocks.SimpleType.getName(), val, val, Mocks.TestAttribute.getName()));
         }
-        final Iterator<String> iter2 = getStmtWheres(Mocks.TypedTypeTestAttr.getName()).iterator();
-        while (iter2.hasNext()) {
-            final String val = iter2.next();
+        for (final String val : getStmtWheres(Mocks.TypedTypeTestAttr.getName())) {
             ret.add(String.format("print query type %s where %s and %s select attribute[%s]",
                             Mocks.TypedType.getName(), val, val, Mocks.TypedTypeTestAttr.getName()));
         }
-        final Iterator<String> iter3 = getStmtWheres(Mocks.AbstractTypeStringAttribute.getName()).iterator();
-        while (iter3.hasNext()) {
-            final String val = iter3.next();
+        for (final String val : getStmtWheres(Mocks.AbstractTypeStringAttribute.getName())) {
             ret.add(String.format("print query type %s where %s and %s select attribute[%s]",
                             Mocks.AbstractType.getName(), val, val, Mocks.AbstractTypeStringAttribute.getName()));
         }
@@ -364,22 +409,16 @@ System.out.println(stmtStr);
 
     public static List<String> getSQLParts2() {
         final List<String> ret = new ArrayList<>();
-        final Iterator<String> iter1 = getSQLWheres(Mocks.TestAttribute.getSQLColumnName()).iterator();
-        while (iter1.hasNext()) {
-            final String val = iter1.next();
+        for (final String val : getSQLWheres(Mocks.TestAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID from %s T0 where T0.%s and T0.%s",
                         Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName(), val, val));
         }
-        final Iterator<String> iter2 = getSQLWheres(Mocks.TypedTypeTestAttr.getSQLColumnName()).iterator();
-        while (iter2.hasNext()) {
-            final String val = iter2.next();
+        for (final String val : getSQLWheres(Mocks.TypedTypeTestAttr.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.%s and T0.%s and T0.TYPE = %s",
                             Mocks.TypedTypeTestAttr.getSQLColumnName(), Mocks.TypedTypeSQLTable.getSqlTableName(),
                             val, val, Mocks.TypedType.getId()));
         }
-        final Iterator<String> iter3 = getSQLWheres(Mocks.AbstractTypeStringAttribute.getSQLColumnName()).iterator();
-        while (iter3.hasNext()) {
-            final String val = iter3.next();
+        for (final String val : getSQLWheres(Mocks.AbstractTypeStringAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where "
                             + "T0.%s and T0.%s and T0.TYPE in (%s,%s)",
                             Mocks.AbstractTypeStringAttribute.getSQLColumnName(),
@@ -397,33 +436,29 @@ System.out.println(stmtStr);
     public static Iterator<Object[]> dataProvider1(final ITestContext _context)
     {
         final List<Object[]> ret = new ArrayList<>();
-        final Iterator<String> stmtIter = getStmtParts1().iterator();
         final Iterator<String> sqlIter = getSQLParts1().iterator();
-        while (stmtIter.hasNext()) {
-            ret.add(new Object[] { stmtIter.next(), sqlIter.next() });
+        for (final String element : getStmtParts1()) {
+            ret.add(new Object[] { element, sqlIter.next() });
         }
         return ret.iterator();
     }
 
     public static List<String> getSQLParts1() {
         final List<String> ret = new ArrayList<>();
-        final Iterator<String> iter1 = getSQLWheres(Mocks.TestAttribute.getSQLColumnName()).iterator();
-        while (iter1.hasNext()) {
+        for (final String element : getSQLWheres(Mocks.TestAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID from %s T0 where T0.%s", Mocks.TestAttribute.getSQLColumnName(),
-                            Mocks.SimpleTypeSQLTable.getSqlTableName(), iter1.next()));
+                            Mocks.SimpleTypeSQLTable.getSqlTableName(), element));
         }
-        final Iterator<String> iter2 = getSQLWheres(Mocks.TypedTypeTestAttr.getSQLColumnName()).iterator();
-        while (iter2.hasNext()) {
+        for (final String element : getSQLWheres(Mocks.TypedTypeTestAttr.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.%s and T0.TYPE = %s",
                             Mocks.TypedTypeTestAttr.getSQLColumnName(), Mocks.TypedTypeSQLTable.getSqlTableName(),
-                            iter2.next(), Mocks.TypedType.getId()));
+                            element, Mocks.TypedType.getId()));
         }
-        final Iterator<String> iter3 = getSQLWheres(Mocks.AbstractTypeStringAttribute.getSQLColumnName()).iterator();
-        while (iter3.hasNext()) {
+        for (final String element : getSQLWheres(Mocks.AbstractTypeStringAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.%s and T0.TYPE in (%s,%s)",
                             Mocks.AbstractTypeStringAttribute.getSQLColumnName(),
                             Mocks.AbstractTypeSQLTable.getSqlTableName(),
-                            iter3.next(),
+                            element,
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
                                 ? Mocks.ChildType1.getId() : Mocks.ChildType2.getId(),
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
@@ -435,20 +470,17 @@ System.out.println(stmtStr);
     public static List<String> getStmtParts1() {
 
         final List<String> ret = new ArrayList<>();
-        final Iterator<String> iter = getStmtWheres(Mocks.TestAttribute.getName()).iterator();
-        while (iter.hasNext()) {
+        for (final String element : getStmtWheres(Mocks.TestAttribute.getName())) {
             ret.add(String.format("print query type %s where %s select attribute[%s]",
-                            Mocks.SimpleType.getName(), iter.next(), Mocks.TestAttribute.getName()));
+                            Mocks.SimpleType.getName(), element, Mocks.TestAttribute.getName()));
         }
-        final Iterator<String> iter2 = getStmtWheres(Mocks.TypedTypeTestAttr.getName()).iterator();
-        while (iter2.hasNext()) {
+        for (final String element : getStmtWheres(Mocks.TypedTypeTestAttr.getName())) {
             ret.add(String.format("print query type %s where %s select attribute[%s]",
-                            Mocks.TypedType.getName(), iter2.next(), Mocks.TypedTypeTestAttr.getName()));
+                            Mocks.TypedType.getName(), element, Mocks.TypedTypeTestAttr.getName()));
         }
-        final Iterator<String> iter3 = getStmtWheres(Mocks.AbstractTypeStringAttribute.getName()).iterator();
-        while (iter3.hasNext()) {
+        for (final String element : getStmtWheres(Mocks.AbstractTypeStringAttribute.getName())) {
             ret.add(String.format("print query type %s where %s select attribute[%s]",
-                            Mocks.AbstractType.getName(), iter3.next(), Mocks.AbstractTypeStringAttribute.getName()));
+                            Mocks.AbstractType.getName(), element, Mocks.AbstractTypeStringAttribute.getName()));
         }
         return ret;
     }
@@ -524,26 +556,20 @@ System.out.println(stmtStr);
         orderbys.add(new String[]{"1 desc", "desc"});
         orderbys.add(new String[]{"SomeKey desc", "desc"});
 
-        final Iterator<String[]> iter = orderbys.iterator();
-        while (iter.hasNext()) {
-            final String[] values = iter.next();
+        for (final String[] values : orderbys) {
             stmts.add(String.format("print query type %s select attribute[%s] as SomeKey order by %s",
                             Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), values[0]));
             sqls.add(String.format("select T0.%s,T0.ID from %s T0  order by T0.%s %s", Mocks.TestAttribute.getSQLColumnName(),
                             Mocks.SimpleTypeSQLTable.getSqlTableName(), Mocks.TestAttribute.getSQLColumnName(), values[1]).trim());
         }
-        final Iterator<String[]> iter2  = orderbys.iterator();
-        while (iter2.hasNext()) {
-            final String[] values = iter2.next();
+        for (final String[] values : orderbys) {
             stmts.add(String.format("print query type %s select attribute[%s] as SomeKey order by %s",
                             Mocks.TypedType.getName(), Mocks.TypedTypeTestAttr.getName(), values[0]));
             sqls.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.TYPE = %s order by T0.%s %s",
                             Mocks.TypedTypeTestAttr.getSQLColumnName(), Mocks.TypedTypeSQLTable.getSqlTableName(),
                             Mocks.TypedType.getId(), Mocks.TypedTypeTestAttr.getSQLColumnName(), values[1]).trim());
         }
-        final Iterator<String[]> iter3 = orderbys.iterator();
-        while (iter3.hasNext()) {
-            final String[] values = iter3.next();
+        for (final String[] values : orderbys) {
             stmts.add(String.format("print query type %s select attribute[%s] as SomeKey order by %s",
                             Mocks.AbstractType.getName(), Mocks.AbstractTypeStringAttribute.getName(), values[0]));
             sqls.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.TYPE in (%s,%s) order by T0.%s %s",
@@ -557,10 +583,9 @@ System.out.println(stmtStr);
         }
 
         final List<Object[]> ret = new ArrayList<>();
-        final Iterator<String> stmtIter = stmts.iterator();
         final Iterator<String> sqlIter = sqls.iterator();
-        while (stmtIter.hasNext()) {
-            ret.add(new Object[] { stmtIter.next(), sqlIter.next() });
+        for (final String stmt : stmts) {
+            ret.add(new Object[] { stmt, sqlIter.next() });
         }
         return ret;
     }
@@ -599,12 +624,11 @@ System.out.println(stmtStr);
                 + " desc, T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
                 + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + " desc"});
 
-        final Iterator<String[]> iter = orderbys.iterator();
-        while (iter.hasNext()) {
-            final String[] values = iter.next();
-            stmts.add(String.format("print query type %s select attribute[%s] as Key1, attribute[%s] as Key2, attribute[%s] as Key3, "
-                            + "attribute[%s] as Key4, attribute[%s] as Key5 "
-                            + "order by %s",
+        for (final String[] values : orderbys) {
+            stmts.add(String.format("""
+                print query type %s select attribute[%s] as Key1, attribute[%s] as Key2, attribute[%s] as Key3,\s\
+                attribute[%s] as Key4, attribute[%s] as Key5\s\
+                order by %s""",
                             Mocks.AllAttrType.getName(), Mocks.AllAttrDateAttribute.getName(),
                             Mocks.AllAttrDecimalAttribute.getName(), Mocks.AllAttrIntegerAttribute.getName(),
                             Mocks.AllAttrLongAttribute.getName(), Mocks.AllAttrStringAttribute.getName(),
@@ -621,10 +645,9 @@ System.out.println(stmtStr);
         }
 
         final List<Object[]> ret = new ArrayList<>();
-        final Iterator<String> stmtIter = stmts.iterator();
         final Iterator<String> sqlIter = sqls.iterator();
-        while (stmtIter.hasNext()) {
-            ret.add(new Object[] { stmtIter.next(), sqlIter.next() });
+        for (final String stmt : stmts) {
+            ret.add(new Object[] { stmt, sqlIter.next() });
         }
         return ret;
     }

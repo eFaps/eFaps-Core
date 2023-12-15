@@ -129,6 +129,25 @@ public class SQLWhere
                              final StringBuilder _cmd)
     {
         if (sections.size() > 0) {
+            // if we have any Main and a
+            if (sections.stream().anyMatch(Section::isMain)
+                            && sections.stream()
+                                            .filter(section -> !section.isMain())
+                                            .anyMatch(section -> Connection.OR.equals(section.getConnection()))) {
+                final Group group = new Group();
+                final var secIter = sections.iterator();
+                var go = true;
+                while (secIter.hasNext() && go) {
+                    final var sec = secIter.next();
+                    go = !sec.isMain();
+                    if (go) {
+                        group.add(sec);
+                        secIter.remove();
+                    }
+                }
+                sections.add(0, group);
+            }
+
             if (isStarted()) {
                 new SQLSelectPart(SQLPart.AND).appendSQL(_cmd);
                 new SQLSelectPart(SQLPart.SPACE).appendSQL(_cmd);
@@ -265,6 +284,11 @@ public class SQLWhere
     {
 
         Connection getConnection();
+
+        default boolean isMain()
+        {
+            return false;
+        }
     }
 
     public static class Group
@@ -300,6 +324,7 @@ public class SQLWhere
         private Set<String> values;
         private boolean escape;
         private Connection connection;
+        private boolean main;
 
         public Criteria values(final Set<String> _values)
         {
@@ -383,6 +408,18 @@ public class SQLWhere
         public Criteria connection(final Connection _connection)
         {
             connection = _connection;
+            return this;
+        }
+
+        @Override
+        public boolean isMain()
+        {
+            return main;
+        }
+
+        public Criteria setMain(boolean main)
+        {
+            this.main = main;
             return this;
         }
     }

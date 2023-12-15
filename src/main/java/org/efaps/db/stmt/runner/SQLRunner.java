@@ -423,7 +423,7 @@ public class SQLRunner
                 where.addCriteria(entry.getKey().getIdx(),
                                 Collections.singletonList(entry.getValue().sqlColCompany),
                                 ids.size() > 1 ? Comparison.IN : Comparison.EQUAL, new LinkedHashSet<>(ids),
-                                false, Connection.AND);
+                                false, Connection.AND).setMain(true);
             }
         }
     }
@@ -476,7 +476,7 @@ public class SQLRunner
                 where.addCriteria(entry.getKey().getIdx(),
                                 Collections.singletonList(entry.getValue().sqlColAssociation),
                                 ids.size() > 1 ? Comparison.IN : Comparison.EQUAL, new LinkedHashSet<>(ids),
-                                false, Connection.AND);
+                                false, Connection.AND).setMain(true);
             }
         }
     }

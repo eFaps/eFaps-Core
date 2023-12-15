@@ -115,7 +115,7 @@ public class NestedQuery
                 final String tableName = table.getSqlTable();
                 final TableIdx tableidx = _parentSqlSelect.getIndexer().getTableIdx(tableName);
                 _parentSqlSelect.getWhere().addCriteria(tableidx.getIdx(), attr.getSqlColNames().get(0), Comparison.IN,
-                                sqlSelect.toString(), term.getConnection());
+                                sqlSelect.toString(), term.getConnection()).setMain(true);
             }
             break;
         }
