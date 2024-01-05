@@ -93,6 +93,8 @@ public final class Converter
             } catch (final SQLException e) {
                 throw new EFapsException("catched", e);
             }
+        } else if (value instanceof Enum) {
+            ret = String.valueOf(value);
         } else {
             LOG.warn("No specific converter defined for: {}", value);
             ret = String.valueOf(value);
