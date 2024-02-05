@@ -45,7 +45,6 @@ import javax.jcr.version.VersionException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
-import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.transaction.ConnectionResource;
@@ -222,14 +221,15 @@ public class JCRStoreResource
      * {@inheritDoc}
      */
     @Override
-    public long write(final InputStream _in,
+    public long write(final InputStream in,
                       final long _size,
                       final String _fileName)
         throws EFapsException
     {
         long size = _size;
         try {
-            final Binary bin = getBinary(_in);
+
+            final Binary bin = getSession().getValueFactory().createBinary(in);
             final Node resNode;
             if (identifier == null) {
                 final Node fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
@@ -250,7 +250,7 @@ public class JCRStoreResource
                 size = 0;
                 final OutputStream out = new ByteArrayOutputStream();
                 while (length > 0) {
-                    length = _in.read(buffer);
+                    length = in.read(buffer);
                     if (length > 0) {
                         out.write(buffer, 0, length);
                         size += length;
@@ -289,25 +289,6 @@ public class JCRStoreResource
             ret = ret.getNode(subFolder);
         } else {
             ret = ret.addNode(subFolder, NodeType.NT_FOLDER);
-        }
-        return ret;
-    }
-
-    /**
-     * Gets the binary.
-     *
-     * @param _in the in
-     * @return the binary
-     * @throws EFapsException on error
-     */
-    protected Binary getBinary(final InputStream _in)
-        throws EFapsException
-    {
-        Binary ret = null;
-        try {
-            ret = SerialValueFactory.getInstance().createBinary(_in);
-        } catch (final RepositoryException e) {
-            throw new EFapsException("RepositoryException", e);
         }
         return ret;
     }
