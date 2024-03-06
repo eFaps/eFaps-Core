@@ -34,6 +34,7 @@ public enum SQLPart
     ASC("asc"),
     /** ,. */
     COMMA(","),
+    COUNT("count(*)"),
     /** distinct. */
     DISTINCT("distinct"),
     /** desc. */

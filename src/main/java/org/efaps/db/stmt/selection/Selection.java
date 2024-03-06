@@ -309,7 +309,7 @@ public final class Selection
      * @return the main type
      * @throws EFapsException on error
      */
-    private Type evalMainType(final Collection<Type> _baseTypes)
+    public static Type evalMainType(final Collection<Type> _baseTypes)
         throws EFapsException
     {
         final Type ret;

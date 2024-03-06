@@ -55,6 +55,7 @@ import org.efaps.db.stmt.delete.AbstractDelete;
 import org.efaps.db.stmt.filter.Filter;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.stmt.print.AbstractPrint;
+import org.efaps.db.stmt.print.CountQuery;
 import org.efaps.db.stmt.print.ListPrint;
 import org.efaps.db.stmt.print.ObjectPrint;
 import org.efaps.db.stmt.print.QueryPrint;
@@ -127,7 +128,9 @@ public class SQLRunner
         LOG.trace("Preparing: {}", this);
         runnable = _runnable;
         sqlSelect = new SQLSelect();
-        if (isPrint()) {
+        if (isCount()) {
+            prepareCount((CountQuery) _runnable);
+        } else if (isPrint()) {
             preparePrint((AbstractPrint) _runnable);
         } else if (isInsert()) {
             prepareInsert();
@@ -255,6 +258,27 @@ public class SQLRunner
         return ret;
     }
 
+    private void prepareCount(final CountQuery count)
+        throws EFapsException
+    {
+        count.getStmt();
+        final Set<TypeCriterion> typeCriteria = new HashSet<>();
+        for (final Select select : count.getSelection().getAllSelects()) {
+            for (final AbstractElement<?> element : select.getElements()) {
+                if (element instanceof AbstractDataElement) {
+                    ((AbstractDataElement<?>) element).append2SQLSelect(sqlSelect);
+                }
+                if (element instanceof ITypeCriterion) {
+                    ((ITypeCriterion) element).add2TypeCriteria(sqlSelect, typeCriteria);
+                }
+            }
+        }
+        addBaseTypeCriteria(count, typeCriteria);
+        addWhere4QueryPrint(count, typeCriteria);
+        addCompanyCriteria(count);
+        addAssociationCriteria(count);
+    }
+
     /**
      * Prepare print.
      *
@@ -298,7 +322,7 @@ public class SQLRunner
                     if (orderElement.getKey().equals(select.getAlias())
                                     || orderElement.getKey().equals(String.valueOf(idx))) {
                         final List<AbstractElement<?>> orderables = select.getElements().stream()
-                                        .filter(element -> element instanceof IOrderable)
+                                        .filter(IOrderable.class::isInstance)
                                         .collect(Collectors.toList());
                         if (orderables.isEmpty()) {
                             LOG.warn("Cannot add order for Key: {}", orderElement);
@@ -336,7 +360,7 @@ public class SQLRunner
                     Filter.get(null).addTypeCriteria(sqlSelect, typeCriteria);
                 }
             } else {
-                addBaseTypeCriteria((QueryPrint) _print, typeCriteria);
+                addBaseTypeCriteria(_print, typeCriteria);
                 addWhere4QueryPrint((QueryPrint) _print, typeCriteria);
             }
             addCompanyCriteria(_print);
@@ -364,6 +388,12 @@ public class SQLRunner
     {
         return runnable instanceof AbstractDelete;
     }
+
+    private boolean isCount()
+    {
+        return runnable instanceof CountQuery;
+    }
+
 
     /**
      * Adds the company criteria.
@@ -507,7 +537,7 @@ public class SQLRunner
      * @param _print the print
      * @param typeCriteria2
      */
-    private void addBaseTypeCriteria(final QueryPrint _print,
+    private void addBaseTypeCriteria(final AbstractPrint _print,
                                      final Set<TypeCriterion> _typeCriteria)
     {
         final List<Type> types = _print.getTypes().stream().collect(Collectors.toList());
@@ -528,12 +558,12 @@ public class SQLRunner
      *
      * @throws CacheReloadException on error
      */
-    private void addWhere4QueryPrint(final QueryPrint _print,
-                                     final Set<TypeCriterion> _typeCriteria)
+    private void addWhere4QueryPrint(final IFiltered filtered,
+                                     final Set<TypeCriterion> typeCriteria)
         throws EFapsException
     {
-        final Filter filter = _print.getFilter();
-        filter.append2SQLSelect(sqlSelect, _typeCriteria);
+        final Filter filter = filtered.getFilter();
+        filter.append2SQLSelect(sqlSelect, typeCriteria);
     }
 
     /**

@@ -21,41 +21,35 @@ import java.util.UUID;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.db.stmt.filter.Filter;
 import org.efaps.db.stmt.runner.IFiltered;
+import org.efaps.db.stmt.selection.Select;
 import org.efaps.db.stmt.selection.Selection;
-import org.efaps.eql2.IPrintQueryStatement;
+import org.efaps.db.stmt.selection.elements.CountElement;
+import org.efaps.eql2.ICountQueryStatement;
 import org.efaps.eql2.IStatement;
 import org.efaps.eql2.IWhere;
 import org.efaps.eql2.StmtFlag;
-import org.efaps.eql2.impl.PrintQueryStatement;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The Class QueryPrint.
- */
-public class QueryPrint
-    extends AbstractPrint implements IFiltered
+public class CountQuery
+    extends AbstractPrint
+    implements IFiltered
 {
-    private static final Logger LOG = LoggerFactory.getLogger(QueryPrint.class);
 
-    /** The eql stmt. */
-    private final IPrintQueryStatement eqlStmt;
+    private static final Logger LOG = LoggerFactory.getLogger(CountQuery.class);
 
-    /**
-     * Instantiates a new object print.
-     *
-     * @param _eqlStmt the eql stmt
-     * @throws CacheReloadException on error
-     */
-    public QueryPrint(final IPrintQueryStatement _eqlStmt, final EnumSet<StmtFlag> _flags)
-        throws CacheReloadException
+    private final ICountQueryStatement eqlStmt;
+
+    public CountQuery(final ICountQueryStatement eqlStmt,
+                      final EnumSet<StmtFlag> flags)
+        throws EFapsException
     {
-        super(_flags);
-        eqlStmt = _eqlStmt;
-        for (final String typeStr : ((PrintQueryStatement) eqlStmt).getQuery().getTypes()) {
+        super(flags);
+        this.eqlStmt = eqlStmt;
+        for (final String typeStr : eqlStmt.getQuery().getTypes()) {
             final Type type;
             if (UUIDUtil.isUUID(typeStr)) {
                 type = Type.get(UUID.fromString(typeStr));
@@ -64,34 +58,24 @@ public class QueryPrint
             }
             if (type.isAbstract()) {
                 type.getChildTypes()
-                    .stream()
-                    .filter(t -> !t.isAbstract())
-                    .forEach(this::addType);
+                                .stream()
+                                .filter(t -> !t.isAbstract())
+                                .forEach(this::addType);
             } else {
                 addType(type);
             }
         }
         LOG.debug("Instanciated: {}", this);
+
+        final var mainType = Selection.evalMainType(getTypes());
+        final var selection = new Selection();
+        final Select select = Select.get();
+        select.getElements().add(new CountElement().setDBTable(mainType.getMainTable()));
+        selection.getSelects().add(select);
+        setSelection(selection);
     }
 
     @Override
-    public Selection getSelection()
-        throws EFapsException
-    {
-        Selection ret = super.getSelection();
-        if (ret == null) {
-            setSelection(Selection.get(this));
-            ret = super.getSelection();
-        }
-        return ret;
-    }
-
-    /**
-     * Gets the filter.
-     *
-     * @return the filter
-     * @throws CacheReloadException the cache reload exception
-     */
     public Filter getFilter()
         throws CacheReloadException
     {
@@ -104,4 +88,5 @@ public class QueryPrint
     {
         return eqlStmt;
     }
+
 }

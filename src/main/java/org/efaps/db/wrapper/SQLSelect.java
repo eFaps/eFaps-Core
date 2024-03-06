@@ -76,7 +76,7 @@ public class SQLSelect
     private int offset;
 
     private boolean squash;
-
+    private boolean count;
     /**
      * Instantiates a new SQL select.
      */
@@ -350,6 +350,9 @@ public class SQLSelect
             }
             column.appendSQL(cmd);
         }
+        if (count) {
+            cmd.append(Context.getDbType().getSQLPart(SQLPart.COUNT));
+        }
         cmd.append(" ").append(Context.getDbType().getSQLPart(SQLPart.FROM)).append(" ");
         first = true;
         for (final FromTable fromTable : fromTables) {
@@ -445,6 +448,12 @@ public class SQLSelect
     public SQLSelect distinct(final boolean _distinct)
     {
         distinct = _distinct;
+        return this;
+    }
+
+    public SQLSelect count(final boolean count)
+    {
+        this.count = count;
         return this;
     }
 

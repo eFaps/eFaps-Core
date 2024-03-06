@@ -65,6 +65,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class Evaluator
 {
+
     /** The Constant LOG. */
     private static final Logger LOG = LoggerFactory.getLogger(Evaluator.class);
 
@@ -125,7 +126,7 @@ public final class Evaluator
     private void squash()
         throws EFapsException
     {
-        if (selection.getSelects().stream().anyMatch(Select::isSquash)) {
+        if (selection != null && selection.getSelects().stream().anyMatch(Select::isSquash)) {
             final Select select = selection.getInstSelects().get(Selection.BASEPATH);
             final Squashing squash = new Squashing(select);
 
@@ -145,12 +146,19 @@ public final class Evaluator
      * @return the int
      * @throws EFapsException the eFaps exception
      */
-    public int count()
+    public long count()
         throws EFapsException
     {
-        initialize(false);
-        final Select select = selection.getInstSelects().get(Selection.BASEPATH);
-        return select.getObjects(this).size();
+        long ret;
+        if (selection.getInstSelects().isEmpty()) {
+            initialize(true);
+            ret = (long) selection.getSelects().get(0).getCurrent();
+        } else {
+            initialize(false);
+            final Select select = selection.getInstSelects().get(Selection.BASEPATH);
+            ret = select.getObjects(this).size();
+        }
+        return ret;
     }
 
     /**
@@ -181,7 +189,7 @@ public final class Evaluator
      * @param <T> the generic type
      * @param _alias the alias
      * @return the t
-     * @throws EFapsException  on error
+     * @throws EFapsException on error
      */
     @SuppressWarnings("unchecked")
     public <T> T get(final String _alias)
@@ -227,13 +235,14 @@ public final class Evaluator
             } else if (helper.getMsgPhrases().containsKey(_alias)) {
                 final var msgPhrase = helper.getMsgPhrases().get(_alias);
                 final List<Object> values = new ArrayList<>();
-                for (int i = 0; i <  msgPhrase.getArguments().size(); i++) {
+                for (int i = 0; i < msgPhrase.getArguments().size(); i++) {
                     final var alias = Print.getMsgPhraseAlias(msgPhrase.getId()) + "_" + i;
                     var value = get(alias);
-                    // for a MsgPharse having a value list is not very logical, s
+                    // for a MsgPharse having a value list is not very logical,
+                    // s
                     // o as long there is one value convert it
                     if (value instanceof List && ((List<?>) value).size() == 1) {
-                        value =  ((List<?>) value).get(0);
+                        value = ((List<?>) value).get(0);
                     }
                     values.add(value == null ? "" : value);
                 }
@@ -339,8 +348,8 @@ public final class Evaluator
         } else if (obj instanceof List) {
             final Iterator<Boolean> iter = accessList.iterator();
             ret = ((List<?>) obj).stream()
-                .map(ele -> iter.hasNext() && iter.next() ? ele : null)
-                .collect(Collectors.toList());
+                            .map(ele -> iter.hasNext() && iter.next() ? ele : null)
+                            .collect(Collectors.toList());
             ret = agregate(_select, (List<Object>) ret);
         } else if (accessList.size() == 1 && accessList.get(0)) {
             ret = obj;
@@ -381,8 +390,9 @@ public final class Evaluator
     }
 
     /**
-     * Move the evaluator to the next value.
-     * Skips values the User does not have access to.
+     * Move the evaluator to the next value. Skips values the User does not have
+     * access to.
+     *
      * @return true, if successful
      * @throws EFapsException on Error
      */
@@ -443,7 +453,8 @@ public final class Evaluator
                             ret = ((List<?>) obj).stream()
                                             .map(ele -> access.hasAccess((Instance) ele))
                                             .collect(Collectors.toList());
-                        } else // if the access is not empty... we are in a a child linkfrom. only if the previous
+                        } else // if the access is not empty... we are in a a
+                               // child linkfrom. only if the previous
                         // one did give access , access is still evaluated
                         if (ret.size() == 1) {
                             final var acc = ret.get(0);
@@ -453,8 +464,8 @@ public final class Evaluator
                         } else {
                             final Iterator<Boolean> iter = ret.iterator();
                             ret = ((List<?>) obj).stream()
-                                        .map(ele -> iter.next() && access.hasAccess((Instance) ele))
-                                        .collect(Collectors.toList());
+                                            .map(ele -> iter.next() && access.hasAccess((Instance) ele))
+                                            .collect(Collectors.toList());
                         }
                         accessTemp = ret.contains(true);
                     }
@@ -517,8 +528,8 @@ public final class Evaluator
                     if (object != null) {
                         if (object instanceof List) {
                             ((List<?>) object).stream()
-                                .filter(Objects::nonNull)
-                                .forEach(e -> instances.add((Instance) e));
+                                            .filter(Objects::nonNull)
+                                            .forEach(e -> instances.add((Instance) e));
                         } else {
                             instances.add((Instance) object);
                         }
@@ -629,7 +640,8 @@ public final class Evaluator
      * @return the selection evaluator
      * @throws EFapsException
      */
-    public static Evaluator get(final ISelectionProvider _selectionProvider, final EvalHelper _helper)
+    public static Evaluator get(final ISelectionProvider _selectionProvider,
+                                final EvalHelper _helper)
         throws EFapsException
     {
         return new Evaluator(_selectionProvider, _helper);

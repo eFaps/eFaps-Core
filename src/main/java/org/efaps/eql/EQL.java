@@ -22,10 +22,12 @@ import org.efaps.ci.CIType;
 import org.efaps.db.Instance;
 import org.efaps.db.stmt.AbstractStmt;
 import org.efaps.db.stmt.CIPrintStmt;
+import org.efaps.db.stmt.CountStmt;
 import org.efaps.db.stmt.DeleteStmt;
 import org.efaps.db.stmt.InsertStmt;
 import org.efaps.db.stmt.PrintStmt;
 import org.efaps.db.stmt.UpdateStmt;
+import org.efaps.eql.builder.Count;
 import org.efaps.eql.builder.Delete;
 import org.efaps.eql.builder.Insert;
 import org.efaps.eql.builder.Print;
@@ -35,11 +37,13 @@ import org.efaps.eql.builder.Update;
 import org.efaps.eql.builder.Where;
 import org.efaps.eql2.EQL2;
 import org.efaps.eql2.ICIPrintStatement;
+import org.efaps.eql2.ICountQueryStatement;
 import org.efaps.eql2.IDeleteStatement;
 import org.efaps.eql2.IInsertStatement;
 import org.efaps.eql2.IPrintStatement;
 import org.efaps.eql2.IStatement;
 import org.efaps.eql2.IUpdateStatement;
+import org.efaps.eql2.bldr.AbstractCountEQLBuilder;
 import org.efaps.eql2.bldr.AbstractDeleteEQLBuilder;
 import org.efaps.eql2.bldr.AbstractInsertEQLBuilder;
 import org.efaps.eql2.bldr.AbstractPrintEQLBuilder;
@@ -56,10 +60,17 @@ import org.efaps.eql2.bldr.AbstractWhereBuilder;
 public final class EQL
     extends EQL2
 {
+
     @Override
     protected AbstractPrintEQLBuilder<?> getPrint()
     {
         return new Print();
+    }
+
+    @Override
+    protected AbstractCountEQLBuilder<?> getCount()
+    {
+        return new Count();
     }
 
     @Override
@@ -118,21 +129,29 @@ public final class EQL
             ret = UpdateStmt.get((IUpdateStatement<?>) stmt);
         } else if (stmt instanceof ICIPrintStatement) {
             ret = CIPrintStmt.get((ICIPrintStatement<?>) stmt);
+        }  else if (stmt instanceof ICountQueryStatement) {
+            ret = CountStmt.get((ICountQueryStatement) stmt);
         }
         return ret;
     }
 
-    public static EQLBuilder builder() {
+    public static EQLBuilder builder()
+    {
         return new EQLBuilder(EQL2.eql());
     }
 
-    public static class EQLBuilder extends EQL2Builder<EQLBuilder> {
-        public EQLBuilder(final EQL2 _eql2) {
+    public static class EQLBuilder
+        extends EQL2Builder<EQLBuilder>
+    {
+
+        public EQLBuilder(final EQL2 _eql2)
+        {
             super(_eql2);
         }
 
         @Override
-        public Delete delete(final String... _oids) {
+        public Delete delete(final String... _oids)
+        {
             return (Delete) super.delete(_oids);
         }
 
@@ -199,6 +218,19 @@ public final class EQL
         public Query query(final CIType... _ciTypes)
         {
             return query(Arrays.stream(_ciTypes)
+                            .map(ciType -> ciType.getType().getName())
+                            .toArray(String[]::new));
+        }
+
+        @Override
+        public Count count(final String... _types)
+        {
+            return (Count) super.count(_types);
+        }
+
+        public Count count(final CIType... _ciTypes)
+        {
+            return count(Arrays.stream(_ciTypes)
                             .map(ciType -> ciType.getType().getName())
                             .toArray(String[]::new));
         }
