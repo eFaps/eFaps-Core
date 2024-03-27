@@ -83,12 +83,8 @@ jobs:
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
     - if: matrix.build-mode == 'manual'
       run: |
-        echo 'If you are using a "manual" build mode for one or more of the' \
-          'languages you are analyzing, replace this with the commands to build' \
-          'your code, for example:'
         wget https://raw.githubusercontent.com/eFaps/Utils/master/settings/settings.xml -O mySettings.xml
         mvn install -s mySettings.xml -DskipTests=true -B -U
-        exit 1
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
