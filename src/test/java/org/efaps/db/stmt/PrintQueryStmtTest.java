@@ -673,7 +673,7 @@ System.out.println(stmtStr);
     {
         final List<String> stmts = new ArrayList<>();
         final List<String> sqls = new ArrayList<>();
-
+/**
         stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s] ",
                             Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
         sqls.add(String.format("select T0.%s,T0.ID from %s T0  limit 100 offset 200",
@@ -729,7 +729,29 @@ System.out.println(stmtStr);
                     Mocks.SimpleTypeSQLTable.getSqlTableName(),
                     Mocks.RelationTypeSQLTable.getSqlTableName(),
                     Mocks.RealtionFromLinkAttribute.getSQLColumnName()));
+**/
 
+        stmts.add(String.format("""
+            print query type %1$s where attribute[%2$s] like "F988" \
+            and ( attribute[%3$s] in ( query type %4$s ) or attribute[%3$s] in ( 44,55 )) \
+            limit 100 offset 200 select attribute[%2$s], linkfrom[%5$s#%6$s].oid order by 1""",
+                        Mocks.AllAttrType.getName(),
+                        Mocks.AllAttrStringAttribute.getName(),
+                        Mocks.AllAttrLongAttribute.getName(),
+                        Mocks.SimpleType.getName(),
+                        Mocks.RelationType.getName(),
+                        Mocks.RealtionFromLinkAttribute.getName()));
+        sqls.add(String.format("""
+            select T0.%1$s,T1.ID,T0.ID \
+            from %2$s T0 left join %3$s T1 on T0.ID=T1.%4$s \
+            where T0.%1$s like 'F988' and (T0.%5$s in ( select N0.ID from T_DEMO N0 ) or T0.%5$s in (44,55)) \
+            and T0.ID in ( select L0.ID from  %2$s L0 where L0.%1$s like 'F988' and (L0.%5$s in ( select N0.ID from T_DEMO N0 ) or L0.%5$s in (44,55)) order by L0.%1$s limit 100 offset 200) \
+            order by T0.%1$s""",
+                    Mocks.AllAttrStringAttribute.getSQLColumnName(),
+                    Mocks.AllAttrTypeSQLTable.getSqlTableName(),
+                    Mocks.RelationTypeSQLTable.getSqlTableName(),
+                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                    Mocks.AllAttrLongAttribute.getSQLColumnName()));
 
         final List<Object[]> ret = new ArrayList<>();
         final Iterator<String> sqlIter = sqls.iterator();

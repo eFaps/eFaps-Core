@@ -15,6 +15,7 @@
  */
 package org.efaps.db.stmt.filter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,8 @@ import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.db.wrapper.SQLSelect;
+import org.efaps.db.wrapper.SQLWhere.Criteria;
+import org.efaps.db.wrapper.SQLWhere.Section;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.eql2.Comparison;
 import org.efaps.eql2.IAttributeSelectElement;
@@ -44,11 +47,12 @@ public class NestedQuery
         whereElement = _whereElement;
     }
 
-    public void append2SQLSelect(final List<Type> _parentTypes,
-                                 final SQLSelect _parentSqlSelect,
-                                 IWhereTerm<?> term)
+    public List<Section> append2SQLSelect(final List<Type> parentTypes,
+                                           final SQLSelect parentSqlSelect,
+                                           final IWhereTerm<?> term)
         throws EFapsException
     {
+        final var sections = new ArrayList<Section>();
         final INestedQuery nestedQuery = whereElement.getNestedQuery();
         final List<Type> types = TypeUtil.getTypes(nestedQuery.getTypes());
         final SQLSelect sqlSelect = new SQLSelect("N");
@@ -107,16 +111,23 @@ public class NestedQuery
                 }
             }
         }
-        for (final Type type : _parentTypes) {
+        for (final Type type : parentTypes) {
             final Attribute attr = type.getAttribute(attrName);
             if (attr != null) {
                 final SQLTable table = attr.getTable();
                 final String tableName = table.getSqlTable();
-                final TableIdx tableidx = _parentSqlSelect.getIndexer().getTableIdx(tableName);
-                _parentSqlSelect.getWhere().addCriteria(tableidx.getIdx(), attr.getSqlColNames().get(0), Comparison.IN,
-                                sqlSelect.toString(), term.getConnection()).setMain(false);
+                final TableIdx tableidx = parentSqlSelect.getIndexer().getTableIdx(tableName);
+                sections.add(new Criteria()
+                                .tableIndex(tableidx.getIdx())
+                                .colNames(attr.getSqlColNames())
+                                .comparison(Comparison.IN)
+                                .values(Set.of(sqlSelect.toString()))
+                                .escape(false)
+                                .connection(term.getConnection())
+                                .setMain(false));
             }
             break;
         }
+        return sections;
     }
 }

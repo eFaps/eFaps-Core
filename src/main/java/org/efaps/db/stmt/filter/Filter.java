@@ -45,6 +45,7 @@ import org.efaps.db.wrapper.SQLSelect.FromTableLeftJoin;
 import org.efaps.db.wrapper.SQLWhere;
 import org.efaps.db.wrapper.SQLWhere.Criteria;
 import org.efaps.db.wrapper.SQLWhere.Group;
+import org.efaps.db.wrapper.SQLWhere.Section;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.eql2.Comparison;
 import org.efaps.eql2.Connection;
@@ -56,6 +57,7 @@ import org.efaps.eql2.ISelectElement;
 import org.efaps.eql2.IWhere;
 import org.efaps.eql2.IWhereElement;
 import org.efaps.eql2.IWhereElementTerm;
+import org.efaps.eql2.IWhereGroupTerm;
 import org.efaps.eql2.IWhereSelect;
 import org.efaps.eql2.IWhereTerm;
 import org.efaps.util.EFapsException;
@@ -110,52 +112,65 @@ public class Filter
      * @param _sqlSelect the sql select
      * @throws EFapsException
      */
-    public void append2SQLSelect(final SQLSelect _sqlSelect,
-                                 final Set<TypeCriterion> _typeCriteria)
+    public void append2SQLSelect(final SQLSelect sqlSelect,
+                                 final Set<TypeCriterion> typeCriteria)
         throws EFapsException
     {
         if (iWhere != null) {
-            for (final IWhereTerm<?> term : iWhere.getTerms()) {
-                if (term instanceof IWhereElementTerm) {
-                    final IWhereElement element = ((IWhereElementTerm) term).getElement();
-                    if (element.getNestedQuery() != null) {
-                        final NestedQuery nestedQuery = new NestedQuery(element);
-                        nestedQuery.append2SQLSelect(types, _sqlSelect, term);
-                    } else if (element.getAttribute() != null) {
-                        attribute(_sqlSelect, term.getConnection(), element, null, null);
-                    } else if (element.getSelect() != null) {
-                        final IWhereSelect select = element.getSelect();
-                        final List<ILinktoSelectElement> linktoElements = new ArrayList<>();
-                        if (select.getElements(0) instanceof IClassSelectElement) {
-                            classSelect(_sqlSelect, element);
-                        } else {
-                            for (final ISelectElement ele : select.getElements()) {
-                                if (ele instanceof IBaseSelectElement) {
-                                    switch (((IBaseSelectElement) ele).getElement()) {
-                                        case STATUS:
-                                            status(_sqlSelect, term.getConnection(), element);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    linktoElements.clear();
-                                } else if (ele instanceof IAttributeSelectElement) {
-                                    attribute(_sqlSelect, term.getConnection(), element, ele, linktoElements);
-                                    linktoElements.clear();
-                                } else if (ele instanceof ILinktoSelectElement) {
-                                    linktoElements.add((ILinktoSelectElement) ele);
+            analyzeTerms(sqlSelect, iWhere.getTerms(), sqlSelect.getWhere().getSections());
+        }
+        addTypeCriteria(sqlSelect, typeCriteria);
+    }
+
+    protected void analyzeTerms(final SQLSelect sqlSelect,
+                                final IWhereTerm<?>[] whereTerms,
+                                final List<Section> sections)
+        throws EFapsException
+    {
+        for (final IWhereTerm<?> term : whereTerms) {
+            if (term instanceof IWhereElementTerm) {
+                final IWhereElement element = ((IWhereElementTerm) term).getElement();
+                if (element.getNestedQuery() != null) {
+                    final NestedQuery nestedQuery = new NestedQuery(element);
+                    sections.addAll(nestedQuery.append2SQLSelect(types, sqlSelect, term));
+                } else if (element.getAttribute() != null) {
+                    sections.add(attribute(sqlSelect, term.getConnection(), element, null, null));
+                } else if (element.getSelect() != null) {
+                    final IWhereSelect select = element.getSelect();
+                    final List<ILinktoSelectElement> linktoElements = new ArrayList<>();
+                    if (select.getElements(0) instanceof IClassSelectElement) {
+                        sections.add(classSelect(sqlSelect, element));
+                    } else {
+                        for (final ISelectElement ele : select.getElements()) {
+                            if (ele instanceof IBaseSelectElement) {
+                                switch (((IBaseSelectElement) ele).getElement()) {
+                                    case STATUS:
+                                        sections.add(status(sqlSelect, term.getConnection(), element));
+                                        break;
+                                    default:
+                                        break;
                                 }
+                                linktoElements.clear();
+                            } else if (ele instanceof IAttributeSelectElement) {
+                                sections.add(attribute(sqlSelect, term.getConnection(), element, ele, linktoElements));
+                                linktoElements.clear();
+                            } else if (ele instanceof ILinktoSelectElement) {
+                                linktoElements.add((ILinktoSelectElement) ele);
                             }
                         }
                     }
                 }
+            } else if (term instanceof IWhereGroupTerm) {
+                final var subTerms = ((IWhereGroupTerm) term).getTerms();
+                final var group = new Group().setConnection(term.getConnection());
+                sections.add(group);
+                analyzeTerms(sqlSelect, subTerms, group);
             }
         }
-        addTypeCriteria(_sqlSelect, _typeCriteria);
     }
 
-    protected void classSelect(final SQLSelect mainSqlSelect,
-                               final IWhereElement element)
+    protected Section classSelect(final SQLSelect mainSqlSelect,
+                                  final IWhereElement element)
         throws EFapsException
     {
         LOG.debug("Evaluation classSelectElement for where: {}", element);
@@ -199,18 +214,23 @@ public class Filter
                 subFilter.attribute(sqlSelect, Connection.AND, element, ele, new ArrayList<>());
             }
         }
-        mainSqlSelect.getWhere().addCriteria(tableidx.getIdx(), "ID", Comparison.IN, sqlSelect.toString(),
-                        Connection.AND);
+        return new Criteria()
+                        .tableIndex(tableidx.getIdx())
+                        .colNames(Collections.singletonList("ID"))
+                        .comparison(Comparison.IN)
+                        .values(Set.of(sqlSelect.toString()))
+                        .escape(false)
+                        .connection(Connection.AND);
     }
 
-
-    protected void attribute(final SQLSelect _sqlSelect,
-                             final Connection connection,
-                             final IWhereElement _element,
-                             final ISelectElement _selectElement,
-                             final List<ILinktoSelectElement> linktoElementStmts)
+    protected Section attribute(final SQLSelect _sqlSelect,
+                                final Connection connection,
+                                final IWhereElement _element,
+                                final ISelectElement _selectElement,
+                                final List<ILinktoSelectElement> linktoElementStmts)
         throws EFapsException
     {
+        Section ret = null;
         final String attrName;
         if (_selectElement != null && _selectElement instanceof IAttributeSelectElement) {
             attrName = ((IAttributeSelectElement) _selectElement).getName();
@@ -241,12 +261,12 @@ public class Filter
             final Type currentType = last.getAttribute().getLink();
             final var tableIdx = last.getJoinTableIdx(_sqlSelect);
             final Attribute attr = currentType.getAttribute(attrName);
-            addAttr(_sqlSelect, attr, connection, _element, tableIdx, false);
+            ret = attribute(_sqlSelect, attr, connection, _element, tableIdx, false);
         } else if (types.isEmpty() && type2tableIdx != null) {
             for (final var entry : type2tableIdx.entrySet()) {
                 final Attribute attr = entry.getKey().getAttribute(attrName);
                 if (attr != null) {
-                    addAttr(_sqlSelect, attr, connection, _element, entry.getValue(), false);
+                    ret = attribute(_sqlSelect, attr, connection, _element, entry.getValue(), false);
                     break;
                 }
             }
@@ -254,22 +274,25 @@ public class Filter
             for (final Type type : types) {
                 final Attribute attr = type.getAttribute(attrName);
                 if (attr != null) {
-                    addAttr(_sqlSelect, attr, connection, _element);
+                    ret = attribute(_sqlSelect, attr, connection, _element);
                     break;
                 }
             }
         }
+        return ret;
     }
 
-    protected void status(final SQLSelect _sqlSelect,
-                          final Connection connection,
-                          final IWhereElement _element)
+    protected Section status(final SQLSelect _sqlSelect,
+                             final Connection connection,
+                             final IWhereElement _element)
     {
+
+        Section ret = null;
         if (types.isEmpty() && type2tableIdx != null) {
             for (final var entry : type2tableIdx.entrySet()) {
                 final Attribute attr = entry.getKey().getStatusAttribute();
                 if (attr != null) {
-                    addAttr(_sqlSelect, attr, connection, _element, entry.getValue(), true);
+                    ret = attribute(_sqlSelect, attr, connection, _element, entry.getValue(), true);
                     break;
                 }
             }
@@ -277,11 +300,12 @@ public class Filter
             for (final Type type : types) {
                 final Attribute attr = type.getStatusAttribute();
                 if (attr != null) {
-                    addAttr(_sqlSelect, attr, connection, _element);
+                    ret = attribute(_sqlSelect, attr, connection, _element);
                     break;
                 }
             }
         }
+        return ret;
     }
 
     protected TableIdx tableIndex4Attr(final SQLSelect _sqlSelect,
@@ -310,24 +334,27 @@ public class Filter
         return tableIdx;
     }
 
-    protected void addAttr(final SQLSelect _sqlSelect,
-                           final Attribute _attr,
-                           final Connection connection,
-                           final IWhereElement _element)
+    protected Section attribute(final SQLSelect _sqlSelect,
+                                final Attribute _attr,
+                                final Connection connection,
+                                final IWhereElement _element)
     {
+        Section ret = null;
         if (_attr != null) {
             final var tableIdx = tableIndex4Attr(_sqlSelect, _attr);
-            addAttr(_sqlSelect, _attr, connection, _element, tableIdx, false);
+            ret = attribute(_sqlSelect, _attr, connection, _element, tableIdx, false);
         }
+        return ret;
     }
 
-    protected void addAttr(final SQLSelect _sqlSelect,
-                           final Attribute _attr,
-                           final Connection connection,
-                           final IWhereElement _element,
-                           final TableIdx _tableIdx,
-                           final boolean _nullable)
+    protected Section attribute(final SQLSelect _sqlSelect,
+                                final Attribute _attr,
+                                final Connection connection,
+                                final IWhereElement _element,
+                                final TableIdx _tableIdx,
+                                final boolean _nullable)
     {
+        Section ret = null;
         if (_attr != null) {
             final IAttributeType attrType = _attr.getAttributeType().getDbAttrType();
 
@@ -363,12 +390,19 @@ public class Filter
                                 .colName(_attr.getSqlColNames().get(0))
                                 .comparison(Comparison.NULL)
                                 .connection(Connection.OR));
-                _sqlSelect.getWhere().section(group);
+                ret = group;
             } else {
-                _sqlSelect.getWhere().addCriteria(_tableIdx.getIdx(), _attr.getSqlColNames(), _element.getComparison(),
-                                new LinkedHashSet<>(values), !noEscape, connection);
+                ret = new Criteria()
+                                .tableIndex(_tableIdx.getIdx())
+                                .colNames(_attr.getSqlColNames())
+                                .comparison(_element.getComparison())
+                                .values(new LinkedHashSet<>(values))
+                                .escape(!noEscape)
+                                .connection(connection)
+                                .setMain(false);
             }
         }
+        return ret;
     }
 
     protected String convertStatusValue(final Attribute _attr,
