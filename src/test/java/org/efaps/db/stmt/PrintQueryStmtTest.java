@@ -673,7 +673,7 @@ System.out.println(stmtStr);
     {
         final List<String> stmts = new ArrayList<>();
         final List<String> sqls = new ArrayList<>();
-/**
+
         stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s] ",
                             Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
         sqls.add(String.format("select T0.%s,T0.ID from %s T0  limit 100 offset 200",
@@ -729,7 +729,7 @@ System.out.println(stmtStr);
                     Mocks.SimpleTypeSQLTable.getSqlTableName(),
                     Mocks.RelationTypeSQLTable.getSqlTableName(),
                     Mocks.RealtionFromLinkAttribute.getSQLColumnName()));
-**/
+
 
         stmts.add(String.format("""
             print query type %1$s where attribute[%2$s] like "F988" \
