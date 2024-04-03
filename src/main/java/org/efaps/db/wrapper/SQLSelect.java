@@ -412,7 +412,7 @@ public class SQLSelect
                         var add = true;
                         for (final var childSection : (Group) section) {
                             add = add && childSection instanceof Criteria
-                                            && ((Criteria) section).getTableIndex() == maintable.getTableIndex();
+                                            && ((Criteria) childSection).getTableIndex() == maintable.getTableIndex();
                         }
                         if (add) {
                             limiter.getWhere().getSections().add(section);
