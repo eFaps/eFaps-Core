@@ -357,8 +357,6 @@ System.out.println(stmtStr);
         verify.verify();
     }
 
-
-
     @DataProvider(name = "SpecificDataProvider")
     public static Iterator<Object[]> specificDataProvider(final ITestContext _context)
     {
@@ -686,7 +684,7 @@ System.out.println(stmtStr);
                         Mocks.RealtionFromLinkAttribute.getName()));
         sqls.add(String.format("""
             select T0.%s,T1.ID,T0.ID from %s T0 left join %s T1 on T0.ID=T1.%s  \
-            and T0.ID in ( \
+            where T0.ID in ( \
             select L0.ID from  %s L0  limit 100 offset 200\
             )""",
                     Mocks.TestAttribute.getSQLColumnName(),
@@ -703,7 +701,7 @@ System.out.println(stmtStr);
             select T0.%s,T1.ID,T0.ID \
             from %s T0 \
             left join %s T1 on T0.ID=T1.%s  \
-            and T0.ID in ( \
+            where T0.ID in ( \
             select L0.ID from  %s L0  order by L0.%s limit 100 offset 200\
             ) \
             order by T0.%s""",
@@ -715,6 +713,22 @@ System.out.println(stmtStr);
                     Mocks.TestAttribute.getSQLColumnName(),
                     Mocks.TestAttribute.getSQLColumnName()));
 
+        stmts.add(String.format("print query type %s where attribute[%s] like \"F988\"  "
+                        + "limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid order by 1",
+                        Mocks.SimpleType.getName(),Mocks.TestAttribute.getName(), Mocks.TestAttribute.getName(),
+                        Mocks.RelationType.getName(), Mocks.RealtionFromLinkAttribute.getName()));
+        sqls.add(String.format("""
+            select T0.%1$s,T1.ID,T0.ID \
+            from %2$s T0 \
+            left join %3$s T1 on T0.ID=T1.%4$s \
+            where T0.%1$s like 'F988' and T0.ID in ( \
+            select L0.ID from  %2$s L0 where L0.%1$s like 'F988' order by L0.%1$s limit 100 offset 200\
+            ) \
+            order by T0.%1$s""",
+                    Mocks.TestAttribute.getSQLColumnName(),
+                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                    Mocks.RelationTypeSQLTable.getSqlTableName(),
+                    Mocks.RealtionFromLinkAttribute.getSQLColumnName()));
 
 
         final List<Object[]> ret = new ArrayList<>();

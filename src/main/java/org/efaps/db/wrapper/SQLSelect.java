@@ -373,6 +373,7 @@ public class SQLSelect
         if (where != null) {
             where.setStarted(whereAdded);
             where.appendSQL(tablePrefix, cmd);
+            whereAdded = true;
         }
 
         if (isSquash()) {
@@ -421,7 +422,7 @@ public class SQLSelect
                 });
             }
 
-            if (!whereAdded) {
+            if (whereAdded) {
                 new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
                 new SQLSelectPart(SQLPart.AND).appendSQL(cmd);
                 new SQLSelectPart(SQLPart.SPACE).appendSQL(cmd);
