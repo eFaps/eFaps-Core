@@ -335,6 +335,30 @@ System.out.println(stmtStr);
         verify.verify();
     }
 
+    @Test(description = "Test for order by", dataProvider = "orderByDataProvider")
+    public void testOrderBy(final String _stmt, final String _sql)
+        throws EFapsException
+    {
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final SQLVerify verify = SQLVerify.builder().withSql(_sql).build();
+        printStmt.execute();
+        verify.verify();
+    }
+
+    @Test(description = "Test for limit", dataProvider = "limitDataProvider")
+    public void testLimit(final String _stmt, final String _sql)
+        throws EFapsException
+    {
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final SQLVerify verify = SQLVerify.builder().withSql(_sql).build();
+        printStmt.execute();
+        verify.verify();
+    }
+
+
+
     @DataProvider(name = "SpecificDataProvider")
     public static Iterator<Object[]> specificDataProvider(final ITestContext _context)
     {
@@ -522,17 +546,6 @@ System.out.println(stmtStr);
         };
     }
 
-    @Test(description = "Test for order by", dataProvider = "orderByDataProvider")
-    public void testOrderBy(final String _stmt, final String _sql)
-        throws EFapsException
-    {
-        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
-        final PrintStmt printStmt = PrintStmt.get(stmt);
-        final SQLVerify verify = SQLVerify.builder().withSql(_sql).build();
-        printStmt.execute();
-        verify.verify();
-    }
-
     @DataProvider
     public static Iterator<Object[]> orderByDataProvider()
     {
@@ -641,6 +654,68 @@ System.out.println(stmtStr);
                             Mocks.AllAttrTypeSQLTable.getSqlTableName(),
                             values[1]).trim());
         }
+
+        final List<Object[]> ret = new ArrayList<>();
+        final Iterator<String> sqlIter = sqls.iterator();
+        for (final String stmt : stmts) {
+            ret.add(new Object[] { stmt, sqlIter.next() });
+        }
+        return ret;
+    }
+
+    @DataProvider
+    public static Iterator<Object[]> limitDataProvider()
+    {
+        final List<Object[]> ret = new ArrayList<>();
+        ret.addAll(limitData1());
+        return ret.iterator();
+    }
+
+    public static List<Object[]> limitData1()
+    {
+        final List<String> stmts = new ArrayList<>();
+        final List<String> sqls = new ArrayList<>();
+
+        stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s] ",
+                            Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
+        sqls.add(String.format("select T0.%s,T0.ID from %s T0  limit 100 offset 200",
+                        Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName()));
+
+        stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid",
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), Mocks.RelationType.getName(),
+                        Mocks.RealtionFromLinkAttribute.getName()));
+        sqls.add(String.format("""
+            select T0.%s,T1.ID,T0.ID from %s T0 left join %s T1 on T0.ID=T1.%s  \
+            and T0.ID in ( \
+            select L0.ID from  %s L0  limit 100 offset 200\
+            )""",
+                    Mocks.TestAttribute.getSQLColumnName(),
+                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                    Mocks.RelationTypeSQLTable.getSqlTableName(),
+                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                    Mocks.SimpleTypeSQLTable.getSqlTableName()));
+
+
+        stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid order by 1",
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), Mocks.RelationType.getName(),
+                        Mocks.RealtionFromLinkAttribute.getName()));
+        sqls.add(String.format("""
+            select T0.%s,T1.ID,T0.ID \
+            from %s T0 \
+            left join %s T1 on T0.ID=T1.%s  \
+            and T0.ID in ( \
+            select L0.ID from  %s L0  order by L0.%s limit 100 offset 200\
+            ) \
+            order by T0.%s""",
+                    Mocks.TestAttribute.getSQLColumnName(),
+                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                    Mocks.RelationTypeSQLTable.getSqlTableName(),
+                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                    Mocks.TestAttribute.getSQLColumnName(),
+                    Mocks.TestAttribute.getSQLColumnName()));
+
+
 
         final List<Object[]> ret = new ArrayList<>();
         final Iterator<String> sqlIter = sqls.iterator();
