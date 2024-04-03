@@ -25,6 +25,7 @@ import org.efaps.db.Context;
 import org.efaps.db.search.section.AbstractQSection;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.wrapper.SQLWhere.Criteria;
+import org.efaps.db.wrapper.SQLWhere.Group;
 import org.efaps.util.EFapsException;
 
 /**
@@ -391,7 +392,6 @@ public class SQLSelect
         return cmd.toString();
     }
 
-
     protected void addLimit4Squash(final StringBuilder cmd,
                                    final boolean whereAdded)
     {
@@ -406,6 +406,15 @@ public class SQLSelect
                 where.getSections().forEach(section -> {
                     if (section instanceof Criteria) {
                         if (((Criteria) section).getTableIndex() == maintable.getTableIndex()) {
+                            limiter.getWhere().getSections().add(section);
+                        }
+                    } else  if (section instanceof Group) {
+                        var add = true;
+                        for (final var childSection : (Group) section) {
+                            add = add && childSection instanceof Criteria
+                                            && ((Criteria) section).getTableIndex() == maintable.getTableIndex();
+                        }
+                        if (add) {
                             limiter.getWhere().getSections().add(section);
                         }
                     }
