@@ -39,6 +39,7 @@ import org.efaps.eql2.EQL2;
 import org.efaps.eql2.ICIPrintStatement;
 import org.efaps.eql2.ICountQueryStatement;
 import org.efaps.eql2.IDeleteStatement;
+import org.efaps.eql2.IExecStatement;
 import org.efaps.eql2.IInsertStatement;
 import org.efaps.eql2.IPrintStatement;
 import org.efaps.eql2.IStatement;
@@ -129,8 +130,10 @@ public final class EQL
             ret = UpdateStmt.get((IUpdateStatement<?>) stmt);
         } else if (stmt instanceof ICIPrintStatement) {
             ret = CIPrintStmt.get((ICIPrintStatement<?>) stmt);
-        }  else if (stmt instanceof ICountQueryStatement) {
+        } else if (stmt instanceof ICountQueryStatement) {
             ret = CountStmt.get((ICountQueryStatement) stmt);
+        } else if (stmt instanceof IExecStatement) {
+            ret = org.efaps.db.stmt.ExecStmt.get((IExecStatement) stmt);
         }
         return ret;
     }
