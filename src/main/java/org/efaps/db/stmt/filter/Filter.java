@@ -202,7 +202,7 @@ public class Filter
         sqlSelect.column(classTableIdx.getIdx(), colName);
 
         final var subFilter = Filter.get(null, classification);
-
+        final List<Section> subSections = new ArrayList<>();
         for (int i = 1; i < element.getSelect().getElements().length; i++) {
             final var ele = element.getSelect().getElements()[i];
             if (ele instanceof IBaseSelectElement) {
@@ -211,9 +211,11 @@ public class Filter
                         break;
                 }
             } else if (ele instanceof IAttributeSelectElement) {
-                subFilter.attribute(sqlSelect, Connection.AND, element, ele, new ArrayList<>());
+                subSections.add(subFilter.attribute(sqlSelect, Connection.AND, element, ele, new ArrayList<>()));
             }
         }
+        sqlSelect.getWhere().getSections().addAll(subSections);
+
         return new Criteria()
                         .tableIndex(tableidx.getIdx())
                         .colNames(Collections.singletonList("ID"))
