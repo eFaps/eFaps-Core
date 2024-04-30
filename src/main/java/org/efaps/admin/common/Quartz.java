@@ -84,6 +84,7 @@ public final class Quartz
         throws EFapsException
     {
         Quartz.QUARTZ = new Quartz();
+        LOG.info("Quartz activated: {}", Quartz.QUARTZ.active);
         if (Quartz.QUARTZ.active) {
             try {
                 // Kernel-Configuration
