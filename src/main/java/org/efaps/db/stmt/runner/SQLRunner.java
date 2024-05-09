@@ -81,6 +81,8 @@ import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLSelect.SQLSelectPart;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.db.wrapper.SQLWhere;
+import org.efaps.db.wrapper.SQLWhere.Criteria;
+import org.efaps.db.wrapper.SQLWhere.Group;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.eql.builder.Converter;
 import org.efaps.eql2.Comparison;
@@ -411,7 +413,8 @@ public class SQLRunner
             if (type.isCompanyDependent()) {
                 final TableIdx tableIdx = evalTableIdx(type.getCompanyAttribute());
                 final String columnName = type.getCompanyAttribute().getSqlColNames().get(0);
-                companyCriterias.put(tableIdx, new CompanyCriteria(columnName, type.getId()));
+                final var isChild = type.getCompanyAttribute().getTable().getMainTable() != null;
+                companyCriterias.put(tableIdx, new CompanyCriteria(columnName, type.getId(), isChild));
             }
         }
         if (!companyCriterias.isEmpty()) {
@@ -448,10 +451,25 @@ public class SQLRunner
                     ids = new ArrayList<>();
                     ids.add(String.valueOf(Context.getThreadContext().getCompany().getId()));
                 }
-                where.addCriteria(entry.getKey().getIdx(),
-                                Collections.singletonList(entry.getValue().sqlColCompany),
-                                ids.size() > 1 ? Comparison.IN : Comparison.EQUAL, new LinkedHashSet<>(ids),
-                                false, Connection.AND).setMain(true);
+                final Criteria criteria = new Criteria()
+                                .tableIndex(entry.getKey().getIdx())
+                                .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
+                                .comparison(ids.size() > 1 ? Comparison.IN : Comparison.EQUAL)
+                                .values(new LinkedHashSet<>(ids))
+                                .escape(false)
+                                .connection(Connection.AND);
+                if (entry.getValue().childTable) {
+                    final var group = new Group().setConnection(Connection.AND);
+                    group.add(criteria);
+                    group.add(new Criteria()
+                                .tableIndex(entry.getKey().getIdx())
+                                .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
+                                .comparison(Comparison.NULL)
+                                .connection(Connection.OR));
+                    where.section(group);
+                } else {
+                    where.section(criteria.setMain(true));
+                }
             }
         }
     }
@@ -796,6 +814,7 @@ public class SQLRunner
         /** The id. */
         private final long id;
 
+        private final boolean childTable;
         /**
          * Instantiates a new type criteria.
          *
@@ -803,10 +822,12 @@ public class SQLRunner
          * @param _id the id
          */
         CompanyCriteria(final String _sqlColCompany,
-                        final long _id)
+                        final long _id,
+                        final boolean childTable)
         {
             sqlColCompany = _sqlColCompany;
             id = _id;
+            this.childTable = childTable;
         }
 
         @Override
