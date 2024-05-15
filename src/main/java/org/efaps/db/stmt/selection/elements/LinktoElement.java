@@ -20,6 +20,7 @@ import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 
 /**
  * The Class LinktoElement.
@@ -67,7 +68,7 @@ public class LinktoElement
         if (getTable() instanceof SQLTable) {
             // evaluated if the attribute that is used as the base for the linkTo is inside a child table
             TableIdx childIdx = null;
-            if (attribute != null && !getTable().equals(attribute.getParent().getMainTable())) {
+            if (attribute != null && !getTable().equals(evalMainTable())) {
                 final TableIdx mainTableIdx;
                 if (getPrevious() != null && getPrevious() instanceof IJoinTableIdx) {
                     mainTableIdx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(_sqlSelect);
@@ -108,6 +109,13 @@ public class LinktoElement
                 _sqlSelect.leftJoin(joinTableName, joinTableidx.getIdx(), "ID", tableidx.getIdx(), linktoColName);
             }
         }
+    }
+
+    private SQLTable evalMainTable()
+        throws CacheReloadException
+    {
+        return attribute.getParentSet() != null ? attribute.getParentSet().getMainTable()
+                        : attribute.getParent().getMainTable();
     }
 
     /**
