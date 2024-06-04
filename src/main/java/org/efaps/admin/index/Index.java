@@ -21,8 +21,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.es.SpanishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
@@ -111,7 +111,7 @@ public final class Index
                 public Directory getDirectory()
                     throws EFapsException
                 {
-                    return new RAMDirectory();
+                    return new ByteBuffersDirectory();
                 }
 
                 @Override
@@ -161,7 +161,7 @@ public final class Index
                 public Directory getTaxonomyDirectory()
                     throws EFapsException
                 {
-                    return new RAMDirectory();
+                    return new ByteBuffersDirectory();
                 }
             };
         }

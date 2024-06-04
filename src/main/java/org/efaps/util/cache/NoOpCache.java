@@ -16,7 +16,6 @@
 package org.efaps.util.cache;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +28,8 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.CacheCollection;
 import org.infinispan.CacheSet;
+import org.infinispan.commons.api.query.ContinuousQuery;
+import org.infinispan.commons.api.query.Query;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -319,12 +320,6 @@ public class NoOpCache<K, V>
     public void removeListener(final Object _listener)
     {
 
-    }
-
-    @Override
-    public Set<Object> getListeners()
-    {
-        return Collections.<Object>emptySet();
     }
 
     @Override
@@ -669,6 +664,18 @@ public class NoOpCache<K, V>
 
     @Override
     public CompletionStage<Void> removeListenerAsync(final Object arg0)
+    {
+        return null;
+    }
+
+    @Override
+    public ContinuousQuery<K, V> continuousQuery()
+    {
+        return null;
+    }
+
+    @Override
+    public <T> Query<T> query(final String query)
     {
         return null;
     }
