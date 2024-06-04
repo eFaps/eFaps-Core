@@ -35,10 +35,8 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
 import org.efaps.util.MsgFormat;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,8 +223,7 @@ public final class MsgPhrase
     {
         String ret = "empty";
         final long companyID = _company == null ? 0 : _company.getId();
-        final Cache<String, String> cache = InfinispanCache.get().<String, String>getCache(
-                        MsgPhrase.LABELCACHE);
+        final var cache = InfinispanCache.get().<String, String>getCache(MsgPhrase.LABELCACHE);
         final String key = _language + "_" + companyID + "_" + getUUID().toString();
         if (cache.containsKey(key)) {
             ret = cache.get(key);
@@ -245,10 +242,8 @@ public final class MsgPhrase
                 for (final Label label : phrase.labels) {
                     if (current == null) {
                         current = label;
-                    } else {
-                        if (label.getPriority(languageid, companyID) > current.getPriority(languageid, companyID)) {
-                            current = label;
-                        }
+                    } else if (label.getPriority(languageid, companyID) > current.getPriority(languageid, companyID)) {
+                        current = label;
                     }
                 }
                 phrase = phrase.getParent();
@@ -283,8 +278,7 @@ public final class MsgPhrase
     {
         final long companyID = _company == null ? 0 : _company.getId();
         final List<String> ret = new ArrayList<>();
-        final Cache<String, List<String>> cache = InfinispanCache.get().<String, List<String>>getCache(
-                        MsgPhrase.ARGUMENTCACHE);
+        final var cache = InfinispanCache.get().<String, List<String>>getCache(MsgPhrase.ARGUMENTCACHE);
         final String key = _language + "_" + companyID + "_" + getUUID().toString();
         if (cache.containsKey(key)) {
             ret.addAll(cache.get(key));
@@ -421,7 +415,7 @@ public final class MsgPhrase
     public static MsgPhrase get(final long _id)
         throws EFapsException
     {
-        final Cache<Long, MsgPhrase> cache = InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE);
         if (!cache.containsKey(_id)) {
             MsgPhrase.loadMsgPhrase(_id);
         }
@@ -439,7 +433,7 @@ public final class MsgPhrase
     public static MsgPhrase get(final String _name)
         throws EFapsException
     {
-        final Cache<String, MsgPhrase> cache = InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE);
         if (!cache.containsKey(_name)) {
             MsgPhrase.loadMsgPhrase(_name);
         }
@@ -457,7 +451,7 @@ public final class MsgPhrase
     public static MsgPhrase get(final UUID _uuid)
         throws EFapsException
     {
-        final Cache<UUID, MsgPhrase> cache = InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             MsgPhrase.loadMsgPhrase(_uuid);
         }
@@ -473,32 +467,27 @@ public final class MsgPhrase
         if (InfinispanCache.get().exists(MsgPhrase.UUIDCACHE)) {
             InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE)
-                            .addListener(new CacheLogListener(MsgPhrase.LOG));
+            InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE, MsgPhrase.LOG);
         }
         if (InfinispanCache.get().exists(MsgPhrase.IDCACHE)) {
             InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE)
-                            .addListener(new CacheLogListener(MsgPhrase.LOG));
+            InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE, MsgPhrase.LOG);
         }
         if (InfinispanCache.get().exists(MsgPhrase.NAMECACHE)) {
             InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE)
-                            .addListener(new CacheLogListener(MsgPhrase.LOG));
+            InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE, MsgPhrase.LOG);
         }
         if (InfinispanCache.get().exists(MsgPhrase.LABELCACHE)) {
             InfinispanCache.get().getCache(MsgPhrase.LABELCACHE).clear();
         } else {
-            InfinispanCache.get().<String, String>getCache(MsgPhrase.LABELCACHE)
-                            .addListener(new CacheLogListener(MsgPhrase.LOG));
+            InfinispanCache.get().<String, String>getCache(MsgPhrase.LABELCACHE, MsgPhrase.LOG);
         }
         if (InfinispanCache.get().exists(MsgPhrase.ARGUMENTCACHE)) {
             InfinispanCache.get().getCache(MsgPhrase.ARGUMENTCACHE).clear();
         } else {
-            InfinispanCache.get().<String, List<String>>getCache(MsgPhrase.ARGUMENTCACHE)
-                            .addListener(new CacheLogListener(MsgPhrase.LOG));
+            InfinispanCache.get().<String, List<String>>getCache(MsgPhrase.ARGUMENTCACHE, MsgPhrase.LOG);
         }
     }
 
@@ -507,16 +496,13 @@ public final class MsgPhrase
      */
     private static void cacheMsgPhrase(final MsgPhrase _phrase)
     {
-        final Cache<UUID, MsgPhrase> cache4UUID = InfinispanCache.get()
-                        .<UUID, MsgPhrase>getIgnReCache(MsgPhrase.UUIDCACHE);
+        final var  cache4UUID = InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE);
         cache4UUID.put(_phrase.getUUID(), _phrase);
 
-        final Cache<String, MsgPhrase> nameCache = InfinispanCache.get()
-                        .<String, MsgPhrase>getIgnReCache(MsgPhrase.NAMECACHE);
+        final var  nameCache = InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE);
         nameCache.put(_phrase.getName(), _phrase);
 
-        final Cache<Long, MsgPhrase> idCache = InfinispanCache.get()
-                        .<Long, MsgPhrase>getIgnReCache(MsgPhrase.IDCACHE);
+       final var idCache = InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE);
         idCache.putIfAbsent(_phrase.getId(), _phrase);
     }
 

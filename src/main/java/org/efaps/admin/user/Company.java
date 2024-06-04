@@ -31,10 +31,8 @@ import org.efaps.db.Instance;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,20 +207,17 @@ public final class Company
         if (InfinispanCache.get().exists(Company.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE)
-                            .addListener(new CacheLogListener(Company.LOG));
+            InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE, Company.LOG);
         }
         if (InfinispanCache.get().exists(Company.IDCACHE)) {
             InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE)
-                            .addListener(new CacheLogListener(Company.LOG));
+            InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE, Company.LOG);
         }
         if (InfinispanCache.get().exists(Company.NAMECACHE)) {
             InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE)
-                            .addListener(new CacheLogListener(Company.LOG));
+            InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE, Company.LOG);
         }
     }
 
@@ -237,7 +232,7 @@ public final class Company
     public static Company get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Company> cache = InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE);
         if (!cache.containsKey(_id) && !Company.getCompanyFromDB(Company.SQL_ID, _id)) {
             cache.put(_id, Company.NULL, 100, TimeUnit.SECONDS);
         }
@@ -257,7 +252,7 @@ public final class Company
     public static Company get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Company> cache = InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE);
         if (!cache.containsKey(_name) && !Company.getCompanyFromDB(Company.SQL_NAME, _name)) {
             cache.put(_name, Company.NULL, 100, TimeUnit.SECONDS);
         }
@@ -275,7 +270,7 @@ public final class Company
     public static Company get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Company> cache = InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Company.getCompanyFromDB(Company.SQL_UUID, String.valueOf(_uuid));
         }
@@ -288,13 +283,13 @@ public final class Company
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
     private static void cacheCompany(final Company _role)
     {
-        final Cache<UUID, Company> cache4UUID = InfinispanCache.get().<UUID, Company>getIgnReCache(Company.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE);
         cache4UUID.putIfAbsent(_role.getUUID(), _role);
 
-        final Cache<String, Company> naCache = InfinispanCache.get().<String, Company>getIgnReCache(Company.NAMECACHE);
+        final var naCache = InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE);
         naCache.putIfAbsent(_role.getName(), _role);
 
-        final Cache<Long, Company> idCache = InfinispanCache.get().<Long, Company>getIgnReCache(Company.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE);
         idCache.putIfAbsent(_role.getId(), _role);
     }
 

@@ -33,10 +33,8 @@ import org.efaps.db.Instance;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,20 +220,17 @@ public final class Consortium
         if (InfinispanCache.get().exists(Consortium.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE)
-                            .addListener(new CacheLogListener(Consortium.LOG));
+            InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE, Consortium.LOG);
         }
         if (InfinispanCache.get().exists(Consortium.IDCACHE)) {
             InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE)
-                            .addListener(new CacheLogListener(Consortium.LOG));
+            InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE, Consortium.LOG);
         }
         if (InfinispanCache.get().exists(Consortium.NAMECACHE)) {
             InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE)
-                            .addListener(new CacheLogListener(Consortium.LOG));
+            InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE, Consortium.LOG);
         }
     }
 
@@ -251,7 +246,7 @@ public final class Consortium
     public static Consortium get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Consortium> cache = InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE);
         if (!cache.containsKey(_id) && !Consortium.getConsortiumFromDB(Consortium.SQL_ID, _id)) {
             cache.put(_id, Consortium.NULL, 100, TimeUnit.SECONDS);
         }
@@ -271,7 +266,7 @@ public final class Consortium
     public static Consortium get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Consortium> cache = InfinispanCache.get().<String, Consortium>getCache(Consortium.IDCACHE);
+        final var cache = InfinispanCache.get().<String, Consortium>getCache(Consortium.IDCACHE);
         if (!cache.containsKey(_name) && !Consortium.getConsortiumFromDB(Consortium.SQL_NAME, _name)) {
             cache.put(_name, Consortium.NULL, 100, TimeUnit.SECONDS);
         }
@@ -290,7 +285,7 @@ public final class Consortium
     public static Consortium get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Consortium> cache = InfinispanCache.get().<UUID, Consortium>getCache(Consortium.IDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Consortium>getCache(Consortium.IDCACHE);
         if (!cache.containsKey(_uuid)) {
             Consortium.getConsortiumFromDB(Consortium.SQL_UUID, String.valueOf(_uuid));
         }
@@ -303,16 +298,13 @@ public final class Consortium
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
     private static void cacheConsortium(final Consortium _consortium)
     {
-        final Cache<UUID, Consortium> cache4UUID = InfinispanCache.get().<UUID, Consortium>getIgnReCache(
-                        Consortium.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE);
         cache4UUID.putIfAbsent(_consortium.getUUID(), _consortium);
 
-        final Cache<String, Consortium> nameCache = InfinispanCache.get().<String, Consortium>getIgnReCache(
-                        Consortium.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE);
         nameCache.put(_consortium.getName(), _consortium);
 
-        final Cache<Long, Consortium> idCache = InfinispanCache.get().<Long, Consortium>getIgnReCache(
-                        Consortium.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE);
         idCache.put(_consortium.getId(), _consortium);
     }
 

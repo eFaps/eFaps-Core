@@ -33,10 +33,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -466,20 +464,17 @@ public final class AccessSet
         if (InfinispanCache.get().exists(AccessSet.UUIDCACHE)) {
             InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE)
-                            .addListener(new CacheLogListener(AccessSet.LOG));
+            InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE, AccessSet.LOG);
         }
         if (InfinispanCache.get().exists(AccessSet.IDCACHE)) {
             InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE)
-                            .addListener(new CacheLogListener(AccessSet.LOG));
+            InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE, AccessSet.LOG);
         }
         if (InfinispanCache.get().exists(AccessSet.NAMECACHE)) {
             InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE)
-                            .addListener(new CacheLogListener(AccessSet.LOG));
+            InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE, AccessSet.LOG);
         }
     }
 
@@ -494,7 +489,7 @@ public final class AccessSet
     public static AccessSet get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, AccessSet> cache = InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE);
         if (!cache.containsKey(_id)) {
             AccessSet.getAccessSetFromDB(AccessSet.SQL_ID, _id);
         }
@@ -512,7 +507,7 @@ public final class AccessSet
     public static AccessSet get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, AccessSet> cache = InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE);
         if (!cache.containsKey(_name)) {
             AccessSet.getAccessSetFromDB(AccessSet.SQL_NAME, _name);
         }
@@ -530,7 +525,7 @@ public final class AccessSet
     public static AccessSet get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, AccessSet> cache = InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             AccessSet.getAccessSetFromDB(AccessSet.SQL_UUID, String.valueOf(_uuid));
         }
@@ -542,15 +537,14 @@ public final class AccessSet
      */
     private static void cacheAccessSet(final AccessSet _role)
     {
-        final Cache<UUID, AccessSet> cache4UUID = InfinispanCache.get().<UUID, AccessSet>getIgnReCache(
-                        AccessSet.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE);
         cache4UUID.put(_role.getUUID(), _role);
 
-        final Cache<String, AccessSet> nameCache = InfinispanCache.get().<String, AccessSet>getIgnReCache(
+        final var nameCache = InfinispanCache.get().<String, AccessSet>getCache(
                         AccessSet.NAMECACHE);
         nameCache.put(_role.getName(), _role);
 
-        final Cache<Long, AccessSet> idCache = InfinispanCache.get().<Long, AccessSet>getIgnReCache(
+        final var idCache = InfinispanCache.get().<Long, AccessSet>getCache(
                         AccessSet.IDCACHE);
         idCache.put(_role.getId(), _role);
     }

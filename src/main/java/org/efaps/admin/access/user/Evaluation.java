@@ -33,7 +33,6 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.PrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +170,7 @@ public final class Evaluation
         Evaluation.LOG.debug("Retrieving Status for {}", _instance);
         long statusId = 0;
         if (_instance.getType().isCheckStatus()) {
-            final Cache<String, Long> cache = AccessCache.getStatusCache();
+            final var cache = AccessCache.getStatusCache();
             if (cache.containsKey(_instance.getKey())) {
                 statusId = cache.get(_instance.getKey());
             } else {
@@ -199,7 +198,7 @@ public final class Evaluation
     {
         Evaluation.LOG.debug("Evaluating Status for {}", _instances);
         if (CollectionUtils.isNotEmpty(_instances)) {
-            final Cache<String, Long> cache = AccessCache.getStatusCache();
+            final var cache = AccessCache.getStatusCache();
             final List<Instance> instances = _instances.stream().filter(inst -> !cache.containsKey(inst.getKey()))
                             .collect(Collectors.toList());
             if (!instances.isEmpty()) {

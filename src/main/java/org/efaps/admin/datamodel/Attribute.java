@@ -44,10 +44,8 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -741,15 +739,13 @@ public class Attribute
         if (InfinispanCache.get().exists(Attribute.NAMECACHE)) {
             InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE)
-                            .addListener(new CacheLogListener(Attribute.LOG));
+            InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE, Attribute.LOG);
         }
 
         if (InfinispanCache.get().exists(Attribute.IDCACHE)) {
             InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE)
-                            .addListener(new CacheLogListener(Attribute.LOG));
+            InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE, Attribute.LOG);
         }
     }
 
@@ -776,7 +772,7 @@ public class Attribute
     public static Attribute get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Attribute> cache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         if (!cache.containsKey(_id)) {
             Type.get(Attribute.getTypeID(_id));
         }
@@ -796,7 +792,7 @@ public class Attribute
     public static Attribute get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Attribute> cache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
         if (!cache.containsKey(_name)) {
             final String[] nameParts = _name.split("/");
             if (nameParts != null && nameParts.length == 2) {
@@ -813,16 +809,14 @@ public class Attribute
     private static void cacheAttribute(final Attribute _attr,
                                        final Type _type)
     {
-        final Cache<String, Attribute> nameCache = InfinispanCache.get().<String, Attribute>getIgnReCache(
-                        Attribute.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
         if (_type != null) {
             nameCache.putIfAbsent(_type.getName() + "/" + _attr.getName(), _attr);
         } else {
             nameCache.putIfAbsent(_attr.getKey(), _attr);
         }
 
-        final Cache<Long, Attribute> idCache = InfinispanCache.get().<Long, Attribute>getIgnReCache(
-                        Attribute.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         idCache.putIfAbsent(_attr.getId(), _attr);
     }
 

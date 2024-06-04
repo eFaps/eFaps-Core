@@ -29,10 +29,8 @@ import org.efaps.db.Instance;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,17 +211,17 @@ public final class Role
         if (InfinispanCache.get().exists(Role.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE).addListener(new CacheLogListener(Role.LOG));
+            InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE, Role.LOG);
         }
         if (InfinispanCache.get().exists(Role.IDCACHE)) {
             InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE).addListener(new CacheLogListener(Role.LOG));
+            InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE, Role.LOG);
         }
         if (InfinispanCache.get().exists(Role.NAMECACHE)) {
             InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE).addListener(new CacheLogListener(Role.LOG));
+            InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE, Role.LOG);
         }
     }
 
@@ -239,7 +237,7 @@ public final class Role
     public static Role get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Role> cache = InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE);
         if (!cache.containsKey(_id) && !Role.getRoleFromDB(Role.SQL_ID, _id)) {
             cache.put(_id, Role.NULL, 100, TimeUnit.SECONDS);
         }
@@ -259,7 +257,7 @@ public final class Role
     public static Role get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Role> cache = InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE);
         if (!cache.containsKey(_name) && !Role.getRoleFromDB(Role.SQL_NAME, _name)) {
             cache.put(_name, Role.NULL, 100, TimeUnit.SECONDS);
         }
@@ -279,7 +277,7 @@ public final class Role
     public static Role get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Role> cache = InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Role.getRoleFromDB(Role.SQL_UUID, String.valueOf(_uuid));
         }
@@ -291,13 +289,13 @@ public final class Role
      */
     private static void cacheRole(final Role _role)
     {
-        final Cache<UUID, Role> cache4UUID = InfinispanCache.get().<UUID, Role>getIgnReCache(Role.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE);
         cache4UUID.putIfAbsent(_role.getUUID(), _role);
 
-        final Cache<String, Role> nameCache = InfinispanCache.get().<String, Role>getIgnReCache(Role.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE);
         nameCache.putIfAbsent(_role.getName(), _role);
 
-        final Cache<Long, Role> idCache = InfinispanCache.get().<Long, Role>getIgnReCache(Role.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE);
         idCache.putIfAbsent(_role.getId(), _role);
     }
 

@@ -32,9 +32,7 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,8 +89,8 @@ public final class DBProperties
                     .addColumnPart(3, "LANG").toString();
 
     /**
-     * SQL Statement used to find a property used if with the previous Statement no
-     * result where found.
+     * SQL Statement used to find a property used if with the previous Statement
+     * no result where found.
      */
     private static final String SQLSELECTDEF = new SQLSelect()
                     .column(0, "DEFAULTV")
@@ -126,6 +124,7 @@ public final class DBProperties
     private static final String SQLLANG = new SQLSelect()
                     .column("LANG")
                     .from("T_ADLANG").toString();
+
     /**
      * Private Constructor for Utility class.
      */
@@ -229,8 +228,7 @@ public final class DBProperties
                 value = _key;
             } else {
                 final String cachKey = _language + ":" + _key;
-                final Cache<String, String> cache = InfinispanCache.get().<String, String>getCache(
-                                DBProperties.CACHENAME);
+                final var cache = InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME);
                 if (cache.containsKey(cachKey)) {
                     value = cache.get(cachKey);
                     if (value.equals(DBProperties.NULLVALUE)) {
@@ -248,7 +246,7 @@ public final class DBProperties
         } catch (final EFapsException e) {
             DBProperties.LOG.error("not able to read ShowDBPropertiesKey from the webConfig", e);
         }
-        return (value == null && _returnKey) ? "?? - " + _key + " - ??" : value;
+        return value == null && _returnKey ? "?? - " + _key + " - ??" : value;
     }
 
     /**
@@ -379,8 +377,7 @@ public final class DBProperties
             }
             rsLang.close();
             stmtLang.close();
-            final Cache<String, String> cache = InfinispanCache.get().<String, String>getCache(
-                            DBProperties.CACHENAME);
+            final var cache = InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME);
             final PreparedStatement stmt = con.prepareStatement(DBProperties.SQLSELECTONSTART);
             final ResultSet resultset = stmt.executeQuery();
             while (resultset.next()) {
@@ -424,8 +421,7 @@ public final class DBProperties
         if (InfinispanCache.get().exists(DBProperties.CACHENAME)) {
             InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME).clear();
         } else {
-            InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME)
-                            .addListener(new CacheLogListener(DBProperties.LOG));
+            InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME, DBProperties.LOG);
         }
         DBProperties.cacheOnStart();
     }

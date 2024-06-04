@@ -27,10 +27,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +41,7 @@ import org.slf4j.LoggerFactory;
 public final class AccessType
     extends AbstractAdminObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -151,20 +150,17 @@ public final class AccessType
         if (InfinispanCache.get().exists(AccessType.UUIDCACHE)) {
             InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE)
-                            .addListener(new CacheLogListener(AccessType.LOG));
+            InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE, AccessType.LOG);
         }
         if (InfinispanCache.get().exists(AccessType.IDCACHE)) {
             InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE)
-                            .addListener(new CacheLogListener(AccessType.LOG));
+            InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE, AccessType.LOG);
         }
         if (InfinispanCache.get().exists(AccessType.NAMECACHE)) {
             InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE)
-                            .addListener(new CacheLogListener(AccessType.LOG));
+            InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE, AccessType.LOG);
         }
         AccessCache.initialize();
     }
@@ -180,7 +176,7 @@ public final class AccessType
     public static AccessType getAccessType(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, AccessType> cache = InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE);
         if (!cache.containsKey(_id)) {
             AccessType.getAccessTypeFromDB(AccessType.SQL_ID, _id);
         }
@@ -198,8 +194,7 @@ public final class AccessType
     public static AccessType getAccessType(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, AccessType> cache = InfinispanCache.get()
-                        .<String, AccessType>getCache(AccessType.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE);
         if (!cache.containsKey(_name)) {
             AccessType.getAccessTypeFromDB(AccessType.SQL_NAME, _name);
         }
@@ -217,7 +212,7 @@ public final class AccessType
     public static AccessType getAccessType(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, AccessType> cache = InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             AccessType.getAccessTypeFromDB(AccessType.SQL_UUID, String.valueOf(_uuid));
         }
@@ -229,20 +224,18 @@ public final class AccessType
      */
     private static void cacheAccessType(final AccessType _accessType)
     {
-        final Cache<UUID, AccessType> cache4UUID = InfinispanCache.get().<UUID, AccessType>getIgnReCache(
-                        AccessType.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE);
         cache4UUID.putIfAbsent(_accessType.getUUID(), _accessType);
 
-        final Cache<String, AccessType> nameCache = InfinispanCache.get().<String, AccessType>getIgnReCache(
-                        AccessType.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE);
         nameCache.putIfAbsent(_accessType.getName(), _accessType);
-        final Cache<Long, AccessType> idCache = InfinispanCache.get().<Long, AccessType>getIgnReCache(
-                        AccessType.IDCACHE);
+
+        final var idCache = InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE);
         idCache.putIfAbsent(_accessType.getId(), _accessType);
     }
 
     /**
-     * @param _sql      sql Statement to be executed
+     * @param _sql sql Statement to be executed
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error

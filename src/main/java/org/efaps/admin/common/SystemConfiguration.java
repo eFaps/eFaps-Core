@@ -41,11 +41,9 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.jaas.AppAccessHandler;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.StringPBEConfig;
 import org.jasypt.iv.IvGenerator;
@@ -199,8 +197,7 @@ public final class SystemConfiguration
     public static SystemConfiguration get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, SystemConfiguration> cache = InfinispanCache.get().<Long, SystemConfiguration>getCache(
-                        SystemConfiguration.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE);
         if (!cache.containsKey(_id)) {
             SystemConfiguration.getSystemConfigurationFromDB(SystemConfiguration.SQL_ID, _id);
         }
@@ -218,8 +215,7 @@ public final class SystemConfiguration
     public static SystemConfiguration get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, SystemConfiguration> cache = InfinispanCache.get().<String, SystemConfiguration>getCache(
-                        SystemConfiguration.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE);
         if (!cache.containsKey(_name)) {
             SystemConfiguration.getSystemConfigurationFromDB(SystemConfiguration.SQL_NAME, _name);
         }
@@ -237,8 +233,7 @@ public final class SystemConfiguration
     public static SystemConfiguration get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, SystemConfiguration> cache = InfinispanCache.get().<UUID, SystemConfiguration>getCache(
-                        SystemConfiguration.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             SystemConfiguration.getSystemConfigurationFromDB(SystemConfiguration.SQL_UUID, String.valueOf(_uuid));
         }
@@ -683,20 +678,17 @@ public final class SystemConfiguration
         if (InfinispanCache.get().exists(SystemConfiguration.UUIDCACHE)) {
             InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE)
-                            .addListener(new CacheLogListener(SystemConfiguration.LOG));
+            InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE, SystemConfiguration.LOG);
         }
         if (InfinispanCache.get().exists(SystemConfiguration.IDCACHE)) {
             InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE)
-                            .addListener(new CacheLogListener(SystemConfiguration.LOG));
+            InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE, SystemConfiguration.LOG);
         }
         if (InfinispanCache.get().exists(SystemConfiguration.NAMECACHE)) {
             InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE)
-                            .addListener(new CacheLogListener(SystemConfiguration.LOG));
+            InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE, SystemConfiguration.LOG);
         }
 
         SystemConfiguration.ENCRYPTOR = new StandardPBEStringEncryptor();
@@ -708,16 +700,13 @@ public final class SystemConfiguration
      */
     private static void cacheSytemConfig(final SystemConfiguration _sysConfig)
     {
-        final Cache<UUID, SystemConfiguration> cache4UUID = InfinispanCache.get()
-                        .<UUID, SystemConfiguration>getIgnReCache(SystemConfiguration.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE);
         cache4UUID.put(_sysConfig.getUUID(), _sysConfig);
 
-        final Cache<String, SystemConfiguration> nameCache = InfinispanCache.get()
-                        .<String, SystemConfiguration>getIgnReCache(SystemConfiguration.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE);
         nameCache.put(_sysConfig.getName(), _sysConfig);
 
-        final Cache<Long, SystemConfiguration> idCache = InfinispanCache.get()
-                        .<Long, SystemConfiguration>getIgnReCache(SystemConfiguration.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE);
         idCache.putIfAbsent(_sysConfig.getId(), _sysConfig);
     }
 

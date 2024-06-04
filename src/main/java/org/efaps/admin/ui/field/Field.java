@@ -31,10 +31,8 @@ import org.efaps.ci.CIAdminUserInterface;
 import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -723,7 +721,7 @@ public class Field
     public static Field get(final long _id)
     {
         Field ret = null;
-        final Cache<Long, Field> cache = InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
         if (cache.containsKey(_id)) {
             ret = cache.get(_id);
         } else {
@@ -764,7 +762,7 @@ public class Field
             InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE).clear();
         } else {
             InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
-            InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE).addListener(new CacheLogListener(Field.LOG));
+            InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE, Field.LOG);
         }
     }
 

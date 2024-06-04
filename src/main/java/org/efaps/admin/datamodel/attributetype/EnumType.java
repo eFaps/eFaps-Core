@@ -26,7 +26,6 @@ import org.efaps.db.wrapper.SQLInsert;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.AdvancedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +63,7 @@ public class EnumType
         if (_objectList.size() < 1) {
             ret = null;
         } else  {
-            final List<Object> list = new ArrayList<Object>();
+            final List<Object> list = new ArrayList<>();
             for (final Object object : _objectList) {
                 Integer num = null;
                 if (object instanceof Number) {
@@ -89,7 +88,7 @@ public class EnumType
     protected Object getEnum4Int(final Attribute _attribute,
                                  final Integer _num)
     {
-        final AdvancedCache<String, Object> cache = InfinispanCache.get().<String, Object>getIgnReCache(EnumType.CACHE);
+        final var cache = InfinispanCache.get().<String, Object>getCache(EnumType.CACHE);
         final String key = _attribute.getClassName() + "-" + _num;
         if (!cache.containsKey(key)) {
             Object ret = null;
@@ -171,7 +170,7 @@ public class EnumType
     {
         final Integer ret;
         if (_value instanceof IEnum) {
-            ret = Integer.valueOf(((IEnum) _value).getInt());
+            ret = ((IEnum) _value).getInt();
         } else {
             ret = null;
         }

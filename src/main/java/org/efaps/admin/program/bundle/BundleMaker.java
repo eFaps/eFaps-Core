@@ -28,11 +28,9 @@ import org.efaps.ci.CIAdminProgram;
 import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,12 +82,9 @@ public final class BundleMaker
             InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLE).clear();
             InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLEMAP).clear();
         } else {
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.NAMECACHE)
-                            .addListener(new CacheLogListener(BundleMaker.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLE)
-                            .addListener(new CacheLogListener(BundleMaker.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLEMAP)
-                            .addListener(new CacheLogListener(BundleMaker.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.NAMECACHE, BundleMaker.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLE, BundleMaker.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLEMAP, BundleMaker.LOG);
         }
     }
 
@@ -111,10 +106,8 @@ public final class BundleMaker
     {
         BundleMaker.mergeList(_names);
         final String key;
-        final Cache<List<String>, String> cache = InfinispanCache.get()
-                        .<List<String>, String>getCache(BundleMaker.CACHE4BUNDLEMAP);
-        final Cache<String, BundleInterface> cache4bundle = InfinispanCache.get()
-                        .<String, BundleInterface>getCache(BundleMaker.CACHE4BUNDLE);
+        final var cache = InfinispanCache.get().<List<String>, String>getCache(BundleMaker.CACHE4BUNDLEMAP);
+        final var cache4bundle = InfinispanCache.get().<String, BundleInterface>getCache(BundleMaker.CACHE4BUNDLE);
         if (cache.containsKey(_names)) {
             key = cache.get(_names);
             if (!cache4bundle.containsKey(key)) {
@@ -135,8 +128,7 @@ public final class BundleMaker
      */
     public static boolean containsKey(final String _key)
     {
-        final Cache<String, BundleInterface> cache = InfinispanCache.get()
-                        .<String, BundleInterface>getIgnReCache(BundleMaker.CACHE4BUNDLE);
+        final var cache = InfinispanCache.get().<String, BundleInterface>getCache(BundleMaker.CACHE4BUNDLE);
         return cache.containsKey(_key);
     }
 
@@ -148,8 +140,7 @@ public final class BundleMaker
      */
     public static BundleInterface getBundle(final String _key)
     {
-        final Cache<String, BundleInterface> cache = InfinispanCache.get()
-                        .<String, BundleInterface>getIgnReCache(BundleMaker.CACHE4BUNDLE);
+        final var cache = InfinispanCache.get().<String, BundleInterface>getCache(BundleMaker.CACHE4BUNDLE);
         return cache.get(_key);
     }
 
@@ -193,8 +184,7 @@ public final class BundleMaker
                 if (builder.length() > 0) {
                     builder.append("-");
                 }
-                final Cache<String, StaticCompiledSource> cache = InfinispanCache.get()
-                                .<String, StaticCompiledSource>getIgnReCache(BundleMaker.NAMECACHE);
+                final var cache = InfinispanCache.get().<String, StaticCompiledSource>getCache(BundleMaker.NAMECACHE);
                 if (!cache.containsKey(name)) {
                     final QueryBuilder queryBldr = new QueryBuilder(CIAdminProgram.StaticCompiled);
                     queryBldr.addWhereAttrEqValue(CIAdminProgram.StaticCompiled.Name, name);
@@ -220,8 +210,7 @@ public final class BundleMaker
             final BundleInterface bundle = (BundleInterface) _bundleclass.getConstructor().newInstance();
             bundle.setKey(ret, oids);
 
-            final Cache<String, BundleInterface> cache = InfinispanCache.get()
-                            .<String, BundleInterface>getIgnReCache(BundleMaker.CACHE4BUNDLE);
+            final var cache = InfinispanCache.get().<String, BundleInterface>getCache(BundleMaker.CACHE4BUNDLE);
             cache.put(ret, bundle);
         } catch (final InstantiationException | IllegalAccessException
                         | IllegalArgumentException | InvocationTargetException | NoSuchMethodException

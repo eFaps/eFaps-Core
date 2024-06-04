@@ -31,10 +31,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -297,14 +295,12 @@ public final class JAASSystem
         if (InfinispanCache.get().exists(JAASSystem.IDCACHE)) {
             InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE)
-                            .addListener(new CacheLogListener(JAASSystem.LOG));
+            InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE, JAASSystem.LOG);
         }
         if (InfinispanCache.get().exists(JAASSystem.NAMECACHE)) {
             InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE)
-                            .addListener(new CacheLogListener(JAASSystem.LOG));
+            InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE, JAASSystem.LOG);
         }
         JAASSystem.getJAASSystemFromDB(JAASSystem.SQL_SELECT, null);
     }
@@ -320,7 +316,7 @@ public final class JAASSystem
     public static JAASSystem getJAASSystem(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, JAASSystem> cache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
         if (!cache.containsKey(_id)) {
             JAASSystem.getJAASSystemFromDB(JAASSystem.SQL_ID, _id);
         }
@@ -338,8 +334,7 @@ public final class JAASSystem
     public static JAASSystem getJAASSystem(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, JAASSystem> cache = InfinispanCache.get()
-                        .<String, JAASSystem>getCache(JAASSystem.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE);
         if (!cache.containsKey(_name)) {
             JAASSystem.getJAASSystemFromDB(JAASSystem.SQL_NAME, _name);
         }
@@ -354,7 +349,7 @@ public final class JAASSystem
     public static Set<JAASSystem> getAllJAASSystems()
     {
         final Set<JAASSystem> ret = new HashSet<>();
-        final Cache<Long, JAASSystem> cache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
         for (final Map.Entry<Long, JAASSystem> entry : cache.entrySet()) {
             ret.add(entry.getValue());
         }
@@ -413,12 +408,10 @@ public final class JAASSystem
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
     private static void cacheJAASSystem(final JAASSystem _group)
     {
-        final Cache<String, JAASSystem> nameCache = InfinispanCache.get().<String, JAASSystem>getIgnReCache(
-                        JAASSystem.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE);
         nameCache.putIfAbsent(_group.getName(), _group);
 
-        final Cache<Long, JAASSystem> idCache = InfinispanCache.get().<Long, JAASSystem>getIgnReCache(
-                        JAASSystem.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
         idCache.putIfAbsent(_group.getId(), _group);
     }
 

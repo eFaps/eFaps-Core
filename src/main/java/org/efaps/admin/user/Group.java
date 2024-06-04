@@ -28,10 +28,8 @@ import org.efaps.db.Instance;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,17 +192,17 @@ public final class Group
         if (InfinispanCache.get().exists(Group.IDCACHE)) {
             InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE).addListener(new CacheLogListener(Group.LOG));
+            InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE, Group.LOG);
         }
         if (InfinispanCache.get().exists(Group.NAMECACHE)) {
             InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE).addListener(new CacheLogListener(Group.LOG));
+            InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE, Group.LOG);
         }
         if (InfinispanCache.get().exists(Group.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE).addListener(new CacheLogListener(Group.LOG));
+            InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE, Group.LOG);
         }
     }
 
@@ -219,7 +217,7 @@ public final class Group
     public static Group get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Group> cache = InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE);
         if (!cache.containsKey(_id) && !Group.getGroupFromDB(Group.SQL_ID, _id)) {
             cache.put(_id, Group.NULL, 100, TimeUnit.SECONDS);
         }
@@ -238,7 +236,7 @@ public final class Group
     public static Group get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Group> cache = InfinispanCache.get().<String, Group>getCache(Group.IDCACHE);
+        final var cache = InfinispanCache.get().<String, Group>getCache(Group.IDCACHE);
         if (!cache.containsKey(_name) && !Group.getGroupFromDB(Group.SQL_NAME, _name)) {
             cache.put(_name, Group.NULL, 100, TimeUnit.SECONDS);
         }
@@ -257,7 +255,7 @@ public final class Group
     public static Group get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Group> cache = InfinispanCache.get().<UUID, Group>getCache(Group.IDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Group>getCache(Group.IDCACHE);
         if (!cache.containsKey(_uuid) && !Group.getGroupFromDB(Group.SQL_UUID, _uuid.toString())) {
             cache.put(_uuid, Group.NULL, 100, TimeUnit.SECONDS);
         }
@@ -328,13 +326,13 @@ public final class Group
      */
     private static void cacheGroup(final Group _group)
     {
-        final Cache<String, Group> nameCache = InfinispanCache.get().<String, Group>getIgnReCache(Group.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE);
         nameCache.putIfAbsent(_group.getName(), _group);
 
-        final Cache<Long, Group> idCache = InfinispanCache.get().<Long, Group>getIgnReCache(Group.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE);
         idCache.putIfAbsent(_group.getId(), _group);
 
-        final Cache<UUID, Group> uuidCache = InfinispanCache.get().<UUID, Group>getIgnReCache(Group.UUIDCACHE);
+        final var uuidCache = InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE);
         uuidCache.putIfAbsent(_group.getUUID(), _group);
     }
 

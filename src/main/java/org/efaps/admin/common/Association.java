@@ -37,11 +37,9 @@ import org.efaps.db.SelectBuilder;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,33 +157,29 @@ public class Association
         if (InfinispanCache.get().exists(Association.UUIDCACHE)) {
             InfinispanCache.get().getCache(Association.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Association>getCache(Association.UUIDCACHE)
-                            .addListener(new CacheLogListener(Association.LOG));
+            InfinispanCache.get().<UUID, Association>getCache(Association.UUIDCACHE, Association.LOG);
         }
         if (InfinispanCache.get().exists(Association.IDCACHE)) {
             InfinispanCache.get().getCache(Association.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE)
-                            .addListener(new CacheLogListener(Association.LOG));
+            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE, Association.LOG);
         }
         if (InfinispanCache.get().exists(Association.NAMECACHE)) {
             InfinispanCache.get().getCache(Association.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Association>getCache(Association.NAMECACHE)
-                            .addListener(new CacheLogListener(Association.LOG));
+            InfinispanCache.get().<String, Association>getCache(Association.NAMECACHE, Association.LOG);
         }
         if (InfinispanCache.get().exists(Association.KEYCACHE)) {
             InfinispanCache.get().getCache(Association.KEYCACHE).clear();
         } else {
-            InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE)
-                            .addListener(new CacheLogListener(Association.LOG));
+            InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE, Association.LOG);
         }
     }
 
     public static Association get(final long _id)
         throws EFapsException
     {
-        final Cache<Long, Association> cache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
         if (!cache.containsKey(_id)) {
             Association.loadAssociation(_id);
         }
@@ -223,16 +217,13 @@ public class Association
 
     private static void cacheAssociation(final Association _association)
     {
-        final Cache<UUID, Association> cache4UUID = InfinispanCache.get().<UUID, Association>getIgnReCache(
-                        Association.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Association>getCache(Association.UUIDCACHE);
         cache4UUID.putIfAbsent(_association.getUUID(), _association);
 
-        final Cache<String, Association> nameCache = InfinispanCache.get().<String, Association>getIgnReCache(
-                        Association.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Association>getCache(Association.NAMECACHE);
         nameCache.putIfAbsent(_association.getName(), _association);
 
-        final Cache<Long, Association> idCache = InfinispanCache.get().<Long, Association>getIgnReCache(
-                        Association.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
         idCache.putIfAbsent(_association.getId(), _association);
     }
 
@@ -250,7 +241,7 @@ public class Association
         final Long typeId = _type.getId();
         final AssociationKey key = AssociationKey.get(_companyId, typeId);
 
-        final Cache<AssociationKey, Long> cache = InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE);
+        final var cache = InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE);
         if (!cache.containsKey(key)) {
             load(_companyId, _type);
         }
@@ -262,7 +253,7 @@ public class Association
                              final Type _type)
         throws EFapsException
     {
-        final Cache<AssociationKey, Long> cache = InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE);
+        final var cache = InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE);
         final Set<Long> typeIds = new HashSet<>();
         Long assocId = null;
         Type currentType = _type;

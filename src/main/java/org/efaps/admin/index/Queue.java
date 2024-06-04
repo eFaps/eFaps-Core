@@ -21,7 +21,6 @@ import org.efaps.db.Instance;
 import org.efaps.util.EFapsException;
 import org.efaps.util.RandomUtil;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.AdvancedCache;
 
 /**
  * TODO comment!
@@ -57,8 +56,7 @@ public final class Queue
                         && EFapsSystemConfiguration.get().getAttributeValueAsBoolean(KernelSettings.INDEXACTIVATE)) {
             if (_instance != null && _instance.getType() != null
                             && IndexDefinition.get(_instance.getType().getUUID()) != null) {
-                final AdvancedCache<String, String> cache = InfinispanCache.get()
-                                .<String, String>getIgnReCache(CACHENAME);
+                final var cache = InfinispanCache.get().<String, String>getCache(CACHENAME);
                 cache.put(RandomUtil.random(12), _instance.getOid());
             }
         }

@@ -19,10 +19,8 @@ import java.util.UUID;
 
 import org.efaps.admin.access.AccessType;
 import org.efaps.db.Instance;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
-import org.infinispan.query.Search;
+import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,14 +62,12 @@ public final class AccessCache
         if (InfinispanCache.get().exists(AccessCache.PERMISSIONCACHE)) {
             InfinispanCache.get().<UUID, AccessType>getCache(AccessCache.PERMISSIONCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessCache.PERMISSIONCACHE)
-                            .addListener(new CacheLogListener(AccessCache.LOG));
+            InfinispanCache.get().<UUID, AccessType>getCache(AccessCache.PERMISSIONCACHE, AccessCache.LOG);
         }
         if (InfinispanCache.get().exists(AccessCache.STATUSCACHE)) {
             InfinispanCache.get().<Long, AccessType>getCache(AccessCache.STATUSCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessCache.STATUSCACHE)
-                            .addListener(new CacheLogListener(AccessCache.LOG));
+            InfinispanCache.get().<Long, AccessType>getCache(AccessCache.STATUSCACHE, AccessCache.LOG);
         }
     }
 
@@ -79,17 +75,17 @@ public final class AccessCache
     /**
      * @return the Cache for AccessKey
      */
-    public static Cache<Key, PermissionSet> getPermissionCache()
+    public static BasicCache<Key, PermissionSet> getPermissionCache()
     {
-        return InfinispanCache.get().<Key, PermissionSet>getIgnReCache(AccessCache.PERMISSIONCACHE);
+        return InfinispanCache.get().<Key, PermissionSet>getCache(AccessCache.PERMISSIONCACHE);
     }
 
     /**
      * @return the Cache for AccessKey
      */
-    public static Cache<String, Long> getStatusCache()
+    public static BasicCache<String, Long> getStatusCache()
     {
-        return InfinispanCache.get().<String, Long>getIgnReCache(AccessCache.STATUSCACHE);
+        return InfinispanCache.get().<String, Long>getCache(AccessCache.STATUSCACHE);
     }
 
     /**
@@ -107,9 +103,8 @@ public final class AccessCache
     public static void clean4Person(final long _personId)
     {
         AccessCache.LOG.debug("Cleaning cache for Person: {}", _personId);
-        final Cache<Key, PermissionSet> cache = AccessCache.getPermissionCache();
-        final var queryFactory = Search.getQueryFactory(cache);
-        final var query = queryFactory.<PermissionSet>create("FROM org.efaps.admin.access.user.PermissionSet p "
+        final var cache = AccessCache.getPermissionCache();
+        final var query = cache.<PermissionSet>query("FROM org.efaps.admin.access.user.PermissionSet p "
                         + "WHERE p.personId = " + _personId);
         query.execute().list().forEach(set -> {
             cache.remove(set.getKey());

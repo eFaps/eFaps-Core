@@ -28,10 +28,8 @@ import org.efaps.db.Instance;
 import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,17 +183,17 @@ public final class Store
         if (InfinispanCache.get().exists(Store.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE).addListener(new CacheLogListener(Store.LOG));
+            InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE, Store.LOG);
         }
         if (InfinispanCache.get().exists(Store.IDCACHE)) {
             InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE).addListener(new CacheLogListener(Store.LOG));
+            InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE, Store.LOG);
         }
         if (InfinispanCache.get().exists(Store.NAMECACHE)) {
             InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE).addListener(new CacheLogListener(Store.LOG));
+            InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE, Store.LOG);
         }
     }
 
@@ -210,7 +208,7 @@ public final class Store
     public static Store get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Store> cache = InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE);
         if (!cache.containsKey(_id)) {
             Store.getStoreFromDB(CIDB.Store.ID, _id);
         }
@@ -228,7 +226,7 @@ public final class Store
     public static Store get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Store> cache = InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE);
         if (!cache.containsKey(_name)) {
             Store.getStoreFromDB(CIDB.Store.Name, _name);
         }
@@ -246,7 +244,7 @@ public final class Store
     public static Store get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Store> cache = InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Store.getStoreFromDB(CIDB.Store.UUID, String.valueOf(_uuid));
         }
@@ -259,13 +257,13 @@ public final class Store
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
     private static void cacheStore(final Store _store)
     {
-        final Cache<UUID, Store> cache4UUID = InfinispanCache.get().<UUID, Store>getIgnReCache(Store.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE);
         cache4UUID.putIfAbsent(_store.getUUID(), _store);
 
-        final Cache<String, Store> nameCache = InfinispanCache.get().<String, Store>getIgnReCache(Store.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE);
         nameCache.putIfAbsent(_store.getName(), _store);
 
-        final Cache<Long, Store> idCache = InfinispanCache.get().<Long, Store>getIgnReCache(Store.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE);
         idCache.putIfAbsent(_store.getId(), _store);
     }
 

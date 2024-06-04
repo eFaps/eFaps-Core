@@ -29,10 +29,8 @@ import org.efaps.db.databases.information.TableInformation;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -349,20 +347,17 @@ public final class SQLTable
         if (InfinispanCache.get().exists(SQLTable.UUIDCACHE)) {
             InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE)
-                            .addListener(new CacheLogListener(SQLTable.LOG));
+            InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE, SQLTable.LOG);
         }
         if (InfinispanCache.get().exists(SQLTable.IDCACHE)) {
             InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE)
-                            .addListener(new CacheLogListener(SQLTable.LOG));
+            InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE, SQLTable.LOG);
         }
         if (InfinispanCache.get().exists(SQLTable.NAMECACHE)) {
             InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE)
-                            .addListener(new CacheLogListener(SQLTable.LOG));
+            InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE, SQLTable.LOG);
         }
     }
 
@@ -386,7 +381,7 @@ public final class SQLTable
     public static SQLTable get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, SQLTable> cache = InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE);
         if (!cache.containsKey(_id)) {
             SQLTable.getSQLTableFromDB(SQLTable.SQL_ID, _id);
         }
@@ -405,7 +400,7 @@ public final class SQLTable
     public static SQLTable get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, SQLTable> cache = InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE);
         if (!cache.containsKey(_name)) {
             SQLTable.getSQLTableFromDB(SQLTable.SQL_NAME, _name);
         }
@@ -423,7 +418,7 @@ public final class SQLTable
     public static SQLTable get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, SQLTable> cache = InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             SQLTable.getSQLTableFromDB(SQLTable.SQL_UUID, String.valueOf(_uuid));
         }
@@ -436,15 +431,13 @@ public final class SQLTable
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORE")
     private static void cacheSQLTable(final SQLTable _sqlTable)
     {
-        final Cache<UUID, SQLTable> cache4UUID = InfinispanCache.get().<UUID, SQLTable>getIgnReCache(
-                        SQLTable.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE);
         cache4UUID.putIfAbsent(_sqlTable.getUUID(), _sqlTable);
 
-        final Cache<String, SQLTable> nameCache = InfinispanCache.get().<String, SQLTable>getIgnReCache(
-                        SQLTable.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE);
         nameCache.putIfAbsent(_sqlTable.getName(), _sqlTable);
-        final Cache<Long, SQLTable> idCache = InfinispanCache.get().<Long, SQLTable>getIgnReCache(
-                        SQLTable.IDCACHE);
+
+        final var idCache = InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE);
         idCache.putIfAbsent(_sqlTable.getId(), _sqlTable);
     }
 

@@ -67,11 +67,8 @@ import org.efaps.db.QueryCache;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
-import org.infinispan.configuration.cache.CacheMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1247,17 +1244,17 @@ public class Type
         if (InfinispanCache.get().exists(Type.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE).addListener(new CacheLogListener(Type.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE, Type.LOG);
         }
         if (InfinispanCache.get().exists(Type.IDCACHE)) {
             InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE).addListener(new CacheLogListener(Type.LOG));
+            InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE, Type.LOG);
         }
         if (InfinispanCache.get().exists(Type.NAMECACHE)) {
             InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE).addListener(new CacheLogListener(Type.LOG));
+            InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE, Type.LOG);
         }
         if (InfinispanCache.get().exists(EnumType.CACHE)) {
             InfinispanCache.get().getCache(EnumType.CACHE).clear();
@@ -1287,7 +1284,7 @@ public class Type
     public static Type get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Type> cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         if (!cache.containsKey(_id)) {
             Type.getTypeFromDB(Type.SQL_ID, _id);
         }
@@ -1311,7 +1308,7 @@ public class Type
     public static Type get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Type> cache = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
         if (!cache.containsKey(_name)) {
             Type.getTypeFromDB(Type.SQL_NAME, _name);
         }
@@ -1335,7 +1332,7 @@ public class Type
     public static Type get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Type> cache = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Type.getTypeFromDB(Type.SQL_UUID, _uuid.toString());
         }
@@ -1354,13 +1351,13 @@ public class Type
     protected static void cacheType(final Type _type)
     {
         _type.setUndirty();
-        final Cache<UUID, Type> cache4UUID = InfinispanCache.get().<UUID, Type>getIgnReCache(Type.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         cache4UUID.put(_type.getUUID(), _type);
 
-        final Cache<String, Type> nameCache = InfinispanCache.get().<String, Type>getIgnReCache(Type.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
         nameCache.put(_type.getName(), _type);
 
-        final Cache<Long, Type> idCache = InfinispanCache.get().<Long, Type>getIgnReCache(Type.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         idCache.put(_type.getId(), _type);
     }
 
@@ -1371,16 +1368,16 @@ public class Type
      *
      * @param _type Type the Hierachy must be cached
      * @throws CacheReloadException on error
-     */
+
     protected static void cacheTypesByHierachy(final Type _type)
         throws CacheReloadException
     {
-        final Cache<UUID, Type> cache4UUID = InfinispanCache.get().<UUID, Type>getIgnReCache(Type.UUIDCACHE);
+        var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         if (cache4UUID.getCacheConfiguration().clustering() != null
                         && !cache4UUID.getCacheConfiguration().clustering().cacheMode().equals(CacheMode.LOCAL)) {
             Type type = _type;
             while (type.getParentTypeId() != null) {
-                final Cache<Long, Type> cache = InfinispanCache.get().<Long, Type>getIgnReCache(Type.IDCACHE);
+                var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
                 if (cache.containsKey(type.getParentTypeId())) {
                     type = cache.get(type.getParentTypeId());
                 } else {
@@ -1389,7 +1386,7 @@ public class Type
             }
             type.recacheChildren();
         }
-    }
+    }*/
 
     /**
      * Recache the children in dropdown. Used for Caching in cluster.
@@ -1571,7 +1568,7 @@ public class Type
         throws CacheReloadException
     {
         boolean ret = false;
-        final Cache<Long, Type> cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         if (cache.containsKey(_typeId)) {
             ret = cache.get(_typeId).getUUID().equals(_typeUUID);
         } else {
@@ -1623,7 +1620,7 @@ public class Type
         throws CacheReloadException
     {
         long ret = 0;
-        final Cache<UUID, Type> cache = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         if (cache.containsKey(_typeUUID)) {
             ret = cache.get(_typeUUID).getId();
         } else {
@@ -1672,7 +1669,7 @@ public class Type
         throws CacheReloadException
     {
         UUID ret = null;
-        final Cache<Long, Type> cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         if (cache.containsKey(_typeId)) {
             ret = cache.get(_typeId).getUUID();
         } else {
@@ -1718,9 +1715,9 @@ public class Type
      */
     public static boolean isInitialized()
     {
-        final Cache<Long, Type> cache1 = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
-        final Cache<String, Type> cache2 = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
-        final Cache<UUID, Type> cache3 = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
+        final var cache1 = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
+        final var cache2 = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
+        final var cache3 = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         return !cache1.isEmpty() || !cache2.isEmpty() || !cache3.isEmpty();
     }
 }

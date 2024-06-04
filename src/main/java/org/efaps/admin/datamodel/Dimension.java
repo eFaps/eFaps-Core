@@ -31,10 +31,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,26 +229,22 @@ public class Dimension
         if (InfinispanCache.get().exists(Dimension.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE)
-                            .addListener(new CacheLogListener(Dimension.LOG));
+            InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE, Dimension.LOG);
         }
         if (InfinispanCache.get().exists(Dimension.IDCACHE)) {
             InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE)
-                            .addListener(new CacheLogListener(Dimension.LOG));
+            InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE, Dimension.LOG);
         }
         if (InfinispanCache.get().exists(Dimension.NAMECACHE)) {
             InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE)
-                            .addListener(new CacheLogListener(Dimension.LOG));
+            InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE, Dimension.LOG);
         }
         if (InfinispanCache.get().exists(Dimension.IDCACHE4UOM)) {
             InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM).clear();
         } else {
-            InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM)
-                            .addListener(new CacheLogListener(Dimension.LOG));
+            InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM, Dimension.LOG);
         }
     }
 
@@ -276,7 +270,7 @@ public class Dimension
     public static Dimension get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Dimension> cache = InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE);
         if (!cache.containsKey(_id)) {
             Dimension.getDimensionFromDB(Dimension.SQL_ID, _id);
         }
@@ -294,7 +288,7 @@ public class Dimension
     public static Dimension get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, Dimension> cache = InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE);
         if (!cache.containsKey(_name)) {
             Dimension.getDimensionFromDB(Dimension.SQL_NAME, _name);
         }
@@ -312,7 +306,7 @@ public class Dimension
     public static Dimension get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, Dimension> cache = InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Dimension.getDimensionFromDB(Dimension.SQL_UUID, String.valueOf(_uuid));
         }
@@ -327,7 +321,7 @@ public class Dimension
      */
     public static UoM getUoM(final Long _uoMId)
     {
-        final Cache<Long, UoM> cache = InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM);
+        final var cache = InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM);
         if (!cache.containsKey(_uoMId)) {
             try {
                 Dimension.getUoMFromDB(Dimension.SQL_SELECT_UOM4ID, _uoMId);
@@ -375,7 +369,7 @@ public class Dimension
                 }
             }
             con.commit();
-            final Cache<Long, UoM> cache = InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM);
+            final var cache = InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM);
             for (final Object[] row : values) {
                 final long id = (Long) row[0];
                 final long dimId = (Long) row[1];
@@ -417,16 +411,13 @@ public class Dimension
      */
     private static void cacheDimension(final Dimension _dimension)
     {
-        final Cache<UUID, Dimension> cache4UUID = InfinispanCache.get().<UUID, Dimension>getIgnReCache(
-                        Dimension.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE);
         cache4UUID.put(_dimension.getUUID(), _dimension);
 
-        final Cache<String, Dimension> nameCache = InfinispanCache.get().<String, Dimension>getIgnReCache(
-                        Dimension.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE);
         nameCache.put(_dimension.getName(), _dimension);
 
-        final Cache<Long, Dimension> idCache = InfinispanCache.get().<Long, Dimension>getIgnReCache(
-                        Dimension.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE);
         idCache.put(_dimension.getId(), _dimension);
     }
 

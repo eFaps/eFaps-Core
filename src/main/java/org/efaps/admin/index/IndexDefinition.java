@@ -32,10 +32,8 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.db.SelectBuilder;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,8 +141,7 @@ public final class IndexDefinition
                 InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE).clear();
             }
         } else {
-            InfinispanCache.get().<UUID, Type>getCache(IndexDefinition.UUIDCACHE).addListener(new CacheLogListener(
-                            IndexDefinition.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(IndexDefinition.UUIDCACHE, IndexDefinition.LOG);
         }
     }
 
@@ -160,8 +157,7 @@ public final class IndexDefinition
         throws EFapsException
     {
         initialize(true);
-        final Cache<UUID, IndexDefinition> cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(
-                        IndexDefinition.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             IndexDefinition.loadDefinition(_uuid);
         }
@@ -212,8 +208,7 @@ public final class IndexDefinition
         } else {
             def = NULLINDEXDEF;
         }
-        final Cache<UUID, IndexDefinition> cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(
-                        IndexDefinition.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
         cache.put(_typeUUID, def);
 
         // only if it is not a null index check if it must be joined with parent index definitions
@@ -291,7 +286,7 @@ public final class IndexDefinition
     private static Set<Type> getChildTypes(final Type _type)
         throws CacheReloadException
     {
-        final Set<Type> ret = new HashSet<Type>();
+        final Set<Type> ret = new HashSet<>();
         ret.add(_type);
         for (final Type child : _type.getChildTypes()) {
             ret.addAll(getChildTypes(child));

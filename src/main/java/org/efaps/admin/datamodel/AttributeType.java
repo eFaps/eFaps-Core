@@ -28,10 +28,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,14 +270,12 @@ public class AttributeType
         if (InfinispanCache.get().exists(AttributeType.IDCACHE)) {
             InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE)
-                            .addListener(new CacheLogListener(AttributeType.LOG));
+            InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE, AttributeType.LOG);
         }
         if (InfinispanCache.get().exists(AttributeType.NAMECACHE)) {
             InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE)
-                            .addListener(new CacheLogListener(AttributeType.LOG));
+            InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE, AttributeType.LOG);
         }
     }
 
@@ -303,8 +299,7 @@ public class AttributeType
     public static AttributeType get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, AttributeType> cache = InfinispanCache.get().<Long, AttributeType>getCache(
-                        AttributeType.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE);
         if (!cache.containsKey(_id)) {
             AttributeType.getAttributeTypeFromDB(AttributeType.SQL_ID, _id);
         }
@@ -323,8 +318,7 @@ public class AttributeType
     public static AttributeType get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, AttributeType> cache = InfinispanCache.get().<String, AttributeType>getCache(
-                        AttributeType.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE);
         if (!cache.containsKey(_name)) {
             AttributeType.getAttributeTypeFromDB(AttributeType.SQL_NAME, _name);
         }
@@ -337,12 +331,10 @@ public class AttributeType
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORE")
     private static void cacheAttributeType(final AttributeType _role)
     {
-        final Cache<String, AttributeType> nameCache = InfinispanCache.get()
-                        .<String, AttributeType>getIgnReCache(AttributeType.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE);
         nameCache.putIfAbsent(_role.getName(), _role);
 
-        final Cache<Long, AttributeType> idCache = InfinispanCache.get().<Long, AttributeType>getIgnReCache(
-                        AttributeType.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE);
         idCache.putIfAbsent(_role.getId(), _role);
     }
 

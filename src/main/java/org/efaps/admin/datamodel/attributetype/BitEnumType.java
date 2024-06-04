@@ -24,7 +24,6 @@ import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.IBitEnum;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.AdvancedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +56,10 @@ public class BitEnumType
     protected Object getEnum4Int(final Attribute _attribute,
                                  final Integer _num)
     {
-        final AdvancedCache<String, Object> cache = InfinispanCache.get().<String, Object>getIgnReCache(EnumType.CACHE);
+        final var cache = InfinispanCache.get().<String, Object>getCache(EnumType.CACHE);
         final String key = _attribute.getClassName() + "-" + _num;
         if (!cache.containsKey(key)) {
-            final List<IBitEnum> ret = new ArrayList<IBitEnum>();
+            final List<IBitEnum> ret = new ArrayList<>();
             try {
                 final Class<?> clazz = Class.forName(_attribute.getClassName(), false, EFapsClassLoader.getInstance());
                 final Object[] consts = clazz.getEnumConstants();

@@ -523,6 +523,17 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
+            <version>15.0.4.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-remote-query-client</artifactId>
+            <version>15.0.4.Final</version>
+        </dependency>
+
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>
             <groupId>org.jboss.logging</groupId>

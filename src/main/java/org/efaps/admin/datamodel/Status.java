@@ -33,11 +33,9 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -250,20 +248,17 @@ public final class Status
         if (InfinispanCache.get().exists(Status.UUIDCACHE4GRP)) {
             InfinispanCache.get().<UUID, Status>getCache(Status.UUIDCACHE4GRP).clear();
         } else {
-            InfinispanCache.get().<UUID, Status>getCache(Status.UUIDCACHE4GRP)
-                            .addListener(new CacheLogListener(Status.LOG));
+            InfinispanCache.get().<UUID, Status>getCache(Status.UUIDCACHE4GRP, Status.LOG);
         }
         if (InfinispanCache.get().exists(Status.IDCACHE4STATUS)) {
             InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS).clear();
         } else {
-            InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS)
-                            .addListener(new CacheLogListener(Status.LOG));
+            InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS, Status.LOG);
         }
         if (InfinispanCache.get().exists(Status.NAMECACHE4GRP)) {
             InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP).clear();
         } else {
-            InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP)
-                            .addListener(new CacheLogListener(Status.LOG));
+            InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP, Status.LOG);
         }
     }
 
@@ -361,7 +356,7 @@ public final class Status
     public static Status get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Status> cache = InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS);
+        final var cache = InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS);
         if (!cache.containsKey(_id)) {
             Status.getStatusFromDB(Status.SQL_ID4STATUS, _id);
         }
@@ -378,8 +373,7 @@ public final class Status
     public static StatusGroup get(final String _typeName)
         throws CacheReloadException
     {
-        final Cache<String, StatusGroup> cache = InfinispanCache.get().<String, StatusGroup>getCache(
-                        Status.NAMECACHE4GRP);
+        final var cache = InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP);
         if (!cache.containsKey(_typeName)) {
             Status.getStatusGroupFromDB(Status.SQL_NAME4GRP, _typeName);
         }
@@ -396,7 +390,7 @@ public final class Status
     public static StatusGroup get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, StatusGroup> cache = InfinispanCache.get().<UUID, StatusGroup>getCache(Status.UUIDCACHE4GRP);
+        final var cache = InfinispanCache.get().<UUID, StatusGroup>getCache(Status.UUIDCACHE4GRP);
         if (!cache.containsKey(_uuid)) {
             Status.getStatusGroupFromDB(Status.SQL_UUID4GRP, String.valueOf(_uuid));
         }
@@ -408,12 +402,10 @@ public final class Status
      */
     private static void cacheStatusGroup(final StatusGroup _grp)
     {
-        final Cache<String, StatusGroup> nameCache = InfinispanCache.get().<String, StatusGroup>getIgnReCache(
-                        Status.NAMECACHE4GRP);
+        final var nameCache = InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP);
         nameCache.put(_grp.getName(), _grp);
 
-        final Cache<UUID, StatusGroup> uuidCache = InfinispanCache.get().<UUID, StatusGroup>getIgnReCache(
-                        Status.UUIDCACHE4GRP);
+        final var uuidCache = InfinispanCache.get().<UUID, StatusGroup>getCache(Status.UUIDCACHE4GRP);
         uuidCache.put(_grp.getUUID(), _grp);
     }
 
@@ -422,7 +414,7 @@ public final class Status
      */
     private static void cacheStatus(final Status _status)
     {
-        final Cache<Long, Status> idCache = InfinispanCache.get().<Long, Status>getIgnReCache(Status.IDCACHE4STATUS);
+        final var idCache = InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS);
         idCache.put(_status.getId(), _status);
     }
 
@@ -470,8 +462,7 @@ public final class Status
                 Status.LOG.debug("read status '{}' (id = {}) + key = {}", typeid, id, key);
 
                 final Type type = Type.get(typeid);
-                final Cache<UUID, StatusGroup> cache = InfinispanCache.get().<UUID, StatusGroup>getCache(
-                                Status.UUIDCACHE4GRP);
+                final var cache = InfinispanCache.get().<UUID, StatusGroup>getCache(Status.UUIDCACHE4GRP);
                 final StatusGroup statusGroup;
                 if (cache.containsKey(type.getUUID())) {
                     statusGroup = cache.get(type.getUUID());

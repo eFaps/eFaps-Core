@@ -1,381 +1,219 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-     Copyright 2003 - 2016 The eFaps Team
-     
+     Copyright 2003 - 2022 The eFaps Team
+
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-     
+
      http://www.apache.org/licenses/LICENSE-2.0
-     
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
-     limitations under the License.
  -->
 
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:infinispan:config:7.0 http://www.infinispan.org/schemas/infinispan-config-7.0.xsd"
-    xmlns="urn:infinispan:config:7.0">
-    <global >
-        <transport>
-            <properties>
-                <property name="configurationFile" value="jgroups-tcp.xml" />
-            </properties>
-        </transport>
-    </global>
-    <!-- the Access cache -->
-    <namedCache name="org.efaps.admin.access.AccessCache.Instance">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <!--10 minutes, 5 minutes (miliseconds) -->
-        <expiration lifespan="600000" maxIdle="300000" />
-        <clustering mode="dist"/>
-        <compatibility enabled="true"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.access.AccessCache.AccessKey">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <!--10 minutes, 5 minutes (miliseconds) -->
-        <expiration lifespan="600000" maxIdle="300000" />
-        <clustering mode="dist"/>
-        <compatibility enabled="true"/>
-    </namedCache>
+    xsi:schemaLocation="urn:infinispan:config:15.0 https://www.infinispan.org/schemas/infinispan-config-15.0.xsd"
+    xmlns="urn:infinispan:config:15.0">
+    <cache-container default-cache="eFaps-Default" name="eFaps-Cache-Container" statistics="true">
 
-    <!-- *************************************** -->
-    <!-- Cache to store Lucene's file metadata -->
-    <!-- *************************************** -->
-    <namedCache name="LuceneIndexesMetadata">
-    <clustering mode="replication">
-        <stateTransfer fetchInMemoryState="true" />
-        <sync replTimeout="25000" />
-    </clustering>
-    <indexing enabled="false" />
-</namedCache>
+        <transport cluster="${infinispan.cluster.name:cluster}"
+                stack="${infinispan.cluster.stack:tcp}"
+                node-name="${infinispan.node.name:}"/>
 
-    <!-- **************************** -->
-    <!-- Cache to store Lucene data -->
-    <!-- **************************** -->
-    <namedCache name="LuceneIndexesData">
-        <clustering mode="distribution">
-            <stateTransfer fetchInMemoryState="true" />
-            <sync replTimeout="25000" />
-        </clustering>
-        <indexing enabled="false" />
-    </namedCache>
+        <local-cache-configuration name="eFaps-Default">
+        </local-cache-configuration>
 
-    <!-- ***************************** -->
-    <!-- Cache to store Lucene locks -->
-    <!-- ***************************** -->
-    <namedCache name="LuceneIndexesLocking">
-        <clustering mode="replication">
-            <stateTransfer fetchInMemoryState="true" />
-            <sync replTimeout="25000" />
-        </clustering>
-        <indexing enabled="false" />
-    </namedCache>
+        <!-- the Access cache -->
+        <local-cache name="org.efaps.admin.access.user.AccessCache.PermissionCache">
+            <memory max-count="5000"/>
+            <!--10 minutes, 5 minutes (miliseconds) -->
+            <expiration lifespan="600000" max-idle="300000" />
+            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan">
+                <indexed-entities>
+                    <indexed-entity>org.efaps.admin.access.user.PermissionSet</indexed-entity>
+                </indexed-entities>
+            </indexing>
+        </local-cache>
+        <local-cache name="org.efaps.admin.access.user.AccessCache.StatusCache"/>
+        <local-cache name="org.efaps.admin.common.Association.UUID"/>
+        <local-cache name="org.efaps.admin.common.Association.ID"/>
+        <local-cache name="org.efaps.admin.common.Association.Name"/>
+        <local-cache name="org.efaps.admin.common.Association.Key"/>
+        <local-cache name="org.efaps.util.cache.InfinispanCache.InternalCounter"/>
+        <local-cache name="org.efaps.admin.ui.Module.UUID"/>
+        <local-cache name="org.efaps.admin.ui.Module.ID"/>
+        <local-cache name="org.efaps.admin.ui.Module.Name"/>
+        <local-cache name="org.efaps.admin.ui.Search.UUID"/>
+        <local-cache name="org.efaps.admin.ui.Search.ID"/>
+        <local-cache name="org.efaps.admin.ui.Search.Name"/>
+        <local-cache name="org.efaps.admin.ui.Form.UUID"/>
+        <local-cache name="org.efaps.admin.ui.Form.ID"/>
+        <local-cache name="org.efaps.admin.ui.Form.Name"/>
+        <local-cache name="org.efaps.admin.ui.Table.UUID"/>
+        <local-cache name="org.efaps.admin.ui.Table.ID"/>
+        <local-cache name="org.efaps.admin.ui.Table.Name"/>
+        <local-cache name="org.efaps.admin.index.Queue.Cache"/>
+        <local-cache name="org.efaps.admin.index.IndexDefinition.UUID"/>
 
+        <!-- the Sql Query cache -->
+        <local-cache name="org.efaps.db.QueryCache">
+            <!--Only experation no eviction 10 minutes, 5 minutes (miliseconds) -->
+            <expiration lifespan="600000" max-idle="300000" />
+            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan" startup-mode="purge">
+                <indexed-entities>
+                    <indexed-entity>org.efaps.db.QueryValue</indexed-entity>
+                </indexed-entities>
+            </indexing>
+        </local-cache>
+        <!---Only experation no eviction, 10 minutes, 5 minutes (miliseconds) -->
+        <!--
+        <local-cache name="org.efaps.db.QueryCache.Index">
 
-    <!-- the Sql Query cache -->
-    <namedCache name="org.efaps.db.QueryCache.Sql">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <!--10 minutes, 5 minutes (miliseconds) -->
-        <expiration lifespan="600000" maxIdle="300000" />
-        <clustering mode="dist"/>
-        <compatibility enabled="true"/>
-    </namedCache>
-    <namedCache name="org.efaps.db.QueryCache.Key">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <!--10 minutes, 5 minutes (miliseconds) -->
-        <expiration lifespan="600000" maxIdle="300000" />
-        <clustering mode="dist"/>
-        <compatibility enabled="true"/>
-    </namedCache>
+            <expiration lifespan="600000" max-idle="300000" />
+            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan" startup-mode="purge">
+                <indexed-entities>
+                    <indexed-entity>org.efaps.db.QueryKey</indexed-entity>
+                </indexed-entities>
+            </indexing>
+        </local-cache>
+            -->
+        <local-cache name="org.efaps.admin.dbproperty.DBProperties"/>
 
+        <!-- UserInterface -->
+        <local-cache name="org.efaps.admin.ui.field.Field"/>
 
-    <namedCache name="org.efaps.admin.dbproperty.DBProperties">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-        <compatibility enabled="true"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.ui.Command.UUID" />
+        <local-cache name="org.efaps.admin.ui.Command.ID" />
+        <local-cache name="org.efaps.admin.ui.Command.Name" />
 
-    <!-- UserInterface -->
-    <namedCache name="org.efaps.admin.ui.field.Field">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.ui.Menu.UUID" />
+        <local-cache name="org.efaps.admin.ui.Menu.ID" />
+        <local-cache name="org.efaps.admin.ui.Menu.Name" />
 
-    <namedCache name="org.efaps.admin.ui.Command.UUID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Command.ID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Command.Name">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.ui.Image.UUID" />
+        <local-cache name="org.efaps.admin.ui.Image.ID" />
+        <local-cache name="org.efaps.admin.ui.Image.Name" />
 
-    <namedCache name="org.efaps.admin.ui.Menu.UUID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Menu.ID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Menu.Name">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+            <!-- DateModel -->
+        <local-cache name="org.efaps.admin.datamodel.AttributeType.ID" />
+        <local-cache name="org.efaps.admin.datamodel.AttributeType.Name" />
 
-    <namedCache name="org.efaps.admin.ui.Image.UUID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Image.ID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.ui.Image.Name">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.datamodel.SQLTable.UUID" />
+        <local-cache name="org.efaps.admin.datamodel.SQLTable.ID" />
+        <local-cache name="org.efaps.admin.datamodel.SQLTable.Name" />
+
+        <local-cache name="org.efaps.admin.access.AccessType.UUID" />
+        <local-cache name="org.efaps.admin.access.AccessType.ID" />
+        <local-cache name="org.efaps.admin.access.AccessType.Name" />
+
+        <local-cache name="org.efaps.admin.datamodel.Type.UUID" />
+        <local-cache name="org.efaps.admin.datamodel.Type.ID" />
+        <!--
+        <local-cache name="org.efaps.admin.datamodel.Type.Name" />
+         -->
+
+   <!--
+<replicated-cache name="org.efaps.admin.datamodel.Type.Name"
+                    segments="256"
+                  mode="SYNC"
+                  statistics="true">
+  <locking isolation="REPEATABLE_READ"/>
+  <transaction mode="FULL_XA"  locking="OPTIMISTIC"/>
+
+</replicated-cache>
+-->
 
 
-    <!-- DateModel -->
-    <namedCache name="org.efaps.admin.datamodel.AttributeType.ID">
-        <eviction maxEntries="50" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.AttributeType.Name">
-        <eviction maxEntries="50" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
 
-    <namedCache name="org.efaps.admin.datamodel.SQLTable.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.SQLTable.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.SQLTable.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.datamodel.Attribute.Name" />
+        <local-cache name="org.efaps.admin.datamodel.Attribute.ID" />
 
-    <namedCache name="org.efaps.admin.access.AccessType.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.access.AccessType.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.access.AccessType.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.datamodel.Dimension.UUID" />
+        <local-cache name="org.efaps.admin.datamodel.Dimension.ID" />
+        <local-cache name="org.efaps.admin.datamodel.Dimension.Name" />
+        <local-cache name="org.efaps.admin.datamodel.Dimension.UoM4ID" />
 
-    <namedCache name="org.efaps.admin.datamodel.Type.UUID">
-        <eviction maxEntries="1500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Type.ID">
-        <eviction maxEntries="1500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Type.Name">
-        <eviction maxEntries="1500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.common.NumberGenerator.UUID" />
+        <local-cache name="org.efaps.admin.common.NumberGenerator.ID" />
+        <local-cache name="org.efaps.admin.common.NumberGenerator.Name" />
 
-    <namedCache name="org.efaps.admin.datamodel.Attribute.Name">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Attribute.ID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.common.SystemConfiguration.UUID" />
+        <local-cache name="org.efaps.admin.common.SystemConfiguration.ID" />
+        <local-cache name="org.efaps.admin.common.SystemConfiguration.Name" />
 
-    <namedCache name="org.efaps.admin.datamodel.Dimension.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Dimension.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Dimension.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Dimension.UoM4ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.datamodel.Status.Group4UUID" />
+        <local-cache name="org.efaps.admin.datamodel.Status.Group4Name" />
+        <local-cache name="org.efaps.admin.datamodel.Status.ID" />
 
-    <namedCache name="org.efaps.admin.common.NumberGenerator.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.common.NumberGenerator.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.common.NumberGenerator.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.datamodel.attributetype.EnumType.Object" />
 
-    <namedCache name="org.efaps.admin.common.SystemConfiguration.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.common.SystemConfiguration.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.common.SystemConfiguration.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.access.AccessSet.UUID" />
+        <local-cache name="org.efaps.admin.access.AccessSet.ID" />
+        <local-cache name="org.efaps.admin.access.AccessSet.Name" />
 
+        <local-cache name="org.efaps.admin.common.MsgPhrase.UUID" />
+        <local-cache name="org.efaps.admin.common.MsgPhrase.ID" />
+        <local-cache name="org.efaps.admin.common.MsgPhrase.Name" />
+        <local-cache name="org.efaps.admin.common.MsgPhrase.Argument" />
+        <local-cache name="org.efaps.admin.common.MsgPhrase.Label" />
 
-    <namedCache name="org.efaps.admin.datamodel.Status.Group4UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Status.Group4Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.datamodel.Status.ID">
-        <eviction maxEntries="5000" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <!-- User Caches This Caches are accessed in the given sequence during
+            the search for a UserObject. That means that for e.g. RoleCache null-Values
+            for ids will be cached that are not a Role -->
+        <local-cache name="org.efaps.admin.user.Role.UUID" />
+        <local-cache name="org.efaps.admin.user.Role.ID" />
+        <local-cache name="org.efaps.admin.user.Role.Name" />
 
-    <namedCache name="org.efaps.admin.access.AccessSet.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.access.AccessSet.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.access.AccessSet.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.user.Group.ID" />
+        <local-cache name="org.efaps.admin.user.Group.Name" />
+        <local-cache name="org.efaps.admin.user.Group.UUID" />
 
-    <!-- User Caches This Caches are accessed in the given sequence during
-        the search for a UserObject. That means that for e.g. RoleCache null-Values
-        for ids will be cached that are not a Role -->
-    <namedCache name="org.efaps.admin.user.Role.UUID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Role.ID">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Role.Name">
-        <eviction maxEntries="500" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.user.Company.UUID" />
+        <local-cache name="org.efaps.admin.user.Company.ID" />
+        <local-cache name="org.efaps.admin.user.Company.Name" />
 
-    <namedCache name="org.efaps.admin.user.Group.ID">
-        <eviction maxEntries="400" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Group.Name">
-        <eviction maxEntries="400" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Group.UUID">
-        <eviction maxEntries="400" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.user.Consortium.UUID" />
+        <local-cache name="org.efaps.admin.user.Consortium.ID" />
+        <local-cache name="org.efaps.admin.user.Consortium.Name" />
 
-    <namedCache name="org.efaps.admin.user.Company.UUID">
-        <eviction maxEntries="300" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Company.ID">
-        <eviction maxEntries="300" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Company.Name">
-        <eviction maxEntries="300" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.user.Person.UUID" />
+        <local-cache name="org.efaps.admin.user.Person.ID" />
+        <local-cache name="org.efaps.admin.user.Person.Name" />
 
-    <namedCache name="org.efaps.admin.user.Consortium.ID">
-        <eviction maxEntries="200" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Consortium.Name">
-        <eviction maxEntries="200" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <!-- JAASSystme is not clusterable due to use of java.lang.reflect.Method
+            instance variables -->
+        <local-cache name="org.efaps.admin.user.JAASSystem.ID" />
+        <local-cache name="org.efaps.admin.user.JAASSystem.Name" />
 
-    <namedCache name="org.efaps.admin.user.Person.UUID">
-        <eviction maxEntries="100" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Person.ID">
-        <eviction maxEntries="100" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.Person.Name">
-        <eviction maxEntries="100" strategy="LIRS" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.user.Association.ID" />
 
-    <!-- JAASSystme is not clusterable due to use of java.lang.reflect.Method instance variables -->
-    <namedCache name="org.efaps.admin.user.JAASSystem.ID">
-        <eviction maxEntries="5" strategy="LRU" />
-    </namedCache>
-    <namedCache name="org.efaps.admin.user.JAASSystem.Name">
-        <eviction maxEntries="5" strategy="LRU" />
-    </namedCache>
+        <!-- Stores are not clusterable. Where to store if they are clustered? -->
+        <local-cache name="org.efaps.db.store.Store.UUID" />
+        <local-cache name="org.efaps.db.store.Store.ID" />
+        <local-cache name="org.efaps.db.store.Store.Name" />
 
-    <namedCache name="org.efaps.admin.user.Association.ID">
-        <eviction maxEntries="50" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Name" />
+        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.BundleMapper" />
+        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Bundles" />
 
-    <!-- Stores are not clusterable. Where to store if they are clustered? -->
-    <namedCache name="org.efaps.db.store.Store.UUID">
-        <eviction maxEntries="50" strategy="LRU" />
-    </namedCache>
-    <namedCache name="org.efaps.db.store.Store.ID">
-        <eviction maxEntries="50" strategy="LRU" />
-    </namedCache>
-    <namedCache name="org.efaps.db.store.Store.Name">
-        <eviction maxEntries="50" strategy="LRU" />
-    </namedCache>
+        <local-cache name="org.efaps.ui.servlet.StaticContentServlet.Cache" />
 
-    <namedCache name="org.efaps.admin.program.bundle.BundleMaker.Name">
-        <eviction maxEntries="150" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.program.bundle.BundleMaker.BundleMapper">
-        <eviction maxEntries="150" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
-    <namedCache name="org.efaps.admin.program.bundle.BundleMaker.Bundles">
-        <eviction maxEntries="150" strategy="LRU" />
-        <clustering mode="dist"/>
-    </namedCache>
+        <local-cache name="org.efaps.ui.servlet.ImageServlet.Cache" />
 
-    <namedCache name="org.efaps.ui.servlet.StaticContentServlet.Cache">
-        <eviction maxEntries="500" strategy="LRU" />
-    </namedCache>
-
+        <local-cache-configuration
+            name="org.efaps.ui.wicket.connectionregistry.RegistryManager.Session">
+            <memory max-count="5000"/>
+            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan">
+                <!-- the entity will be added during webapp loading
+                <indexed-entities>
+                    <indexed-entity>org.efaps.ui.wicket.connectionregistry.UserSession</indexed-entity>
+                </indexed-entities>
+                 -->
+            </indexing>
+        </local-cache-configuration>
+    </cache-container>
 </infinispan>
 

@@ -28,11 +28,9 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -310,20 +308,17 @@ public final class NumberGenerator
         if (InfinispanCache.get().exists(NumberGenerator.UUIDCACHE)) {
             InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE)
-                            .addListener(new CacheLogListener(NumberGenerator.LOG));
+            InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE, NumberGenerator.LOG);
         }
         if (InfinispanCache.get().exists(NumberGenerator.IDCACHE)) {
             InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE)
-                            .addListener(new CacheLogListener(NumberGenerator.LOG));
+            InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE, NumberGenerator.LOG);
         }
         if (InfinispanCache.get().exists(NumberGenerator.NAMECACHE)) {
             InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE)
-                            .addListener(new CacheLogListener(NumberGenerator.LOG));
+            InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE, NumberGenerator.LOG);
         }
     }
 
@@ -337,8 +332,7 @@ public final class NumberGenerator
     public static NumberGenerator get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, NumberGenerator> cache = InfinispanCache.get().<Long, NumberGenerator>getCache(
-                        NumberGenerator.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE);
         if (!cache.containsKey(_id)) {
             NumberGenerator.getNumberGeneratorFromDB(NumberGenerator.SQL_ID, _id);
         }
@@ -356,8 +350,7 @@ public final class NumberGenerator
     public static NumberGenerator get(final String _name)
         throws CacheReloadException
     {
-        final Cache<String, NumberGenerator> cache = InfinispanCache.get().<String, NumberGenerator>getCache(
-                        NumberGenerator.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE);
         if (!cache.containsKey(_name)) {
             NumberGenerator.getNumberGeneratorFromDB(NumberGenerator.SQL_NAME, _name);
         }
@@ -375,8 +368,7 @@ public final class NumberGenerator
     public static NumberGenerator get(final UUID _uuid)
         throws CacheReloadException
     {
-        final Cache<UUID, NumberGenerator> cache = InfinispanCache.get().<UUID, NumberGenerator>getCache(
-                        NumberGenerator.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             NumberGenerator.getNumberGeneratorFromDB(NumberGenerator.SQL_UUID, String.valueOf(_uuid));
         }
@@ -388,16 +380,13 @@ public final class NumberGenerator
      */
     private static void cacheNumberGenerator(final NumberGenerator _numberGenerator)
     {
-        final Cache<UUID, NumberGenerator> cache4UUID = InfinispanCache.get().<UUID, NumberGenerator>getIgnReCache(
-                        NumberGenerator.UUIDCACHE);
+        final var cache4UUID = InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE);
         cache4UUID.putIfAbsent(_numberGenerator.getUUID(), _numberGenerator);
 
-        final Cache<String, NumberGenerator> nameCache = InfinispanCache.get().<String, NumberGenerator>getIgnReCache(
-                        NumberGenerator.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE);
         nameCache.putIfAbsent(_numberGenerator.getName(), _numberGenerator);
 
-        final Cache<Long, NumberGenerator> idCache = InfinispanCache.get().<Long, NumberGenerator>getIgnReCache(
-                        NumberGenerator.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE);
         idCache.putIfAbsent(_numberGenerator.getId(), _numberGenerator);
     }
 

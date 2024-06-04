@@ -50,10 +50,8 @@ import org.efaps.util.ChronologyType;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -1553,19 +1551,17 @@ public final class Person
         if (InfinispanCache.get().exists(Person.IDCACHE)) {
             InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE).addListener(new CacheLogListener(Person.LOG));
+            InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE, Person.LOG);
         }
         if (InfinispanCache.get().exists(Person.NAMECACHE)) {
             InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE).clear();
         } else {
-            InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE)
-                            .addListener(new CacheLogListener(Person.LOG));
+            InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE,Person.LOG);
         }
         if (InfinispanCache.get().exists(Person.UUIDCACHE)) {
             InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE).clear();
         } else {
-            InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE)
-                            .addListener(new CacheLogListener(Person.LOG));
+            InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE, Person.LOG);
         }
     }
 
@@ -1582,7 +1578,7 @@ public final class Person
     public static Person get(final long _id)
         throws EFapsException
     {
-        final Cache<Long, Person> cache = InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE);
         if (!cache.containsKey(_id)) {
             Person.getPersonFromDB(Person.SQL_ID, _id);
         }
@@ -1601,7 +1597,7 @@ public final class Person
     public static Person get(final UUID _uuid)
         throws EFapsException
     {
-        final Cache<UUID, Person> cache = InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE);
+        final var cache = InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             Person.getPersonFromDB(Person.SQL_UUID, _uuid.toString());
         }
@@ -1621,7 +1617,7 @@ public final class Person
     public static Person get(final String _name)
         throws EFapsException
     {
-        final Cache<String, Person> cache = InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE);
+        final var cache = InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE);
         if (!cache.containsKey(_name)) {
             Person.getPersonFromDB(Person.SQL_NAME, _name);
         }
@@ -1660,14 +1656,14 @@ public final class Person
     private static void cachePerson(final Person _person)
         throws EFapsException
     {
-        final Cache<String, Person> nameCache = InfinispanCache.get().<String, Person>getIgnReCache(Person.NAMECACHE);
+        final var nameCache = InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE);
         nameCache.putIfAbsent(_person.getName(), _person);
 
-        final Cache<Long, Person> idCache = InfinispanCache.get().<Long, Person>getIgnReCache(Person.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE);
         idCache.putIfAbsent(_person.getId(), _person);
 
         if (_person.getUUID() != null) {
-            final Cache<UUID, Person> uuidCache = InfinispanCache.get().<UUID, Person>getIgnReCache(Person.UUIDCACHE);
+            final var uuidCache = InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE);
             uuidCache.putIfAbsent(_person.getUUID(), _person);
         }
     }

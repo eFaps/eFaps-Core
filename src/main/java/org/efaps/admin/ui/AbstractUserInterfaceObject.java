@@ -49,10 +49,8 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.jaas.AppAccessHandler;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -326,7 +324,7 @@ public abstract class AbstractUserInterfaceObject
                                final Type _type)
         throws CacheReloadException
     {
-        final Cache<UUID, V> cache = InfinispanCache.get().<UUID, V>getCache(
+        final var cache = InfinispanCache.get().<UUID, V>getCache(
                         AbstractUserInterfaceObject.getUUIDCacheName(_componentType));
         if (!cache.containsKey(_uuid)
                         && !AbstractUserInterfaceObject
@@ -351,8 +349,7 @@ public abstract class AbstractUserInterfaceObject
                                final Type _type)
         throws CacheReloadException
     {
-        final Cache<Long, V> cache = InfinispanCache.get().<Long, V>getCache(
-                        AbstractUserInterfaceObject.getIDCacheName(_componentType));
+        final var cache = InfinispanCache.get().<Long, V>getCache(AbstractUserInterfaceObject.getIDCacheName(_componentType));
         if (!cache.containsKey(_id) && !
                         AbstractUserInterfaceObject.readObjectFromDB(_componentType, _type, CIAdmin.Abstract.ID, _id)) {
             cache.put(_id, (V) getNull(_componentType), 100, TimeUnit.SECONDS);
@@ -375,7 +372,7 @@ public abstract class AbstractUserInterfaceObject
                                final Type _type)
         throws CacheReloadException
     {
-        final Cache<String, V> cache = InfinispanCache.get().<String, V>getCache(
+        final var cache = InfinispanCache.get().<String, V>getCache(
                         AbstractUserInterfaceObject.getNameCacheName(_componentType));
         if (!cache.containsKey(_name)
                         && !AbstractUserInterfaceObject.readObjectFromDB(_componentType, _type, CIAdmin.Abstract.Name,
@@ -419,18 +416,15 @@ public abstract class AbstractUserInterfaceObject
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
     protected static void cacheUIObject(final AbstractUserInterfaceObject _object)
     {
-        final Cache<UUID, AbstractUserInterfaceObject> cache4UUID = InfinispanCache.get()
-                        .<UUID, AbstractUserInterfaceObject>getIgnReCache(
+        final var cache4UUID = InfinispanCache.get().<UUID, AbstractUserInterfaceObject>getCache(
                                         AbstractUserInterfaceObject.getUUIDCacheName(_object.getClass()));
         cache4UUID.put(_object.getUUID(), _object);
 
-        final Cache<String, AbstractUserInterfaceObject> nameCache = InfinispanCache.get()
-                        .<String, AbstractUserInterfaceObject>getIgnReCache(
+        final var nameCache = InfinispanCache.get().<String, AbstractUserInterfaceObject>getCache(
                                         AbstractUserInterfaceObject.getNameCacheName(_object.getClass()));
         nameCache.put(_object.getName(), _object);
 
-        final Cache<Long, AbstractUserInterfaceObject> idCache = InfinispanCache.get()
-                        .<Long, AbstractUserInterfaceObject>getIgnReCache(
+        final var idCache = InfinispanCache.get().<Long, AbstractUserInterfaceObject>getCache(
                                         AbstractUserInterfaceObject.getIDCacheName(_object.getClass()));
         idCache.put(_object.getId(), _object);
     }
@@ -545,54 +539,34 @@ public abstract class AbstractUserInterfaceObject
             InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Module.class))
                             .clear();
         } else {
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Command.class))
-                            .addListener(new CacheLogListener(Command.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Command.class))
-                            .addListener(new CacheLogListener(Command.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Command.class))
-                            .addListener(new CacheLogListener(Command.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Command.class), Command.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Command.class), Command.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Command.class), Command.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Menu.class))
-                            .addListener(new CacheLogListener(Menu.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Menu.class))
-                            .addListener(new CacheLogListener(Menu.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Menu.class))
-                            .addListener(new CacheLogListener(Menu.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Menu.class), Menu.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Menu.class), Menu.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Menu.class), Menu.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Image.class))
-                            .addListener(new CacheLogListener(Image.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Image.class))
-                            .addListener(new CacheLogListener(Image.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Image.class))
-                            .addListener(new CacheLogListener(Image.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Image.class), Image.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Image.class), Image.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Image.class), Image.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Search.class))
-                            .addListener(new CacheLogListener(Search.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Search.class))
-                            .addListener(new CacheLogListener(Search.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Search.class))
-                            .addListener(new CacheLogListener(Search.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Search.class), Search.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Search.class), Search.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Search.class), Search.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Form.class))
-                            .addListener(new CacheLogListener(Form.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Form.class))
-                            .addListener(new CacheLogListener(Form.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Form.class))
-                            .addListener(new CacheLogListener(Form.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Form.class), Form.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Form.class), Form.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Form.class), Form.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Table.class))
-                            .addListener(new CacheLogListener(Table.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Table.class))
-                            .addListener(new CacheLogListener(Table.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Table.class))
-                            .addListener(new CacheLogListener(Table.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Table.class), Table.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Table.class), Table.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Table.class), Table.LOG);
 
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Module.class))
-                            .addListener(new CacheLogListener(Module.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Module.class))
-                            .addListener(new CacheLogListener(Module.LOG));
-            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Module.class))
-                            .addListener(new CacheLogListener(Module.LOG));
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getUUIDCacheName(Module.class), Module.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getIDCacheName(Module.class), Module.LOG);
+            InfinispanCache.get().<UUID, Type>getCache(AbstractUserInterfaceObject.getNameCacheName(Module.class), Module.LOG);
+
         }
         BundleMaker.initialize();
     }

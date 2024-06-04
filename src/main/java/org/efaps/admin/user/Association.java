@@ -25,10 +25,8 @@ import org.efaps.db.Context;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheLogListener;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
-import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,8 +134,7 @@ public class Association
         if (InfinispanCache.get().exists(Association.IDCACHE)) {
             InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE).clear();
         } else {
-            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE)
-                            .addListener(new CacheLogListener(Association.LOG));
+            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE, Association.LOG);
         }
     }
 
@@ -152,7 +149,7 @@ public class Association
     public static Association get(final long _id)
         throws CacheReloadException
     {
-        final Cache<Long, Association> cache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
+        final var cache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
         if (!cache.containsKey(_id) && !Association.getAssociationFromDB(Association.SQL_ID, _id)) {
             cache.put(_id, Association.NULL, 100, TimeUnit.SECONDS);
         }
@@ -165,8 +162,7 @@ public class Association
      */
     private static void cacheAssociation(final Association _association)
     {
-        final Cache<Long, Association> idCache = InfinispanCache.get().<Long, Association>getIgnReCache(
-                        Association.IDCACHE);
+        final var idCache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
         idCache.putIfAbsent(_association.getId(), _association);
 
     }
