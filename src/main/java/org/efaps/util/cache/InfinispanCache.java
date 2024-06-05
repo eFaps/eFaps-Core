@@ -16,7 +16,13 @@
 package org.efaps.util.cache;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
+import org.infinispan.client.hotrod.DefaultTemplate;
+import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ClientIntelligence;
+import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
+import org.infinispan.client.hotrod.near.DefaultNearCacheFactory;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -67,7 +73,14 @@ public final class InfinispanCache
      */
     private void init()
     {
-        if (this.container == null) {
+        if (true) {
+            final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
+                            .uri("hotrod://admin:secret@localhost:11222")
+                            .clientIntelligence(ClientIntelligence.BASIC)
+                            .addContextInitializer(new LibraryInitializerImpl())
+                            .build();
+            container = new RemoteCacheManager(config);
+        } else if (this.container == null) {
             try {
                 this.container = new DefaultCacheManager(this.getClass().getResourceAsStream(
                                 "/org/efaps/util/cache/infinispan-config.xml"));
@@ -117,12 +130,24 @@ public final class InfinispanCache
      * @param <V> Value
      * @return a cache from Infinspan
      */
-    public <K, V> BasicCache<K, V> getCache(final String _cacheName)
+    public <K, V> BasicCache<K, V> getCache(final String cacheName)
     {
-        return this.container.getCache(_cacheName);
+        BasicCache<K, V> cache = this.container.getCache(cacheName);
+        if (cache == null) {
+            if (this.container instanceof RemoteCacheManager) {
+                final var config = ((RemoteCacheManager) this.container).getConfiguration();
+                final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
+                                .templateName(DefaultTemplate.REPL_ASYNC)
+                                .nearCacheFactory(new DefaultNearCacheFactory());
+                config.addRemoteCache(cacheName, consumer);
+            }
+            cache = this.container.getCache(cacheName);
+        }
+        return cache;
     }
 
-    public <K, V> BasicCache<K, V> getCache(final String _cacheName, final Logger addListener)
+    public <K, V> BasicCache<K, V> getCache(final String _cacheName,
+                                            final Logger addListener)
     {
         return this.container.getCache(_cacheName);
     }
@@ -145,14 +170,23 @@ public final class InfinispanCache
      * @param <V> Value
      * @return a cache from Infinspan
      */
-    public <K, V> BasicCache<K, V> initCache(final String _cacheName)
+    public <K, V> BasicCache<K, V> initCache(final String cacheName)
     {
-        if (!exists(_cacheName)
-                        && ((EmbeddedCacheManager) getContainer()).getCacheConfiguration(_cacheName) == null) {
-            ((EmbeddedCacheManager) getContainer()).defineConfiguration(_cacheName, "eFaps-Default",
+        return this.initCache(cacheName, null);
+    }
+
+    public <K, V> BasicCache<K, V> initCache(final String cacheName,
+                                             final Consumer<RemoteCacheConfigurationBuilder> consumer)
+    {
+        if (this.container instanceof RemoteCacheManager) {
+            final var config = ((RemoteCacheManager) this.container).getConfiguration();
+            config.addRemoteCache(cacheName, consumer);
+        } else if (!exists(cacheName)
+                        && ((EmbeddedCacheManager) getContainer()).getCacheConfiguration(cacheName) == null) {
+            ((EmbeddedCacheManager) getContainer()).defineConfiguration(cacheName, "eFaps-Default",
                             new ConfigurationBuilder().build());
         }
-        return this.container.getCache(_cacheName);
+        return this.container.getCache(cacheName);
     }
 
     /**

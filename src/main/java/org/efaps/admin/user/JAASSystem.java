@@ -183,7 +183,7 @@ public final class JAASSystem
      * @param _id       id to set
      * @param _name     name to set
      */
-    private JAASSystem(final long _id,
+    protected JAASSystem(final long _id,
                        final String _name)
     {
         super(_id, null, _name);

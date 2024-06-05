@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.efaps.admin.EFapsSystemConfiguration;
@@ -330,6 +331,20 @@ public final class Person
                    final boolean _status)
     {
         super(_id, _uuid, _name, _status);
+    }
+
+    protected Person(final long id,
+                     final String uuid,
+                     final String name,
+                     final boolean status,
+                     final Set<Long> roles,
+                     final Set<Long> companies,
+                     final Set<Long> associations)
+    {
+        super(id, uuid, name, status);
+        this.roles.addAll(roles);
+        this.companies.addAll(companies);
+        this.associations.addAll(associations);
     }
 
     /**
@@ -1657,14 +1672,14 @@ public final class Person
         throws EFapsException
     {
         final var nameCache = InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE);
-        nameCache.putIfAbsent(_person.getName(), _person);
+        nameCache.put(_person.getName(), _person, 15, TimeUnit.MINUTES);
 
         final var idCache = InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE);
-        idCache.putIfAbsent(_person.getId(), _person);
+        idCache.put(_person.getId(), _person, 15, TimeUnit.MINUTES);
 
         if (_person.getUUID() != null) {
             final var uuidCache = InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE);
-            uuidCache.putIfAbsent(_person.getUUID(), _person);
+            uuidCache.put(_person.getUUID(), _person, 15, TimeUnit.MINUTES);
         }
     }
 
@@ -1725,6 +1740,7 @@ public final class Person
         }
         if (ret != null) {
             ret.readFromDB();
+            Person.cachePerson(ret);
         }
         return ret;
     }

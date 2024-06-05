@@ -177,9 +177,9 @@ public final class SystemConfiguration
      * @param _uuid uuid of the SystemConfiguration
      * @param _name name of the SystemConfiguration
      */
-    private SystemConfiguration(final long _id,
-                                final String _name,
-                                final String _uuid)
+    protected SystemConfiguration(final long _id,
+                                  final String _name,
+                                  final String _uuid)
     {
         id = _id;
         uuid = UUID.fromString(_uuid);

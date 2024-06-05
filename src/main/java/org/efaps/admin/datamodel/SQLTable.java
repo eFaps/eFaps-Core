@@ -47,6 +47,7 @@ public final class SQLTable
     extends AbstractDataModelObject
     implements DBTable
 {
+
     /**
      * Needed for serialization.
      */
@@ -112,12 +113,12 @@ public final class SQLTable
     /**
      * Name of the Cache by ID.
      */
-    private static final String IDCACHE =  SQLTable.class.getName() + ".ID";
+    private static final String IDCACHE = SQLTable.class.getName() + ".ID";
 
     /**
      * Name of the Cache by Name.
      */
-    private static final String NAMECACHE =  SQLTable.class.getName() + ".Name";
+    private static final String NAMECACHE = SQLTable.class.getName() + ".Name";
 
     /**
      * Instance variable for the name of the SQL table.
@@ -139,13 +140,6 @@ public final class SQLTable
      * @see #getSqlColType
      */
     private final String sqlColType;
-
-    /**
-     * Stores the information about the SQL table within the database.
-     *
-     * @see #getTableInformation
-     */
-    private final TableInformation tableInformation;
 
     /**
      * The instance variable stores the main table for this table instance. The
@@ -189,19 +183,17 @@ public final class SQLTable
      * @param _sqlColType name of column for the type within SQL table
      * @throws SQLException on error
      */
-    private SQLTable(final long _id,
-                     final String _uuid,
-                     final String _name,
-                     final String _sqlTable,
-                     final String _sqlColId,
-                     final String _sqlColType)
-        throws SQLException
+    protected SQLTable(final long _id,
+                       final String _uuid,
+                       final String _name,
+                       final String _sqlTable,
+                       final String _sqlColId,
+                       final String _sqlColType)
     {
         super(_id, _uuid, _name);
         this.sqlTable = _sqlTable.trim();
         this.sqlColId = _sqlColId.trim();
         this.sqlColType = _sqlColType != null ? _sqlColType.trim() : null;
-        this.tableInformation = Context.getDbType().getCachedTableInformation(this.sqlTable);
     }
 
     /**
@@ -273,11 +265,18 @@ public final class SQLTable
      * .
      *
      * @return value of instance variable {@link #tableInformation}
+     * @throws SQLException
      * @see #tableInformation
      */
     public TableInformation getTableInformation()
     {
-        return this.tableInformation;
+        try {
+            return Context.getDbType().getCachedTableInformation(this.sqlTable);
+        } catch (final SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -334,7 +333,7 @@ public final class SQLTable
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
@@ -442,7 +441,7 @@ public final class SQLTable
     }
 
     /**
-     * @param _sql      SQL Statement to be executed
+     * @param _sql SQL Statement to be executed
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
@@ -489,7 +488,8 @@ public final class SQLTable
                     final SQLTable mainTable = SQLTable.get(tableMainId);
                     table.mainTable = mainTable;
                 }
-                // needed due to cluster serialization that does not update automatically
+                // needed due to cluster serialization that does not update
+                // automatically
                 SQLTable.cacheSQLTable(table);
             }
         } catch (final SQLException e) {

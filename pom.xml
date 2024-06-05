@@ -173,6 +173,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <configuration>
+        <annotationProcessorPaths>
+          <annotationProcessorPath>
+            <groupId>org.infinispan.protostream</groupId>
+            <artifactId>protostream-processor</artifactId>
+            <version>5.0.5.Final</version>
+          </annotationProcessorPath>
+        </annotationProcessorPaths>
+      </configuration>
+    </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -533,6 +546,11 @@
             <artifactId>infinispan-remote-query-client</artifactId>
             <version>15.0.4.Final</version>
         </dependency>
+        <dependency>
+    <groupId>org.infinispan</groupId>
+    <artifactId>infinispan-jboss-marshalling</artifactId>
+    <version>15.0.4.Final</version>
+</dependency>
 
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>

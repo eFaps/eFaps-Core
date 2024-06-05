@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 public final class Role
     extends AbstractUserObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -54,7 +55,8 @@ public final class Role
     private static final Logger LOG = LoggerFactory.getLogger(Role.class);
 
     /**
-     * This is the SQL select statement to select a role from the database by ID.
+     * This is the SQL select statement to select a role from the database by
+     * ID.
      */
     private static final String SQL_ID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -65,7 +67,8 @@ public final class Role
                     .addPart(SQLPart.WHERE).addColumnPart(0, "ID").addPart(SQLPart.EQUAL).addValuePart("?").toString();
 
     /**
-     * This is the SQL select statement to select a role from the database by Name.
+     * This is the SQL select statement to select a role from the database by
+     * Name.
      */
     private static final String SQL_NAME = new SQLSelect().column("ID")
                     .column("UUID")
@@ -77,7 +80,8 @@ public final class Role
                     .toString();
 
     /**
-     * This is the SQL select statement to select a role from the database by UUID.
+     * This is the SQL select statement to select a role from the database by
+     * UUID.
      */
     private static final String SQL_UUID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -89,7 +93,8 @@ public final class Role
                     .toString();
 
     /**
-     * This is the SQL select statement to select a Role from the database using the JAAS key..
+     * This is the SQL select statement to select a Role from the database using
+     * the JAAS key..
      */
     private static final String SQL_JAASKEY = new SQLSelect().column("ID")
                     .from("V_USERROLEJASSKEY", 0)
@@ -126,17 +131,17 @@ public final class Role
      * Create a new role instance. The method is used from the static method
      * {@link #initialize()} to read all roles from the database.
      *
-     * @param _id       id of the role
-     * @param _uuid     uuid of the role
-     * @param _name     name of the role
-     * @param _status   status of the role
-     * @param _typeId   id of the type
+     * @param _id id of the role
+     * @param _uuid uuid of the role
+     * @param _name name of the role
+     * @param _status status of the role
+     * @param _typeId id of the type
      */
-    private Role(final long _id,
-                 final String _uuid,
-                 final String _name,
-                 final boolean _status,
-                 final long _typeId)
+    protected Role(final long _id,
+                   final String _uuid,
+                   final String _name,
+                   final boolean _status,
+                   final long _typeId)
     {
         super(_id, _uuid, _name, _status);
         this.typeId = _typeId;
@@ -164,10 +169,15 @@ public final class Role
                         : CIAdminUser.RoleLocal.getType().getId() == this.typeId;
     }
 
+    protected long getTypeId()
+    {
+        return this.typeId;
+    }
+
     /**
      * Checks, if the given person is assigned to this role.
      *
-     * @param _person   person to test
+     * @param _person person to test
      * @return <i>true</i> if the person is assigned to this role, otherwise
      *         <i>false</i>
      * @see Person#isAssigned(Role)
@@ -200,7 +210,7 @@ public final class Role
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
@@ -229,7 +239,7 @@ public final class Role
      * Returns for given parameter <i>_id</i> the instance of class
      * {@link Role}.
      *
-     * @param _id  id to search in the cache
+     * @param _id id to search in the cache
      * @return instance of class {@link Role}
      * @throws CacheReloadException on error
      * @see #CACHE
@@ -300,7 +310,7 @@ public final class Role
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
@@ -356,12 +366,12 @@ public final class Role
 
     /**
      * Returns for given parameter <code>_jaasKey</code> the instance of class
-     * {@link Role}. The parameter <code>_jaasKey</code> is the name of the
-     * role used in the given JAAS system for the role.
+     * {@link Role}. The parameter <code>_jaasKey</code> is the name of the role
+     * used in the given JAAS system for the role.
      *
-     * @param _jaasSystem   JAAS system for which the JAAS key is named
-     * @param _jaasKey      key in the foreign JAAS system for which the role is
-     *                      searched
+     * @param _jaasSystem JAAS system for which the JAAS key is named
+     * @param _jaasKey key in the foreign JAAS system for which the role is
+     *            searched
      * @throws EFapsException on error
      * @return instance of class {@link Role}, or <code>null</code> if role is
      *         not found
@@ -388,9 +398,9 @@ public final class Role
                 rs.close();
             } catch (final SQLException e) {
                 Role.LOG.warn("search for role for JAAS system '" + _jaasSystem.getName()
-                        + "' with key '" + _jaasKey + "' is not possible", e);
+                                + "' with key '" + _jaasKey + "' is not possible", e);
                 throw new EFapsException(Role.class, "getWithJAASKey.SQLException", e,
-                        _jaasSystem.getName(), _jaasKey);
+                                _jaasSystem.getName(), _jaasKey);
             } finally {
                 try {
                     stmt.close();

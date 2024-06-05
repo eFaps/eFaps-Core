@@ -30,7 +30,6 @@ import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * A relation mapping between a Group and a Role providing a 2 dimensional
  * access and right definition. e.g.<br/>
@@ -41,13 +40,15 @@ import org.slf4j.LoggerFactory;
  */
 public class Association
 {
+
     /**
      * Logging instance used in this class.
      */
     private static final Logger LOG = LoggerFactory.getLogger(Association.class);
 
     /**
-     * This is the SQL select statement to select a role from the database by ID.
+     * This is the SQL select statement to select a role from the database by
+     * ID.
      */
     private static final String SQL_ID = new SQLSelect().column("ID")
                     .column("ROLEID")
@@ -81,9 +82,9 @@ public class Association
     private final long groupId;
 
     /**
-     * @param _id       id of this Association
-     * @param _roleId   related role
-     * @param _groupId  related group
+     * @param _id id of this Association
+     * @param _roleId related role
+     * @param _groupId related group
      */
     public Association(final long _id,
                        final long _roleId,
@@ -106,6 +107,7 @@ public class Association
 
     /**
      * Get the Role.
+     *
      * @return Role for this Association.
      * @throws CacheReloadException on error
      */
@@ -115,8 +117,14 @@ public class Association
         return Role.get(this.roleId);
     }
 
+    protected long getRoleId()
+    {
+        return this.roleId;
+    }
+
     /**
      * Get the Group.
+     *
      * @return Group for this Association.
      * @throws CacheReloadException on error
      */
@@ -124,6 +132,11 @@ public class Association
         throws CacheReloadException
     {
         return Group.get(this.groupId);
+    }
+
+    protected long getGroupId()
+    {
+        return this.groupId;
     }
 
     /**
@@ -142,7 +155,7 @@ public class Association
      * Returns for given parameter <i>_id</i> the instance of class
      * {@link Association}.
      *
-     * @param _id  id to search in the cache
+     * @param _id id to search in the cache
      * @return instance of class {@link Association}
      * @throws CacheReloadException on error
      */
@@ -168,13 +181,14 @@ public class Association
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
      */
     private static boolean getAssociationFromDB(final String _sql,
-                                                final Object _criteria) throws CacheReloadException
+                                                final Object _criteria)
+        throws CacheReloadException
     {
         boolean ret = false;
         Connection con = null;

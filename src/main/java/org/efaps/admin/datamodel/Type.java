@@ -27,9 +27,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -86,8 +88,9 @@ public class Type
      * Enum for the different purpose of a type.
      */
     public enum Purpose
-        implements IBitEnum
+                    implements IBitEnum
     {
+
         /** Abstract purpose. */
         ABSTRACT,
         /** classification purpose. */
@@ -96,7 +99,7 @@ public class Type
         GENERALINSTANCE,
         /** No GeneralInstane. */
         NOGENERALINSTANCE,
-        /** Has history and therfor cannot be deleted.*/
+        /** Has history and therfor cannot be deleted. */
         HISTORY;
 
         /**
@@ -187,7 +190,7 @@ public class Type
                     .column("PURPOSE")
                     .from("V_ADMINTYPE", 0)
                     .addPart(SQLPart.WHERE).addColumnPart(0, "PARENTCLASSDMTYPE")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
 
     /**
@@ -218,23 +221,23 @@ public class Type
      *
      * @see #getChildTypes
      */
-    private final Set<Long> childTypes = new TreeSet<>();
+    private Set<Long> childTypeIds = new TreeSet<>();
 
     /**
      * Classification ids which are classifying this type.
      */
-    private final Set<Long> classifiedByTypes = new HashSet<>();
+    private Set<Long> classifiedByTypeIds = new HashSet<>();
 
     /**
-     * The instance variables stores all attributes for this type object.
+     * Caching
      *
-     * @see #getAttributes()
-     * @see #add(Attribute)
-     * @see #getAttribute
-     * @see #getAttributes(Class)
      */
-    private final Map<String, Attribute> attributes = new HashMap<>();
+    private Map<String, Long> attributeIds = new HashMap<>();
 
+    /**
+     * Internal
+     */
+    private Map<String, Attribute> attributesInternal;
     /**
      * Instance of a HashSet to store all needed tables for this type. The
      * tables are automatically added via the method {@link #add(Attribute)}.
@@ -242,7 +245,7 @@ public class Type
      * @see #add(Attribute)
      * @see #getTables
      */
-    private final Set<SQLTable> tables = new HashSet<>();
+    private Set<Long> tableIds = new HashSet<>();
 
     /**
      * The instance variable stores the main table, which must be inserted
@@ -254,16 +257,17 @@ public class Type
      * @see #getMainTable
      * @see #setMainTable
      */
-    private SQLTable mainTable = null;
+    private Long mainTableId = null;
 
     /**
-     * All access sets  ids which are assigned to this type are store in this
-     * instance variable. If <code>null</code> the variable was not evaluated yet;
+     * All access sets ids which are assigned to this type are store in this
+     * instance variable. If <code>null</code> the variable was not evaluated
+     * yet;
      *
      * @see #addAccessSet
      * @see #getAccessSets
      */
-    private final Set<Long> accessSets = new HashSet<>();
+    private Set<Long> accessSetIds = new HashSet<>();
 
     /**
      * Have the accessSet been evaluated.
@@ -326,8 +330,8 @@ public class Type
     private String companyAttributeName;
 
     /**
-     * Stores the name of attribute that contains the association of this type. (if
-     * exist)
+     * Stores the name of attribute that contains the association of this type.
+     * (if exist)
      */
     private String associationAttributeName;
 
@@ -352,7 +356,7 @@ public class Type
      * <li>n: ID of the TypeMenu</li>
      * </ul>
      */
-    private Long typeMenu;
+    private Long typeMenuId;
 
     /**
      * Id of the Icon defined as TypeIcon for this Type.<br/>
@@ -363,8 +367,7 @@ public class Type
      * <li>n: ID of the TypeMenu</li>
      * </ul>
      */
-    private Long typeIcon;
-
+    private Long typeIconId;
 
     /**
      * Id of the From defined as TypeFrom for this Type.<br/>
@@ -375,7 +378,7 @@ public class Type
      * <li>n: ID of the TypeMenu</li>
      * </ul>
      */
-    private Long typeForm;
+    private Long typeFormId;
 
     /**
      * This is the constructor for class Type. Every instance of class Type must
@@ -409,7 +412,7 @@ public class Type
      *
      * @param _abstract value for instance variable {@link #abstractBool}
      */
-    private void setAbstract(final boolean _abstract)
+    protected void setAbstract(final boolean _abstract)
     {
         abstractBool = _abstract;
     }
@@ -433,10 +436,11 @@ public class Type
     /**
      * Setter method for instance variable {@link #generalInstance}.
      *
-     * @param _generalInstance value for instance variable {@link #generalInstance}
+     * @param _generalInstance value for instance variable
+     *            {@link #generalInstance}
      */
 
-    private void setGeneralInstance(final boolean _generalInstance)
+    protected void setGeneralInstance(final boolean _generalInstance)
     {
         generalInstance = _generalInstance;
     }
@@ -456,14 +460,15 @@ public class Type
      *
      * @param _history value for instance variable {@link #history}
      */
-    private void setHistory(final boolean _history)
+    protected void setHistory(final boolean _history)
     {
         history = _history;
     }
 
     /**
-     * Add attributes to this type and all child types of this type.
-     * Recursive method.
+     * Add attributes to this type and all child types of this type. Recursive
+     * method.
+     *
      * @param _inherited is the attribute inherited or form this type
      * @param _attributes attributes to add
      * @throws CacheReloadException on error
@@ -473,7 +478,7 @@ public class Type
         throws CacheReloadException
     {
         for (final Attribute attribute : _attributes) {
-            if (!attributes.containsKey(attribute.getName())) {
+            if (!attributeIds.containsKey(attribute.getName())) {
                 Type.LOG.trace("adding Attribute:'{}' to type: '{}'", attribute.getName(), getName());
                 // evaluate for type attribute
                 if (attribute.getAttributeType().getClassRepr().equals(TypeType.class)) {
@@ -493,9 +498,9 @@ public class Type
                     // evaluate for association
                     associationAttributeName = attribute.getName();
                 }
-                attributes.put(attribute.getName(), attribute);
+                attributeIds.put(attribute.getName(), attribute.getId());
                 if (attribute.getTable() != null) {
-                    tables.add(attribute.getTable());
+                    tableIds.add(attribute.getTable().getId());
                     attribute.getTable().addType(getId());
                     if (getMainTable() == null) {
                         setMainTable(attribute.getTable());
@@ -508,6 +513,7 @@ public class Type
 
     /**
      * Inherit Attributes are child types.
+     *
      * @throws CacheReloadException on error
      */
     protected void inheritAttributes()
@@ -531,7 +537,12 @@ public class Type
      */
     public Attribute getStatusAttribute()
     {
-        return attributes.get(statusAttributeName);
+        return getAttribute(statusAttributeName);
+    }
+
+    protected String getStatusAttributeName()
+    {
+        return statusAttributeName;
     }
 
     /**
@@ -576,7 +587,7 @@ public class Type
      */
     public Attribute getCompanyAttribute()
     {
-        return attributes.get(companyAttributeName);
+        return getAttribute(companyAttributeName);
     }
 
     /**
@@ -586,7 +597,7 @@ public class Type
      */
     public Attribute getAssociationAttribute()
     {
-        return attributes.get(associationAttributeName);
+        return getAttribute(associationAttributeName);
     }
 
     /**
@@ -596,7 +607,7 @@ public class Type
      */
     public Attribute getGroupAttribute()
     {
-        return attributes.get(groupAttributeName);
+        return getAttribute(groupAttributeName);
     }
 
     /**
@@ -606,11 +617,11 @@ public class Type
      */
     public Attribute getTypeAttribute()
     {
-        final Attribute ret;
+        Attribute ret = null;
         if (typeAttributeName == null && getParentType() != null) {
             ret = getParentType().getTypeAttribute();
         } else {
-            ret = attributes.get(typeAttributeName);
+            ret = getAttribute(typeAttributeName);
         }
         return ret;
     }
@@ -636,9 +647,9 @@ public class Type
     public final Set<Attribute> getAttributes(final Class<?> _class)
     {
         final Set<Attribute> ret = new HashSet<>();
-        for (final Attribute attr : getAttributes().values()) {
-            if (attr.getAttributeType().getClassRepr() == _class) {
-                ret.add(attr);
+        for (final Attribute attribute : getAttributes().values()) {
+            if (attribute.getAttributeType().getClassRepr() == _class) {
+                ret.add(attribute);
             }
         }
         return ret;
@@ -708,7 +719,6 @@ public class Type
         return value;
     }
 
-
     /**
      * Checks, if the current context user has all access defined in the list of
      * access types for the given instance.
@@ -731,7 +741,8 @@ public class Type
      *
      * @param _instance instance for which the access must be checked
      * @param _accessType list of access types which must be checked
-     * @param _newValues objects that will be passed to esjp as <code>NEW_VALUES</code>
+     * @param _newValues objects that will be passed to esjp as
+     *            <code>NEW_VALUES</code>
      * @throws EFapsException on error
      * @return true if user has access, else false
      */
@@ -799,7 +810,7 @@ public class Type
      */
     public void addAccessSet(final AccessSet _accessSet)
     {
-        accessSets.add(_accessSet.getId());
+        accessSetIds.add(_accessSet.getId());
         setDirty();
     }
 
@@ -823,15 +834,26 @@ public class Type
             while (multi.next()) {
                 final Long accessSet = multi.<Long>getAttribute(CIAdminAccess.AccessSet2DataModelType.AccessSetLink);
                 AccessSet.get(accessSet);
-                accessSets.add(accessSet);
+                accessSetIds.add(accessSet);
             }
             setDirty();
         }
         final Set<AccessSet> ret = new HashSet<>();
-        for (final Long id : accessSets) {
+        for (final Long id : accessSetIds) {
             ret.add(AccessSet.get(id));
         }
         return Collections.unmodifiableSet(ret);
+    }
+
+    protected Set<Long> getAccessSetIds()
+    {
+        return accessSetIds;
+    }
+
+    protected void setAccessSetIds(Set<Long> accessSetIds)
+    {
+        this.accessSetIds = accessSetIds;
+        this.checked4AccessSet = true;
     }
 
     /**
@@ -898,9 +920,9 @@ public class Type
      *
      * @param _parentTypeId parentid to set
      */
-    protected void setParentTypeID(final long _parentTypeId)
+    protected void setParentTypeID(final Long parentTypeId)
     {
-        parentTypeId = _parentTypeId;
+        this.parentTypeId = parentTypeId;
     }
 
     /**
@@ -911,13 +933,25 @@ public class Type
     protected void addClassifiedByType(final Classification _classification)
     {
         checked4classifiedBy = true;
-        classifiedByTypes.add(_classification.getId());
+        classifiedByTypeIds.add(_classification.getId());
         setDirty();
     }
 
+    protected Set<Long> getClassifiedByTypeIds()
+    {
+        return classifiedByTypeIds;
+    }
+
+    protected void setClassifiedByTypeIds(Set<Long> classifiedByTypeIds)
+    {
+        this.classifiedByTypeIds = classifiedByTypeIds;
+        checked4classifiedBy = true;
+    }
+
     /**
-     * Getter method for instance variable {@link #classifiedByTypes}.
-     * The method retrieves lazy the Classification Types.
+     * Getter method for instance variable {@link #classifiedByTypes}. The
+     * method retrieves lazy the Classification Types.
+     *
      * @return value of instance variable {@link #classifiedByTypes}
      * @throws EFapsException on error
      */
@@ -942,7 +976,7 @@ public class Type
         if (getParentType() != null) {
             ret.addAll(getParentType().getClassifiedByTypes());
         }
-        for (final Long id : classifiedByTypes) {
+        for (final Long id : classifiedByTypeIds) {
             ret.add((Classification) Type.get(id));
         }
         return Collections.unmodifiableSet(ret);
@@ -959,7 +993,7 @@ public class Type
         throws CacheReloadException
     {
         final Set<Type> ret = new LinkedHashSet<>();
-        for (final Long id : childTypes) {
+        for (final Long id : childTypeIds) {
             final Type child = Type.get(id);
             ret.add(child);
             ret.addAll(child.getChildTypes());
@@ -967,9 +1001,20 @@ public class Type
         return Collections.unmodifiableSet(ret);
     }
 
+    protected Set<Long> getChildTypeIds()
+    {
+        return childTypeIds;
+    }
+
+    protected void setChildTypeIds(Set<Long> childTypeIds)
+    {
+        this.childTypeIds = childTypeIds;
+        this.checked4Children = true;
+    }
+
     public boolean hasChildren()
     {
-        return !childTypes.isEmpty();
+        return !childTypeIds.isEmpty();
     }
 
     /**
@@ -980,7 +1025,22 @@ public class Type
      */
     public Map<String, Attribute> getAttributes()
     {
-        return attributes;
+        final Map<String, Attribute> ret;
+        if (attributesInternal != null) {
+            ret = attributesInternal;
+        } else {
+            ret = new HashMap<>();
+            for (final var entry : attributeIds.entrySet()) {
+                try {
+                    ret.put(entry.getKey(), Attribute.get(entry.getValue()));
+                } catch (final CacheReloadException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            attributesInternal = ret;
+        }
+        return ret;
     }
 
     /**
@@ -991,7 +1051,25 @@ public class Type
      */
     public Set<SQLTable> getTables()
     {
-        return tables;
+        return tableIds.stream().map(arg0 -> {
+            try {
+                return SQLTable.get(arg0);
+            } catch (final CacheReloadException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    protected Set<Long> getTableIds()
+    {
+        return tableIds;
+    }
+
+    protected void setTableIds(Set<Long> tableIds)
+    {
+        this.tableIds = tableIds;
     }
 
     /**
@@ -1003,11 +1081,27 @@ public class Type
      */
     public SQLTable getMainTable()
     {
-        SQLTable ret = mainTable;
-        if (mainTable == null && getParentType() != null) {
+        SQLTable ret = null;
+        if (mainTableId != null && mainTableId != 0) {
+            try {
+                ret = SQLTable.get(mainTableId);
+            } catch (final CacheReloadException e) {
+                e.printStackTrace();
+            }
+        } else if (getParentType() != null) {
             ret = getParentType().getMainTable();
         }
         return ret;
+    }
+
+    protected Long getMainTableId()
+    {
+        return mainTableId;
+    }
+
+    protected void setMainTableId(Long mainTableId)
+    {
+        this.mainTableId = mainTableId;
     }
 
     /**
@@ -1023,7 +1117,7 @@ public class Type
         while (table.getMainTable() != null) {
             table = table.getMainTable();
         }
-        mainTable = table;
+        mainTableId = table == null ? null : table.getId();
     }
 
     /**
@@ -1089,7 +1183,7 @@ public class Type
         throws EFapsException
     {
         Menu ret = null;
-        if (typeMenu == null) {
+        if (typeMenuId == null) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.LinkIsTypeTreeFor);
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.LinkIsTypeTreeFor.To, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -1099,20 +1193,20 @@ public class Type
                 final Long menuId = multi.<Long>getAttribute(CIAdminUserInterface.LinkIsTypeTreeFor.From);
                 ret = Menu.get(menuId);
                 if (ret != null) {
-                    typeMenu = ret.getId();
+                    typeMenuId = ret.getId();
                     ret.setTypeMenu(true);
                 } else {
-                    typeMenu = (long) 0;
+                    typeMenuId = (long) 0;
                 }
             } else {
-                typeMenu = (long) 0;
+                typeMenuId = (long) 0;
             }
             setDirty();
         }
-        if (typeMenu == 0 && getParentType() != null) {
+        if (typeMenuId == 0 && getParentType() != null) {
             ret = getParentType().getTypeMenu();
         } else {
-            ret = Menu.get(typeMenu);
+            ret = Menu.get(typeMenuId);
         }
         return ret;
     }
@@ -1126,7 +1220,7 @@ public class Type
         throws EFapsException
     {
         Image ret = null;
-        if (typeIcon == null) {
+        if (typeIconId == null) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.LinkIsTypeIconFor);
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.LinkIsTypeIconFor.To, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -1136,19 +1230,19 @@ public class Type
                 final Long menuId = multi.<Long>getAttribute(CIAdminUserInterface.LinkIsTypeIconFor.From);
                 ret = Image.get(menuId);
                 if (ret != null) {
-                    typeIcon = ret.getId();
+                    typeIconId = ret.getId();
                 } else {
-                    typeIcon = (long) 0;
+                    typeIconId = (long) 0;
                 }
             } else {
-                typeIcon = (long) 0;
+                typeIconId = (long) 0;
             }
             setDirty();
         }
-        if (typeIcon == 0 && getParentType() != null) {
+        if (typeIconId == 0 && getParentType() != null) {
             ret = getParentType().getTypeIcon();
         } else {
-            ret = Image.get(typeIcon);
+            ret = Image.get(typeIconId);
         }
         return ret;
     }
@@ -1161,7 +1255,7 @@ public class Type
         throws EFapsException
     {
         Form ret = null;
-        if (typeForm == null) {
+        if (typeFormId == null) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.LinkIsTypeFormFor);
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.LinkIsTypeFormFor.To, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -1171,21 +1265,116 @@ public class Type
                 final Long formId = multi.<Long>getAttribute(CIAdminUserInterface.LinkIsTypeFormFor.From);
                 ret = Form.get(formId);
                 if (ret != null) {
-                    typeForm = ret.getId();
+                    typeFormId = ret.getId();
                 } else {
-                    typeForm = (long) 0;
+                    typeFormId = (long) 0;
                 }
             } else {
-                typeForm = (long) 0;
+                typeFormId = (long) 0;
             }
             setDirty();
         }
-        if (typeForm == 0 && getParentType() != null) {
-             ret = getParentType().getTypeForm();
+        if (typeFormId == 0 && getParentType() != null) {
+            ret = getParentType().getTypeForm();
         } else {
-            ret = Form.get(typeForm);
+            ret = Form.get(typeFormId);
         }
         return ret;
+    }
+
+    protected String getCompanyAttributeName()
+    {
+        return companyAttributeName;
+    }
+
+    protected void setStatusAttributeName(String statusAttributeName)
+    {
+        this.statusAttributeName = statusAttributeName;
+    }
+
+    protected void setCompanyAttributeName(String companyAttributeName)
+    {
+        this.companyAttributeName = companyAttributeName;
+    }
+
+    protected void setGroupAttributeName(String groupAttributeName)
+    {
+        this.groupAttributeName = groupAttributeName;
+    }
+
+    protected void setTypeAttributeName(String typeAttributeName)
+    {
+        this.typeAttributeName = typeAttributeName;
+    }
+
+    protected void setTypeMenuId(Long typeMenuId)
+    {
+        this.typeMenuId = typeMenuId;
+    }
+
+    protected void setTypeIconId(Long typeIconId)
+    {
+        this.typeIconId = typeIconId;
+    }
+
+    protected void setTypeFormId(Long typeFormId)
+    {
+        this.typeFormId = typeFormId;
+    }
+
+    protected String getAssociationAttributeName()
+    {
+        return associationAttributeName;
+    }
+
+    protected String getGroupAttributeName()
+    {
+        return groupAttributeName;
+    }
+
+    protected String getTypeAttributeName()
+    {
+        return typeAttributeName;
+    }
+
+    protected Long getTypeMenuId()
+    {
+        return typeMenuId;
+    }
+
+    protected Long getTypeIconId()
+    {
+        return typeIconId;
+    }
+
+    protected Long getTypeFormId()
+    {
+        return typeFormId;
+    }
+
+    protected long getStoreIdInternal()
+    {
+        return storeId;
+    }
+
+    protected void setStoreId(long storeId)
+    {
+        this.storeId = storeId;
+    }
+
+    protected void setAssociationAttributeName(String associationAttributeName)
+    {
+        this.associationAttributeName = associationAttributeName;
+    }
+
+    protected Map<String, Long> getAttributeIds()
+    {
+        return attributeIds;
+    }
+
+    protected void setAttributeIds(final Map<String, Long> attributeIds)
+    {
+        this.attributeIds = attributeIds;
     }
 
     /**
@@ -1199,10 +1388,10 @@ public class Type
     {
         return new ToStringBuilder(this).appendSuper(super.toString())
                         .append("parentTypeId", parentTypeId)
-                        .append("attributes", attributes.size())
-                        .append("children", childTypes.size())
+                        .append("attributes", attributeIds.size())
+                        .append("children", childTypeIds.size())
                         .append("abstract", abstractBool)
-                        .append("accessSets", accessSets.size())
+                        .append("accessSets", accessSetIds.size())
                         .append("companyDependend", isCompanyDependent())
                         .append("hasAssociation", hasAssociation())
                         .append("groupDependend", isGroupDependent())
@@ -1368,28 +1557,24 @@ public class Type
      *
      * @param _type Type the Hierachy must be cached
      * @throws CacheReloadException on error
-
-    protected static void cacheTypesByHierachy(final Type _type)
-        throws CacheReloadException
-    {
-        var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
-        if (cache4UUID.getCacheConfiguration().clustering() != null
-                        && !cache4UUID.getCacheConfiguration().clustering().cacheMode().equals(CacheMode.LOCAL)) {
-            Type type = _type;
-            while (type.getParentTypeId() != null) {
-                var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
-                if (cache.containsKey(type.getParentTypeId())) {
-                    type = cache.get(type.getParentTypeId());
-                } else {
-                    type = type.getParentType();
-                }
-            }
-            type.recacheChildren();
-        }
-    }*/
+     *
+     *             protected static void cacheTypesByHierachy(final Type _type)
+     *             throws CacheReloadException { var cache4UUID =
+     *             InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
+     *             if (cache4UUID.getCacheConfiguration().clustering() != null
+     *             &&
+     *             !cache4UUID.getCacheConfiguration().clustering().cacheMode().equals(CacheMode.LOCAL))
+     *             { Type type = _type; while (type.getParentTypeId() != null) {
+     *             var cache = InfinispanCache.get().<Long,
+     *             Type>getCache(Type.IDCACHE); if
+     *             (cache.containsKey(type.getParentTypeId())) { type =
+     *             cache.get(type.getParentTypeId()); } else { type =
+     *             type.getParentType(); } } type.recacheChildren(); } }
+     */
 
     /**
      * Recache the children in dropdown. Used for Caching in cluster.
+     *
      * @throws CacheReloadException on error
      */
     private void recacheChildren()
@@ -1507,7 +1692,7 @@ public class Type
             con.close();
             if (ret != null) {
                 if (parentTypeId != 0) {
-                    Type.LOG.trace("get parent for id = {}",  parentTypeId);
+                    Type.LOG.trace("get parent for id = {}", parentTypeId);
                     final Type parent = Type.get(parentTypeId);
                     // TODO: test if loop
                     if (ret.getId() == parent.getId()) {
@@ -1518,7 +1703,7 @@ public class Type
                     ret.checked4Children = true;
                     for (final Object[] childIDs : Type.getChildTypeIDs(ret.getId(), Type.SQL_CHILD)) {
                         Type.LOG.trace("reading Child Type with id: {} for type :{}", childIDs[0], ret.getName());
-                        ret.childTypes.add((Long) childIDs[0]);
+                        ret.childTypeIds.add((Long) childIDs[0]);
                     }
                     if (ret instanceof Classification) {
                         for (final Object[] childIDs : Type.getChildTypeIDs(ret.getId(), Type.SQL_CLASSCHILD)) {
@@ -1533,7 +1718,8 @@ public class Type
                 ret.readFromDB4Links();
                 ret.readFromDB4Properties();
                 ret.inheritAttributes();
-                // needed due to cluster serialization that does not update automatically
+                // needed due to cluster serialization that does not update
+                // automatically
                 Type.cacheType(ret);
                 Type.LOG.trace("ended reading type '{}'", ret.getName());
             }
@@ -1611,7 +1797,9 @@ public class Type
     }
 
     /**
-     * During the initial caching of types, the mapping does not exists but is necessary.
+     * During the initial caching of types, the mapping does not exists but is
+     * necessary.
+     *
      * @param _typeUUID UUID of the type the id is wanted for
      * @return id of the type
      * @throws CacheReloadException on error
@@ -1660,7 +1848,9 @@ public class Type
     }
 
     /**
-     * During the initial caching of types, the mapping does not exists but is necessary.
+     * During the initial caching of types, the mapping does not exists but is
+     * necessary.
+     *
      * @param _typeId id of the type the UUID is wanted for
      * @return id of the type
      * @throws CacheReloadException on error

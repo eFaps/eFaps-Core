@@ -39,7 +39,7 @@ public class AttributeSet
     /**
      * Type of the attribute.
      */
-    private final AttributeType attributeType;
+    private final long attributeTypeId;
 
     /**
      * Name of the attribute.
@@ -49,7 +49,7 @@ public class AttributeSet
     /**
      * attributes of this set.
      */
-    private final Set<String> setAttributes = new HashSet<String>();
+    private final Set<String> setAttributes = new HashSet<>();
 
     /**
      * @param _id               id of this set
@@ -64,9 +64,9 @@ public class AttributeSet
      */
     //CHECKSTYLE:OFF
     protected AttributeSet(final long _id,
-                           final Type _type,
+                           final long _typeId,
                            final String _name,
-                           final AttributeType _attributeType,
+                           final long _attributeTypeId,
                            final String _sqlColNames,
                            final long _tableId,
                            final long _typeLinkId,
@@ -74,18 +74,18 @@ public class AttributeSet
         throws EFapsException
     {
         //CHECKSTYLE:ON
-        super(_id, _uuid, AttributeSet.evaluateName(_type.getName(), _name));
+        super(_id, _uuid, AttributeSet.evaluateName(Type.get(_typeId).getName(), _name));
 
-        this.attributeName = (_name == null) ? null : _name.trim();
+        this.attributeName = _name == null ? null : _name.trim();
 
         readFromDB4Properties();
 
-        this.attributeType = _attributeType;
+        this.attributeTypeId = _attributeTypeId;
 
-        final Attribute attr = new Attribute(_id, getId(), _name, _sqlColNames, SQLTable.get(_tableId), AttributeType
-                        .get("Link"), null, null);
+        final Attribute attr = new Attribute(_id, getId(), _name, _sqlColNames, _tableId, AttributeType
+                        .get("Link").getId(), null, null);
         addAttributes(false, attr);
-        attr.setLink(_type.getId());
+        attr.setLink(_typeId);
         if (_typeLinkId > 0) {
             setParentTypeID(_typeLinkId);
         }
@@ -99,7 +99,13 @@ public class AttributeSet
      */
     public AttributeType getAttributeType()
     {
-        return this.attributeType;
+        try {
+            return AttributeType.get(attributeTypeId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**

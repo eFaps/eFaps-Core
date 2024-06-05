@@ -47,6 +47,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class Company
     extends AbstractUserObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -58,7 +59,8 @@ public final class Company
     private static final Logger LOG = LoggerFactory.getLogger(Company.class);
 
     /**
-     * This is the SQL select statement to select a role from the database by ID.
+     * This is the SQL select statement to select a role from the database by
+     * ID.
      */
     private static final String SQL_ID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -68,7 +70,8 @@ public final class Company
                     .addPart(SQLPart.WHERE).addColumnPart(0, "ID").addPart(SQLPart.EQUAL).addValuePart("?").toString();
 
     /**
-     * This is the SQL select statement to select a role from the database by Name.
+     * This is the SQL select statement to select a role from the database by
+     * Name.
      */
     private static final String SQL_NAME = new SQLSelect().column("ID")
                     .column("UUID")
@@ -79,7 +82,8 @@ public final class Company
                     .toString();
 
     /**
-     * This is the SQL select statement to select a role from the database by UUID.
+     * This is the SQL select statement to select a role from the database by
+     * UUID.
      */
     private static final String SQL_UUID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -115,10 +119,10 @@ public final class Company
     private final Set<Long> consortiumIds = new HashSet<>();
 
     /**
-     * @param _id       id for this company
-     * @param _uuid     uuid for this company
-     * @param _name     name for this company
-     * @param _status    status for this company
+     * @param _id id for this company
+     * @param _uuid uuid for this company
+     * @param _name name for this company
+     * @param _status status for this company
      */
     private Company(final long _id,
                     final String _uuid,
@@ -126,6 +130,16 @@ public final class Company
                     final boolean _status)
     {
         super(_id, _uuid, _name, _status);
+    }
+
+    protected Company(final long _id,
+                      final String _uuid,
+                      final String _name,
+                      final boolean _status,
+                      final Set<Long> consortiumIds)
+    {
+        super(_id, _uuid, _name, _status);
+        this.consortiumIds.addAll(consortiumIds);
     }
 
     /**
@@ -138,6 +152,7 @@ public final class Company
 
     /**
      * Get the related Consortium (unmodifiable).
+     *
      * @return the set of related Consortiums
      */
     public Set<Long> getConsortiums()
@@ -196,7 +211,7 @@ public final class Company
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
@@ -221,14 +236,15 @@ public final class Company
         }
     }
 
-   /**
-    * Returns for given parameter <i>_id</i> the instance of class {@link Company}.
-    *
-    * @param _id    id to search in the cache
-    * @return instance of class {@link Company}
-    * @throws CacheReloadException on error
-    * @see #getCache
-    */
+    /**
+     * Returns for given parameter <i>_id</i> the instance of class
+     * {@link Company}.
+     *
+     * @param _id id to search in the cache
+     * @return instance of class {@link Company}
+     * @throws CacheReloadException on error
+     * @see #getCache
+     */
     public static Company get(final long _id)
         throws CacheReloadException
     {
@@ -240,15 +256,15 @@ public final class Company
         return ret.equals(Company.NULL) ? null : ret;
     }
 
-   /**
-    * Returns for given parameter <i>_name</i> the instance of class
-    * {@link Company}.
-    *
-    * @param _name   name to search in the cache
-    * @return instance of class {@link Company}
-    * @throws CacheReloadException on error
-    * @see #getCache
-    */
+    /**
+     * Returns for given parameter <i>_name</i> the instance of class
+     * {@link Company}.
+     *
+     * @param _name name to search in the cache
+     * @return instance of class {@link Company}
+     * @throws CacheReloadException on error
+     * @see #getCache
+     */
     public static Company get(final String _name)
         throws CacheReloadException
     {
@@ -263,6 +279,7 @@ public final class Company
     /**
      * Returns for given parameter <i>_uuid</i> the instance of class
      * {@link Company}.
+     *
      * @param _uuid UUI to search for
      * @return instance of class {@link Company}
      * @throws CacheReloadException on error
@@ -294,7 +311,7 @@ public final class Company
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error

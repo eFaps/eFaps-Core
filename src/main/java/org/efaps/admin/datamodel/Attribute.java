@@ -62,11 +62,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class Attribute
     extends AbstractDataModelObject
 {
+
     /**
      * ENUM used to access the different attribute types.
      */
     public enum AttributeTypeDef
     {
+
         /** Attribute type Link. */
         ATTRTYPE_LINK("440f472f-7be2-41d3-baec-4a2f0e4e5b31"),
         /** Attribute type Link with Ranges. */
@@ -168,10 +170,10 @@ public class Attribute
      *
      * @see #getTable
      */
-    private final SQLTable sqlTable;
+    private final long sqlTableId;
 
     /**
-     * Instance variable for the link to another type  id..
+     * Instance variable for the link to another type id..
      *
      * @see #getLink
      * @see #setLink
@@ -199,7 +201,7 @@ public class Attribute
      *
      * @see #getAttributeType
      */
-    private final AttributeType attributeType;
+    private final long attributeTypeId;
 
     /**
      * The String holds the default value as string for this Attribute.
@@ -244,14 +246,14 @@ public class Attribute
     private Map<String, Attribute> dependencies;
 
     /**
-     * Key of this Attribute. Consist of name of the Parent Type and name of the Attribute itself
+     * Key of this Attribute. Consist of name of the Parent Type and name of the
+     * Attribute itself
      */
     private String key;
 
     /**
      * ClassName of this Attribute. Used only in case of
-     * {@link org.efaps.admin.datamodel.attributetype.EnumType}
-     * and
+     * {@link org.efaps.admin.datamodel.attributetype.EnumType} and
      * {@link org.efaps.admin.datamodel.attributetype.BitEnumType}.
      */
     private String className;
@@ -272,22 +274,22 @@ public class Attribute
      * @throws EFapsException on error while retrieving column information from
      *             database
      */
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     protected Attribute(final long _id,
                         final long _parentId,
                         final String _name,
                         final String _sqlColNames,
-                        final SQLTable _sqlTable,
-                        final AttributeType _attributeType,
+                        final long _sqlTableId,
+                        final long _attributeTypeId,
                         final String _defaultValue,
                         final String _dimensionUUID)
-    //CHECKSTYLE:ON
+        // CHECKSTYLE:ON
         throws EFapsException
     {
         super(_id, null, _name);
-        sqlTable = _sqlTable;
+        sqlTableId = _sqlTableId;
         parent = _parentId;
-        attributeType = _attributeType;
+        attributeTypeId = _attributeTypeId;
         defaultValue = _defaultValue != null ? _defaultValue.trim() : null;
         dimensionUUID = _dimensionUUID != null ? _dimensionUUID.trim() : null;
         // add SQL columns and evaluate if attribute is required
@@ -298,9 +300,9 @@ public class Attribute
         while (tok.hasMoreTokens()) {
             final String colName = tok.nextToken().trim();
             getSqlColNames().add(colName);
-            final ColumnInformation columInfo = sqlTable.getTableInformation().getColInfo(colName);
+            final ColumnInformation columInfo = SQLTable.get(sqlTableId).getTableInformation().getColInfo(colName);
             if (columInfo == null) {
-                throw new EFapsException(Attribute.class, "Attribute", _id, _name, _sqlTable, colName);
+                throw new EFapsException(Attribute.class, "Attribute", _id, _name, sqlTableId, colName);
             }
             req |= !columInfo.isNullable();
             sizeTemp = columInfo.getSize();
@@ -310,6 +312,33 @@ public class Attribute
         scale = scaleTemp;
         required = req;
     }
+
+    protected Attribute(final long id,
+                        final long parentId,
+                        final String name,
+                        final List<String> sqlColNames,
+                        final long sqlTableId,
+                        final long attributeTypeId,
+                        final String defaultValue,
+                        final String dimensionUUID,
+                        int size,
+                        int scale,
+                        boolean required)
+        // CHECKSTYLE:ON
+        throws EFapsException
+    {
+        super(id, null, name);
+        this.sqlTableId = sqlTableId;
+        parent = parentId;
+        this.attributeTypeId = attributeTypeId;
+        this.defaultValue = defaultValue != null ? defaultValue.trim() : null;
+        this.dimensionUUID = dimensionUUID != null ? dimensionUUID.trim() : null;
+        this.sqlColNames.addAll(sqlColNames);
+        this.size = size;
+        this.scale = scale;
+        this.required = required;
+    }
+
 
     /**
      * This is the constructor for class {@link Attribute}. Every instance of
@@ -333,8 +362,8 @@ public class Attribute
     private Attribute(final long _id,
                       final long _parentId,
                       final String _name,
-                      final SQLTable _sqlTable,
-                      final AttributeType _attributeType,
+                      final long _sqlTableId,
+                      final long _attributeTypeId,
                       final String _defaultValue,
                       final String _dimensionUUID,
                       final boolean _required,
@@ -344,8 +373,8 @@ public class Attribute
         // CHECKSTYLE:ON
         super(_id, null, _name);
         parent = _parentId;
-        sqlTable = _sqlTable;
-        attributeType = _attributeType;
+        sqlTableId = _sqlTableId;
+        attributeTypeId = _attributeTypeId;
         defaultValue = _defaultValue != null ? _defaultValue.trim() : null;
         required = _required;
         size = _size;
@@ -366,12 +395,13 @@ public class Attribute
 
     /**
      * The method makes a clone of the current attribute instance.
+     *
      * @param _parentId if of the parent type
      * @return clone of current attribute instance
      */
     protected Attribute copy(final long _parentId)
     {
-        final Attribute ret = new Attribute(getId(), _parentId, getName(), sqlTable, attributeType,
+        final Attribute ret = new Attribute(getId(), _parentId, getName(), sqlTableId, attributeTypeId,
                         defaultValue, dimensionUUID, required, size, scale);
         ret.getSqlColNames().addAll(getSqlColNames());
         ret.setLink(link);
@@ -405,7 +435,18 @@ public class Attribute
      */
     public SQLTable getTable()
     {
-        return sqlTable;
+        try {
+            return SQLTable.get(sqlTableId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected long getSqlTableId()
+    {
+        return sqlTableId;
     }
 
     /**
@@ -505,7 +546,7 @@ public class Attribute
      * @return value of instance variable {@link #sqlColNames}
      * @see #sqlColNames
      */
-    public ArrayList<String> getSqlColNames()
+    public List<String> getSqlColNames()
     {
         return sqlColNames;
     }
@@ -518,7 +559,18 @@ public class Attribute
      */
     public AttributeType getAttributeType()
     {
-        return attributeType;
+        try {
+            return AttributeType.get(attributeTypeId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected long getAttributeTypeId()
+    {
+        return attributeTypeId;
     }
 
     /**
@@ -579,6 +631,11 @@ public class Attribute
         return ret;
     }
 
+    protected String getDimensionUUID()
+    {
+        return dimensionUUID;
+    }
+
     /**
      * Has this attribute an UoM.
      *
@@ -596,10 +653,11 @@ public class Attribute
      * @param _insert SQL insert statement for related {@link #sqlTable}
      * @param _values values to insert
      * @throws SQLException if values could not be inserted
+     * @throws CacheReloadException
      */
     public void prepareDBInsert(final SQLInsert _insert,
                                 final Object... _values)
-        throws SQLException
+        throws SQLException, CacheReloadException
     {
         Object[] tmp = _values;
         try {
@@ -613,7 +671,7 @@ public class Attribute
         } catch (final EFapsException e) {
             throw new SQLException(e);
         }
-        attributeType.getDbAttrType().prepareInsert(_insert, this, tmp);
+        AttributeType.get(attributeTypeId).getDbAttrType().prepareInsert(_insert, this, tmp);
     }
 
     /**
@@ -623,10 +681,11 @@ public class Attribute
      * @param _update SQL update statement for related {@link #sqlTable}
      * @param _values values to update
      * @throws SQLException if values could not be inserted
+     * @throws CacheReloadException
      */
     public void prepareDBUpdate(final SQLUpdate _update,
                                 final Object... _values)
-        throws SQLException
+        throws SQLException, CacheReloadException
     {
         Object[] tmp = _values;
         try {
@@ -640,7 +699,7 @@ public class Attribute
         } catch (final EFapsException e) {
             throw new SQLException(e);
         }
-        attributeType.getDbAttrType().prepareUpdate(_update, this, tmp);
+        AttributeType.get(attributeTypeId).getDbAttrType().prepareUpdate(_update, this, tmp);
     }
 
     /**
@@ -654,6 +713,7 @@ public class Attribute
         throws EFapsException
     {
         Object ret;
+        final var attributeType = AttributeType.get(attributeTypeId);
         if (attributeType.getDbAttrType() instanceof DateTimeType) {
             ret = ((DateTimeType) attributeType.getDbAttrType()).readDateTimeValue(this, _objectList);
         } else {
@@ -672,7 +732,7 @@ public class Attribute
     public Object value(final List<Object> _objectList)
         throws EFapsException
     {
-        Object ret = attributeType.getDbAttrType().readValue(this, _objectList);
+        Object ret = AttributeType.get(attributeTypeId).getDbAttrType().readValue(this, _objectList);
         final List<Return> returns = executeEvents(EventType.READ_VALUE, ParameterValues.CLASS, this,
                         ParameterValues.OTHERS, ret);
         for (final Return aRet : returns) {
@@ -682,7 +742,6 @@ public class Attribute
         }
         return ret;
     }
-
 
     /**
      * @return the key for the DBProperties value
@@ -850,11 +909,11 @@ public class Attribute
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
-     * @param _attrId   id of an attribute
+     * @param _attrId id of an attribute
      * @return the id of a Type
      * @throws CacheReloadException on error
      */
@@ -956,29 +1015,31 @@ public class Attribute
                 Attribute.LOG.debug("read attribute '{}/{}' (id = {})", _type.getName(), name, id);
 
                 if (Type.check4Type(typeAttrId, CIAdminDataModel.AttributeSet.uuid)) {
-                    final AttributeSet set = new AttributeSet(id, _type, name, AttributeType.get(attrTypeId),
+                    final AttributeSet set = new AttributeSet(id, _type.getId(), name, attrTypeId,
                                     sqlCol, tableId, typeLinkId, dimensionUUID);
                     id2Set.put(id, set);
                 } else {
-                    final Attribute attr = new Attribute(id, _type.getId(), name, sqlCol, SQLTable.get(tableId),
-                                    AttributeType.get(attrTypeId), defaultval,
-                                    dimensionUUID);
+                    final Attribute attr = new Attribute(id, _type.getId(), name, sqlCol, tableId,
+                                    attrTypeId, defaultval, dimensionUUID);
 
                     final UUID uuid = attr.getAttributeType().getUUID();
                     if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_LINK_WITH_RANGES.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_STATUS.getUuid())) {
                         attr.setLink(typeLinkId);
-                        // in case of a PersonLink, CreatorLink or ModifierLink a link to Admin_User_Person
+                        // in case of a PersonLink, CreatorLink or ModifierLink
+                        // a link to Admin_User_Person
                         // must be set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_CREATOR_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_MODIFIER_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_PERSON_LINK.getUuid())) {
                         attr.setLink(Type.getId4UUID(CIAdminUser.Person.uuid));
-                        // in case of a GroupLink, a link to Admin_User_Group must be set
+                        // in case of a GroupLink, a link to Admin_User_Group
+                        // must be set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_GROUP_LINK.getUuid())) {
                         attr.setLink(Type.getId4UUID(CIAdminUser.Group.uuid));
-                        // in case of a Enum and BitEnum the className must be set
+                        // in case of a Enum and BitEnum the className must be
+                        // set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_ENUM.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_BITENUM.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_JAXB.getUuid())) {
@@ -1004,7 +1065,8 @@ public class Attribute
                 final Attribute childAttr = entry.getKey();
                 parentset.addAttributes(false, childAttr);
                 childAttr.setParentSet(parentset);
-                // needed due to cluster serialization that does not update automatically
+                // needed due to cluster serialization that does not update
+                // automatically
                 Attribute.cacheAttribute(childAttr, parentset);
             }
             for (final AttributeSet set : id2Set.values()) {
