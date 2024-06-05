@@ -58,7 +58,7 @@ public abstract class AbstractCollection
      * @see #getFieldExprIndex
      * @see #getAllFieldExpr
      */
-    private final Map<String, Integer> allFieldExpr = new HashMap<String, Integer>();
+    private final Map<String, Integer> allFieldExpr = new HashMap<>();
 
     /**
      * All fields of the collection are stored sorted belonging to the id of the
@@ -67,12 +67,12 @@ public abstract class AbstractCollection
      * @see #getFields
      * @see #add(Field)
      */
-    private final Map<Long, Field> fields = new TreeMap<Long, Field>();
+    private final Map<Long, Field> fields = new TreeMap<>();
 
     /**
      * Map to have the fields belonging to this collection accessible for name.
      */
-    private final Map<String, Field> fieldName2Field = new TreeMap<String, Field>();
+    private final Map<String, Field> fieldName2Field = new TreeMap<>();
 
     /**
      * Instance variable for the length of the field expression list.
@@ -143,7 +143,7 @@ public abstract class AbstractCollection
         if (getAllFieldExpr().containsKey(_expr)) {
             ret = getFieldExprIndex(_expr);
         } else {
-            getAllFieldExpr().put(_expr, Integer.valueOf(getSelIndexLen()));
+            getAllFieldExpr().put(_expr, getSelIndexLen());
             if (getSelect() == null) {
                 setSelect(_expr);
             } else {
@@ -178,13 +178,13 @@ public abstract class AbstractCollection
     /**
      * The instance method reads all needed information for this user interface
      * object.
+     * @throws EFapsException
      *
      * @see #readFromDB4Fields
-     * @throws CacheReloadException on error
      */
     @Override
     protected void readFromDB()
-        throws CacheReloadException
+        throws EFapsException
     {
         super.readFromDB();
         readFromDB4Fields();
@@ -246,7 +246,7 @@ public abstract class AbstractCollection
      */
     public List<Field> getFields()
     {
-        return new ArrayList<Field>(this.fields.values());
+        return new ArrayList<>(this.fields.values());
     }
 
     /**

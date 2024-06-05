@@ -21,6 +21,7 @@ import org.efaps.admin.datamodel.AttributeSetAdapter;
 import org.efaps.admin.datamodel.AttributeTypeAdapter;
 import org.efaps.admin.datamodel.SQLTableAdapter;
 import org.efaps.admin.datamodel.TypeAdapter;
+import org.efaps.admin.event.EventDefinitionAdapter;
 import org.efaps.admin.ui.CommandAdapter;
 import org.efaps.admin.ui.FormAdapter;
 import org.efaps.admin.ui.ImageAdapter;
@@ -36,33 +37,37 @@ import org.efaps.admin.user.RoleAdapter;
 import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoSyntax;
+import org.infinispan.protostream.types.java.CommonContainerTypes;
 
-@AutoProtoSchemaBuilder(
-                includeClasses = {
-                                AssociationAdapter.class,
-                                AttributeAdapter.class,
-                                AttributeSetAdapter.class,
-                                AttributeTypeAdapter.class,
-                                CommandAdapter.class,
-                                CompanyAdapter.class,
-                                FormAdapter.class,
-                                ImageAdapter.class,
-                                JAASSystemAdapter.class,
-                                MenuAdapter.class,
-                                ModuleAdapter.class,
-                                PersonAdapter.class,
-                                RoleAdapter.class,
-                                SearchAdapter.class,
-                                SQLTableAdapter.class,
-                                SystemConfigurationAdapter.class,
-                                TableAdapter.class,
-                                TypeAdapter.class
-                },
+@AutoProtoSchemaBuilder(dependsOn = {
+                CommonContainerTypes.class
+}, includeClasses = {
+                AssociationAdapter.class,
+                AttributeAdapter.class,
+                AttributeSetAdapter.class,
+                AttributeTypeAdapter.class,
+                CommandAdapter.class,
+                CompanyAdapter.class,
+                EventDefinitionAdapter.class,
+                FormAdapter.class,
+                ImageAdapter.class,
+                JAASSystemAdapter.class,
+                MenuAdapter.class,
+                ModuleAdapter.class,
+                PersonAdapter.class,
+                RoleAdapter.class,
+                SearchAdapter.class,
+                SQLTableAdapter.class,
+                SystemConfigurationAdapter.class,
+                TableAdapter.class,
+                TypeAdapter.class
+},
                 schemaFileName = "library.proto",
                 schemaFilePath = "proto/",
                 schemaPackageName = "efaps",
                 syntax = ProtoSyntax.PROTO3)
-public interface LibraryInitializer extends GeneratedSchema
+public interface LibraryInitializer
+    extends GeneratedSchema
 {
 
 }

@@ -228,6 +228,12 @@ public class AttributeType
         return this.createUpdate;
     }
 
+    @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheAttributeType(this);
+    }
+
     /**
      * @return string representation of this attribute type
      */

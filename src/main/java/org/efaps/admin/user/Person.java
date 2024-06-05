@@ -1522,6 +1522,12 @@ public final class Person
         return Instance.get(CIAdminUser.Person.getType(), getId());
     }
 
+    @Override
+    protected void updateCache() throws EFapsException
+    {
+        cachePerson(this);
+    }
+
     /**
      * Returns a string representation of this person.
      *

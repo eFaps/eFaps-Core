@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,7 +263,7 @@ public abstract class AbstractAdminObject
         // if there are more than one event they must be sorted by their index
         // position
         if (evenList.size() > 1) {
-            Collections.sort(evenList, (_eventDef0, _eventDef1) -> Long.compare(_eventDef0.getIndexPos(), _eventDef1.getIndexPos()));
+            Collections.sort(evenList, Comparator.comparing(EventDefinition::getIndexPos));
         }
         setDirty();
     }
@@ -279,12 +280,15 @@ public abstract class AbstractAdminObject
             eventChecked = true;
             try {
                 EventDefinition.addEvents(this);
+                this.updateCache();
             } catch (final EFapsException e) {
                 AbstractAdminObject.LOG.error("Could not read events for Name:; {}', UUID: {}",  name, uuid);
             }
         }
         return events.get(_eventType);
     }
+
+    protected abstract void updateCache() throws EFapsException;
 
     /**
      * Does this instance have Event, for the specified EventType ?
@@ -293,17 +297,9 @@ public abstract class AbstractAdminObject
      * @return <i>true</i>, if this instance has a trigger, otherwise
      *         <i>false</i>.
      */
-    public boolean hasEvents(final EventType _eventtype)
+    public boolean hasEvents(final EventType eventtype)
     {
-        if (!eventChecked) {
-            eventChecked = true;
-            try {
-                EventDefinition.addEvents(this);
-            } catch (final EFapsException e) {
-                AbstractAdminObject.LOG.error("Could not read events for Name:; {}', UUID: {}",  name, uuid);
-            }
-        }
-        return events.get(_eventtype) != null;
+        return getEvents(eventtype) != null;
     }
 
     /**
@@ -567,6 +563,16 @@ public abstract class AbstractAdminObject
         return events;
     }
 
+    protected void setEventChecked(boolean eventChecked)
+    {
+        this.eventChecked = eventChecked;
+    }
+
+
+    protected boolean isEventChecked()
+    {
+        return eventChecked;
+    }
 
     /**
      * Getter method for the instance variable {@link #dirty}.

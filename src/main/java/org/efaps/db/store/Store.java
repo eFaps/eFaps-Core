@@ -172,6 +172,12 @@ public final class Store
         return ret;
     }
 
+    @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheStore(this);
+    }
+
     /**
      * Method to initialize the Cache of this CacheObjectInterface.
      *

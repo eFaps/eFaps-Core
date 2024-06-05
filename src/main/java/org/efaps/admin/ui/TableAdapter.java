@@ -15,8 +15,10 @@
  */
 package org.efaps.admin.ui;
 
+import java.util.List;
 import java.util.Map;
 
+import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 
@@ -29,7 +31,9 @@ public class TableAdapter
     Table create(final long id,
                  final String uuid,
                  final String name,
-                 Map<String, String> propertyMap)
+                 Map<String, String> propertyMap,
+                 List<EventDefinition> events,
+                 boolean eventChecked)
     {
         final var table = new Table(id, uuid, name);
         setPropertiesMap(table, propertyMap);

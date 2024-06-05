@@ -196,6 +196,12 @@ public final class Role
     }
 
     @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheRole(this);
+    }
+
+    @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;

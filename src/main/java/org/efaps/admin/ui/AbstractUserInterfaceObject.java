@@ -121,14 +121,14 @@ public abstract class AbstractUserInterfaceObject
     /**
      * The instance method reads all needed information for this user interface
      * object. Here, only the properties are read from the database
+     * @throws EFapsException
      *
      * @see #readFromDB4Properties
      * @see #readFromDB4Links
      * @see #readFromDB4Access
-     * @throws CacheReloadException on error during reload
      */
     protected void readFromDB()
-        throws CacheReloadException
+        throws EFapsException
     {
         readFromDB4Properties();
         readFromDB4Links();
@@ -292,6 +292,12 @@ public abstract class AbstractUserInterfaceObject
     protected Set<Long> getAccess()
     {
         return access;
+    }
+
+    @Override
+    protected void updateCache()
+    {
+        cacheUIObject(this);
     }
 
     private static <V extends AbstractUserInterfaceObject> AbstractUserInterfaceObject getNull(final Class<V> _componentType)

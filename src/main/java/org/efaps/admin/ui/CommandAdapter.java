@@ -15,8 +15,10 @@
  */
 package org.efaps.admin.ui;
 
+import java.util.List;
 import java.util.Map;
 
+import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -35,7 +37,9 @@ public class CommandAdapter
                    Long targetMenuId,
                    Long targetTableId,
                    Long targetSearchId,
-                   Long targetCommandId)
+                   Long targetCommandId,
+                   List<EventDefinition> events,
+                   boolean eventChecked)
     {
         final var command = new Command(id, uuid, name);
         command.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
@@ -44,6 +48,7 @@ public class CommandAdapter
         command.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         command.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
         setPropertiesMap(command, propertyMap);
+        setEvents(command, events);
         return command;
     }
 

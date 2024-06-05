@@ -116,7 +116,7 @@ public abstract class AbstractMenu
     {
         boolean ret = super.hasAccess(_targetMode, _instance);
 
-        if (ret && getCommands().size() > 0 && !AppAccessHandler.excludeMode()) {
+        if (ret && commands.size() > 0 && !AppAccessHandler.excludeMode()) {
             ret = false;
             for (final AbstractCommand cmd : getCommands()) {
                 if (cmd.hasAccess(_targetMode, _instance)) {
@@ -174,13 +174,13 @@ public abstract class AbstractMenu
      * The instance method reads all needed information for this user interface
      * object. The method extends the original method, because the sub menus and
      * commands must be read.
+     * @throws EFapsException
      *
      * @see #readFromDB4Childs
-     * @throws CacheReloadException on error during load
      */
     @Override
     protected void readFromDB()
-        throws CacheReloadException
+        throws EFapsException
     {
         super.readFromDB();
         readFromDB4Childs();

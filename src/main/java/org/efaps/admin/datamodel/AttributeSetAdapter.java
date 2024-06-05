@@ -15,10 +15,12 @@
  */
 package org.efaps.admin.datamodel;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.EFapsException;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -53,7 +55,10 @@ public class AttributeSetAdapter
                         Long storeId,
                         Map<String, String> attributeIds,
                         long attributeTypeId,
-                        String attributeName)
+                        String attributeName,
+                        final Map<String, String> propertyMap,
+                        List<EventDefinition> events,
+                        boolean eventChecked)
     {
         try {
             final var attributeSet = new AttributeSet(id, uuid, name);

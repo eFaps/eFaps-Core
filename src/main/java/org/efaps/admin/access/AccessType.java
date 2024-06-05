@@ -116,6 +116,12 @@ public final class AccessType
         super(_id, _uuid, _name);
     }
 
+    @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheAccessType(this);
+    }
+
     /**
      * The method checks, if the given object represents the same access type as
      * this instance. Equals means, that the object to compare is not null, an

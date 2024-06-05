@@ -21,31 +21,31 @@ public class AbstractCommandAdapter
     extends AbstractUIAdapter
 {
 
-    @ProtoField(number = 100)
+    @ProtoField(number = 200)
     Long getTargetFormId(AbstractCommand abstractCommand)
     {
         return abstractCommand.getTargetFormId();
     }
 
-    @ProtoField(number = 101)
+    @ProtoField(number = 201)
     Long getTargetMenuId(AbstractCommand abstractCommand)
     {
         return abstractCommand.getTargetMenuId();
     }
 
-    @ProtoField(number = 102)
+    @ProtoField(number = 202)
     Long getTargetTableId(AbstractCommand abstractCommand)
     {
         return abstractCommand.getTargetTableId();
     }
 
-    @ProtoField(number = 103)
+    @ProtoField(number = 203)
     Long getTargetSearchId(AbstractCommand abstractCommand)
     {
         return abstractCommand.getTargetSearchId();
     }
 
-    @ProtoField(number = 104)
+    @ProtoField(number = 204)
     Long getTargetCommandId(AbstractCommand abstractCommand)
     {
         return abstractCommand.getTargetCommandId();

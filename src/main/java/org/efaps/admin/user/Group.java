@@ -165,6 +165,12 @@ public final class Group
     }
 
     @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheGroup(this);
+    }
+
+    @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;

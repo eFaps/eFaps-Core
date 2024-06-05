@@ -285,6 +285,12 @@ public final class JAASSystem
         return this.groupMethodKey;
     }
 
+    @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheJAASSystem(this);
+    }
+
     /**
      * Method to initialize the cache of JAAS systems.
      * @throws CacheReloadException on error

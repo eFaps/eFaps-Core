@@ -319,6 +319,12 @@ public final class SQLTable
     }
 
     @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheSQLTable(this);
+    }
+
+    @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;

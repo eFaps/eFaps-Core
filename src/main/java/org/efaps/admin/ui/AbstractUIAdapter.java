@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.ui;
 
-import java.util.Map;
-
 import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.infinispan.protostream.annotations.ProtoField;
 
@@ -24,27 +22,21 @@ public abstract class AbstractUIAdapter
     extends AbstractAdminObjectAdapter
 {
 
-    @ProtoField(number = 1, defaultValue = "0")
+    @ProtoField(number = 100, defaultValue = "0")
     long getId(AbstractUserInterfaceObject uiObject)
     {
         return uiObject.getId();
     }
 
-    @ProtoField(number = 2)
+    @ProtoField(number = 101)
     String getUuid(AbstractUserInterfaceObject uiObject)
     {
         return uiObject.getUUID() == null ? null : uiObject.getUUID().toString();
     }
 
-    @ProtoField(number = 3)
+    @ProtoField(number = 102)
     String getName(AbstractUserInterfaceObject uiObject)
     {
         return uiObject.getName();
-    }
-
-    @ProtoField(number = 4)
-    Map<String, String> getPropertyMap(AbstractUserInterfaceObject uiObject)
-    {
-        return uiObject.getPropertyMap();
     }
 }

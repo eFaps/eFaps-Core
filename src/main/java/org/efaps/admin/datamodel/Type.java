@@ -1377,6 +1377,12 @@ public class Type
         this.attributeIds = attributeIds;
     }
 
+    @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheType(this);
+    }
+
     /**
      * The method overrides the original method 'toString' and returns
      * information about this type instance.

@@ -793,6 +793,12 @@ public class Attribute
         className = _className;
     }
 
+    @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheAttribute(this, getParent());
+    }
+
     /**
      * Method to initialize this Cache.
      *
@@ -877,13 +883,13 @@ public class Attribute
     {
         final var nameCache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
         if (_type != null) {
-            nameCache.putIfAbsent(_type.getName() + "/" + _attr.getName(), _attr);
+            nameCache.put(_type.getName() + "/" + _attr.getName(), _attr);
         } else {
-            nameCache.putIfAbsent(_attr.getKey(), _attr);
+            nameCache.put(_attr.getKey(), _attr);
         }
 
         final var idCache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
-        idCache.putIfAbsent(_attr.getId(), _attr);
+        idCache.put(_attr.getId(), _attr);
     }
 
     /**

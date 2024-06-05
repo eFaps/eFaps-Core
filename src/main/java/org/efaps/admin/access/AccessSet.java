@@ -409,6 +409,12 @@ public final class AccessSet
         }
     }
 
+    @Override
+    protected void updateCache() throws EFapsException
+    {
+        cacheAccessSet(this);
+    }
+
     /**
      * Read the related Abstract Person (Role, Person).
      * @throws CacheReloadException on error

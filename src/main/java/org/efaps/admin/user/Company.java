@@ -197,6 +197,12 @@ public final class Company
     }
 
     @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheCompany(this);
+    }
+
+    @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;

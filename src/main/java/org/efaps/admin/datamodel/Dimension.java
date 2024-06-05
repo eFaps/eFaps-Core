@@ -217,6 +217,12 @@ public class Dimension
         return this.baseUoM;
     }
 
+    @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        cacheDimension(this);
+    }
+
     /**
      * Method to initialize the Cache of this CacheObjectInterface.
      *

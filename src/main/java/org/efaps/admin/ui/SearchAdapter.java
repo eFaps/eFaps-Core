@@ -15,8 +15,10 @@
  */
 package org.efaps.admin.ui;
 
+import java.util.List;
 import java.util.Map;
 
+import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -35,7 +37,9 @@ public class SearchAdapter
                   Long targetMenuId,
                   Long targetTableId,
                   Long targetSearchId,
-                  Long targetCommandId)
+                  Long targetCommandId,
+                  List<EventDefinition> events,
+                  boolean eventChecked)
     {
         final var search = new Search(id, uuid, name);
         search.setTargetFormId(ProtoUtils.toNullLong(targetFormId));

@@ -108,7 +108,7 @@ public class Menu
     {
         boolean ret = super.hasAccess(_targetMode, _instance);
 
-        if (!ret && getCommands().size() > 0 && !AppAccessHandler.excludeMode() && isTypeMenu()) {
+        if (!ret && getCommandsInternal().size() > 0 && !AppAccessHandler.excludeMode() && isTypeMenu()) {
             ret = true;
         }
         return ret;

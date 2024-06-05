@@ -31,6 +31,7 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.db.SelectBuilder;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public final class EventDefinition
     extends AbstractAdminObject
     implements EventExecution
 {
+
     /**
      * Needed for serialization.
      */
@@ -76,6 +78,9 @@ public final class EventDefinition
      */
     private final String methodName;
 
+    private final EventType eventType;
+
+
     /**
      * @param _instance Instance of this EventDefinition
      * @param _name name of this EventDefinition
@@ -84,7 +89,8 @@ public final class EventDefinition
      * @param _method method of this EventDefinition
      * @throws EFapsException on error
      */
-    private EventDefinition(final Instance _instance,
+    private EventDefinition(final EventType eventType,
+                            final Instance _instance,
                             final String _name,
                             final int _indexPos,
                             final String _resourceName,
@@ -92,11 +98,26 @@ public final class EventDefinition
         throws EFapsException
     {
         super(_instance.getId(), null, _name);
+        this.eventType = eventType;
         this.indexPos = _indexPos;
         this.resourceName = _resourceName;
         this.methodName = _method;
         checkProgramInstance();
         setProperties(_instance);
+    }
+
+    protected EventDefinition(final EventType eventType,
+                              final Long id,
+                              final String name,
+                              final int indexPos,
+                              final String resourceName,
+                              final String method)
+    {
+        super(id, null, name);
+        this.eventType = eventType;
+        this.indexPos = indexPos;
+        this.resourceName = resourceName;
+        this.methodName = method;
     }
 
     /**
@@ -125,7 +146,7 @@ public final class EventDefinition
      * @return value of instance variable {@link #indexPos}
      * @see #indexPos
      */
-    public long getIndexPos()
+    public int getIndexPos()
     {
         return this.indexPos;
     }
@@ -139,6 +160,16 @@ public final class EventDefinition
     public String getResourceName()
     {
         return this.resourceName;
+    }
+
+    protected String getMethodName()
+    {
+        return this.methodName;
+    }
+
+    public EventType getEventType()
+    {
+        return eventType;
     }
 
     /**
@@ -174,6 +205,12 @@ public final class EventDefinition
         } catch (final InvocationTargetException e) {
             EventDefinition.LOG.error("could not access Class: '{}'", this.resourceName, e);
         }
+    }
+
+    @Override
+    protected void updateCache() throws CacheReloadException
+    {
+        //nothing
     }
 
     /**
@@ -297,7 +334,7 @@ public final class EventDefinition
                     }
 
                     _adminObject.addEvent(triggerEvent,
-                                    new EventDefinition(inst, eventName, eventPos, program, method));
+                                    new EventDefinition(triggerEvent, inst, eventName, eventPos, program, method));
 
                     // CHECKSTYLE:OFF
                 } catch (final Exception e) {
