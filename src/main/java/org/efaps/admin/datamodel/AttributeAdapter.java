@@ -18,6 +18,7 @@ package org.efaps.admin.datamodel;
 import java.util.List;
 
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -37,11 +38,12 @@ public class AttributeAdapter
                      final String dimensionUUID,
                      int size,
                      int scale,
-                     boolean required)
+                     boolean required,
+                     Long linkId)
     {
         try {
             return new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
-                            dimensionUUID, size, scale, required);
+                            dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId));
         } catch (final EFapsException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -109,6 +111,12 @@ public class AttributeAdapter
     boolean isRequired(Attribute attribute)
     {
         return attribute.isRequired();
+    }
+
+    @ProtoField(number = 12, defaultValue = "0")
+    Long getLinkId(Attribute attribute)
+    {
+        return attribute.getLinkId();
     }
 
 }

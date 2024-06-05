@@ -37,7 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class represents the Commands which enable the interaction with a User. <br>
+ * This class represents the Commands which enable the interaction with a User.
+ * <br>
  * Buttons in the UserInterface a represented by this Class.
  *
  * @author The eFaps Team
@@ -50,7 +51,9 @@ public abstract class AbstractCommand
     /**
      * This enum is used to define the Sortdirection of a Field.
      */
-    public enum SortDirection {
+    public enum SortDirection
+    {
+
         /**
          * Sortdirection descending.
          */
@@ -111,13 +114,13 @@ public abstract class AbstractCommand
      * This map is used as a store by the enum SortDirection for the method
      * getEnum.
      */
-    private static final Map<String, AbstractCommand.SortDirection> MAPPER
-        = new HashMap<>();
+    private static final Map<String, AbstractCommand.SortDirection> MAPPER = new HashMap<>();
 
     /**
      * This enum id used to define the different Targets a Command can have.
      */
-    public enum Target {
+    public enum Target
+    {
         /** The target of the href is the content frame. */
         CONTENT,
         /** The target of the href is the hidden frame. */
@@ -195,12 +198,9 @@ public abstract class AbstractCommand
     /**
      * Number of rows that must be committed. Special meanings:
      * <ul>
-     * <li>
-     * 0: the mechanism expects at least one. Default</li>
-     * <li>
-     * -1: the mechanism is deactivated.</li>
-     * <li>
-     * 1, 2, 3 ...: the exact number of selected rows will be checked.</li>
+     * <li>0: the mechanism expects at least one. Default</li>
+     * <li>-1: the mechanism is deactivated.</li>
+     * <li>1, 2, 3 ...: the exact number of selected rows will be checked.</li>
      * </ul>
      *
      */
@@ -254,7 +254,7 @@ public abstract class AbstractCommand
      * @see #getTargetForm
      * @see #setTargetForm
      */
-    private Form targetForm = null;
+    private Long targetFormId = null;
 
     private UUID targetModule = null;
 
@@ -265,13 +265,13 @@ public abstract class AbstractCommand
      * @see #setTargetMenu
      * @see #getTargetMenu
      */
-    private Menu targetMenu = null;
+    private Long targetMenuId = null;
 
     /**
      * The instance method stores the command that will be executed after this
      * command.
      */
-    private AbstractCommand targetCommand = null;
+    private Long targetCommandId = null;
 
     /**
      * Should the revise/previous button be rendered.
@@ -293,7 +293,7 @@ public abstract class AbstractCommand
      * @see #getTargetSearch
      * @see #setTargetSearch
      */
-    private Search targetSearch = null;
+    private Long targetSearchId = null;
 
     /**
      * Standard checkboxes for a table must be shown. The checkboxes are used
@@ -310,7 +310,7 @@ public abstract class AbstractCommand
      * @see #getTargetTable
      * @see #setTargetTable
      */
-    private Table targetTable = null;
+    private Long targetTableId = null;
 
     /**
      * The instance variable stores for target user interface table object the
@@ -525,7 +525,13 @@ public abstract class AbstractCommand
      */
     public Form getTargetForm()
     {
-        return targetForm;
+        try {
+            return targetFormId == null ? null : Form.get(targetFormId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Module getTargetModule()
@@ -535,9 +541,9 @@ public abstract class AbstractCommand
     }
 
     /**
-     * Getter method for the instance variable {@link #targetMenu}.
-     * Adds the default menus if allowed ({@link #targetDefaultMenu}
-     * defined in an SystemConfiguration.
+     * Getter method for the instance variable {@link #targetMenu}. Adds the
+     * default menus if allowed ({@link #targetDefaultMenu} defined in an
+     * SystemConfiguration.
      *
      * @return value of instance variable {@link #targetMenu}
      * @throws EFapsException on error
@@ -547,12 +553,12 @@ public abstract class AbstractCommand
     public Menu getTargetMenu()
         throws EFapsException
     {
-        Menu ret = targetMenu;
+        Menu ret = Menu.get(targetMenuId);
         if (targetDefaultMenu
                         && EFapsSystemConfiguration.get().getAttributeValue(KernelSettings.DEFAULTMENU) != null) {
             // reads the Value from "Common_Main_DefaultMenu"
             if (EFapsSystemConfiguration.get().getAttributeValue(KernelSettings.DEFAULTMENU).equals("none")) {
-                ret = targetMenu;
+                ret = Menu.get(targetMenuId);
             } else {
                 final Properties prop = EFapsSystemConfiguration.get()
                                 .getAttributeValueAsProperties(KernelSettings.DEFAULTMENU);
@@ -565,23 +571,27 @@ public abstract class AbstractCommand
                             // menu will be added
                             if (prop.getProperty("Enable4Table" + i) == null
                                             || prop.getProperty("Enable4Table" + i) != null
-                                            && !"false".equalsIgnoreCase(prop.getProperty("Enable4Table" + i))) {
-                                if (targetMenu == null && ret == null) {
+                                                            && !"false".equalsIgnoreCase(
+                                                                            prop.getProperty("Enable4Table" + i))) {
+                                if (targetMenuId == null && ret == null) {
                                     ret = Menu.get(menuname);
                                     break;
                                 } else {
+                                    final var targetMenu = Menu.get(targetMenuId);
                                     targetMenu.addAll(Menu.get(menuname));
                                     ret = targetMenu;
                                 }
                             }
                         } else if (getTargetForm() != null) {
-                            // only if a Enabled4FormN property is set to true the menu will be added
+                            // only if a Enabled4FormN property is set to true
+                            // the menu will be added
                             if (prop.getProperty("Enable4Form" + i) != null
                                             && "true".equalsIgnoreCase(prop.getProperty("Enable4Form" + i))) {
-                                if (targetMenu == null && ret == null) {
+                                if (targetMenuId == null && ret == null) {
                                     ret = Menu.get(menuname);
                                     break;
                                 } else {
+                                    final var targetMenu = Menu.get(targetMenuId);
                                     targetMenu.addAll(Menu.get(menuname));
                                     ret = targetMenu;
                                 }
@@ -603,7 +613,13 @@ public abstract class AbstractCommand
      */
     public AbstractCommand getTargetCommand()
     {
-        return targetCommand;
+        try {
+            return targetCommandId == null ? null : Command.get(targetCommandId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -680,7 +696,13 @@ public abstract class AbstractCommand
      */
     public Search getTargetSearch()
     {
-        return targetSearch;
+        try {
+            return targetSearchId == null ? null : Search.get(targetSearchId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -692,7 +714,13 @@ public abstract class AbstractCommand
      */
     public Table getTargetTable()
     {
-        return targetTable;
+        try {
+            return targetTableId == null ? null : Table.get(targetTableId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -915,20 +943,20 @@ public abstract class AbstractCommand
         if (_linkTypeUUID.equals(CIAdminUserInterface.LinkIcon.uuid)) {
             icon = _toName;
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetForm.uuid)) {
-            targetForm = Form.get(_toId);
+            targetFormId = Form.get(_toId).getId();
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetModule.uuid)) {
             final var module = Module.get(_toId);
             if (module != null) {
                 targetModule = module.getUUID();
             }
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetMenu.uuid)) {
-            targetMenu = Menu.get(_toId);
+            targetMenuId = Menu.get(_toId).getId();
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetSearch.uuid)) {
-            targetSearch = Search.get(_toId);
+            targetSearchId = Search.get(_toId).getId();
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetTable.uuid)) {
-            targetTable = Table.get(_toId);
+            targetTableId = Table.get(_toId).getId();
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetCommand.uuid)) {
-            targetCommand = Command.get(_toId);
+            targetCommandId = Command.get(_toId).getId();
         } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetHelp.uuid)) {
             targeHelp = _toName;
         } else {
@@ -1019,9 +1047,58 @@ public abstract class AbstractCommand
             windowHeight = Integer.parseInt(_value);
         } else if ("WindowWidth".equals(_name)) {
             windowWidth = Integer.parseInt(_value);
-        } else {
-            super.setProperty(_name, _value);
         }
+        super.setProperty(_name, _value);
+    }
+
+    protected Long getTargetFormId()
+    {
+        return this.targetFormId;
+    }
+
+    protected void setTargetFormId(Long targetFormId)
+    {
+        this.targetFormId = targetFormId;
+    }
+
+    protected void setTargetMenuId(Long targetMenuId)
+    {
+        this.targetMenuId = targetMenuId;
+    }
+
+    protected void setTargetSearchId(Long targetSearchId)
+    {
+        this.targetSearchId = targetSearchId;
+    }
+
+    protected void setTargetTableId(Long targetTableId)
+    {
+        this.targetTableId = targetTableId;
+    }
+
+    protected Long getTargetMenuId()
+    {
+        return this.targetMenuId;
+    }
+
+    protected Long getTargetTableId()
+    {
+        return this.targetTableId;
+    }
+
+    protected Long getTargetSearchId()
+    {
+        return this.targetSearchId;
+    }
+
+    protected Long getTargetCommandId()
+    {
+        return this.targetCommandId;
+    }
+
+    protected void setTargetCommandId(Long targetCommandId)
+    {
+        this.targetCommandId = targetCommandId;
     }
 
     @Override
@@ -1039,7 +1116,7 @@ public abstract class AbstractCommand
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     protected static AbstractCommand search(final Long _id)

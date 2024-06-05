@@ -39,12 +39,12 @@ public class AttributeSet
     /**
      * Type of the attribute.
      */
-    private final long attributeTypeId;
+    private long attributeTypeId;
 
     /**
      * Name of the attribute.
      */
-    private final String attributeName;
+    private String attributeName;
 
     /**
      * attributes of this set.
@@ -65,6 +65,7 @@ public class AttributeSet
     //CHECKSTYLE:OFF
     protected AttributeSet(final long _id,
                            final long _typeId,
+                           final String typeName,
                            final String _name,
                            final long _attributeTypeId,
                            final String _sqlColNames,
@@ -74,7 +75,7 @@ public class AttributeSet
         throws EFapsException
     {
         //CHECKSTYLE:ON
-        super(_id, _uuid, AttributeSet.evaluateName(Type.get(_typeId).getName(), _name));
+        super(_id, _uuid, AttributeSet.evaluateName(typeName, _name));
 
         this.attributeName = _name == null ? null : _name.trim();
 
@@ -85,11 +86,19 @@ public class AttributeSet
         final Attribute attr = new Attribute(_id, getId(), _name, _sqlColNames, _tableId, AttributeType
                         .get("Link").getId(), null, null);
         addAttributes(false, attr);
-        attr.setLink(_typeId);
+        attr.setLinkId(_typeId);
         if (_typeLinkId > 0) {
             setParentTypeID(_typeLinkId);
         }
         inheritAttributes();
+    }
+
+    protected AttributeSet(final long _id,
+                           final String _uuid,
+                           final String _name)
+        throws EFapsException
+    {
+        super(_id, _uuid, _name);
     }
 
     /**
@@ -106,6 +115,15 @@ public class AttributeSet
             e.printStackTrace();
         }
         return null;
+    }
+
+    protected long getAttributeTypeId() {
+        return attributeTypeId;
+    }
+
+    protected void setAttributeTypeId(long attributeTypeId)
+    {
+        this.attributeTypeId = attributeTypeId;
     }
 
     /**
@@ -127,6 +145,11 @@ public class AttributeSet
     public String getAttributeName()
     {
         return this.attributeName;
+    }
+
+    protected void setAttributeName(String attributeName)
+    {
+        this.attributeName = attributeName;
     }
 
     /**

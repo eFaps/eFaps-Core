@@ -22,6 +22,7 @@ import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.client.hotrod.near.DefaultNearCacheFactory;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.api.BasicCacheContainer;
@@ -138,7 +139,8 @@ public final class InfinispanCache
                 final var config = ((RemoteCacheManager) this.container).getConfiguration();
                 final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
                                 .templateName(DefaultTemplate.REPL_ASYNC)
-                                .nearCacheFactory(new DefaultNearCacheFactory());
+                                .nearCacheFactory(new DefaultNearCacheFactory())
+                                .transactionMode(TransactionMode.NONE);
                 config.addRemoteCache(cacheName, consumer);
             }
             cache = this.container.getCache(cacheName);

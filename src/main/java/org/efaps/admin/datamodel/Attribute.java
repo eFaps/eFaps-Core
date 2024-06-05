@@ -178,7 +178,7 @@ public class Attribute
      * @see #getLink
      * @see #setLink
      */
-    private Long link = null;
+    private Long linkId = null;
 
     /**
      * Instance variable for the parent type id.
@@ -323,7 +323,8 @@ public class Attribute
                         final String dimensionUUID,
                         int size,
                         int scale,
-                        boolean required)
+                        boolean required,
+                        final Long linkId)
         // CHECKSTYLE:ON
         throws EFapsException
     {
@@ -337,6 +338,7 @@ public class Attribute
         this.size = size;
         this.scale = scale;
         this.required = required;
+        this.linkId = linkId;
     }
 
 
@@ -390,7 +392,7 @@ public class Attribute
      */
     public boolean hasLink()
     {
-        return link != null;
+        return linkId != null;
     }
 
     /**
@@ -404,7 +406,7 @@ public class Attribute
         final Attribute ret = new Attribute(getId(), _parentId, getName(), sqlTableId, attributeTypeId,
                         defaultValue, dimensionUUID, required, size, scale);
         ret.getSqlColNames().addAll(getSqlColNames());
-        ret.setLink(link);
+        ret.setLinkId(linkId);
         ret.setClassName(getClassName());
         ret.getProperties().putAll(getProperties());
         return ret;
@@ -456,9 +458,14 @@ public class Attribute
      * @see #link
      * @see #getLink
      */
-    protected void setLink(final Long _link)
+    protected void setLinkId(final Long linkId)
     {
-        link = _link;
+        this.linkId = linkId;
+    }
+
+    protected Long getLinkId()
+    {
+        return this.linkId;
     }
 
     /**
@@ -470,10 +477,10 @@ public class Attribute
     public Type getLink()
         throws CacheReloadException
     {
-        if (link == null) {
+        if (linkId == null) {
             Attribute.LOG.error("Access on Attribute Link without parent defintion: {}", this);
         }
-        return Type.get(link);
+        return Type.get(linkId);
     }
 
     /**
@@ -1015,7 +1022,7 @@ public class Attribute
                 Attribute.LOG.debug("read attribute '{}/{}' (id = {})", _type.getName(), name, id);
 
                 if (Type.check4Type(typeAttrId, CIAdminDataModel.AttributeSet.uuid)) {
-                    final AttributeSet set = new AttributeSet(id, _type.getId(), name, attrTypeId,
+                    final AttributeSet set = new AttributeSet(id, _type.getId(),_type.getName(), name, attrTypeId,
                                     sqlCol, tableId, typeLinkId, dimensionUUID);
                     id2Set.put(id, set);
                 } else {
@@ -1026,18 +1033,18 @@ public class Attribute
                     if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_LINK_WITH_RANGES.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_STATUS.getUuid())) {
-                        attr.setLink(typeLinkId);
+                        attr.setLinkId(typeLinkId);
                         // in case of a PersonLink, CreatorLink or ModifierLink
                         // a link to Admin_User_Person
                         // must be set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_CREATOR_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_MODIFIER_LINK.getUuid())
                                     || uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_PERSON_LINK.getUuid())) {
-                        attr.setLink(Type.getId4UUID(CIAdminUser.Person.uuid));
+                        attr.setLinkId(Type.getId4UUID(CIAdminUser.Person.uuid));
                         // in case of a GroupLink, a link to Admin_User_Group
                         // must be set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_GROUP_LINK.getUuid())) {
-                        attr.setLink(Type.getId4UUID(CIAdminUser.Group.uuid));
+                        attr.setLinkId(Type.getId4UUID(CIAdminUser.Group.uuid));
                         // in case of a Enum and BitEnum the className must be
                         // set
                     } else if (uuid.equals(Attribute.AttributeTypeDef.ATTRTYPE_ENUM.getUuid())

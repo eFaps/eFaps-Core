@@ -128,6 +128,16 @@ public abstract class AbstractMenu
         return ret;
     }
 
+    protected void setCommandsInternal(final Map<Long, Long> commands)
+    {
+        this.commands.putAll(commands);
+    }
+
+    protected Map<Long, Long> getCommandsInternal()
+    {
+       return this.commands;
+    }
+
     /**
      * Returns all information from the menu as string.
      *
@@ -156,7 +166,7 @@ public abstract class AbstractMenu
     public List<AbstractCommand> getCommands()
     {
         return commands.values().stream()
-                        .map(id -> AbstractCommand.search(id))
+                        .map(AbstractCommand::search)
                         .collect(Collectors.toList());
     }
 

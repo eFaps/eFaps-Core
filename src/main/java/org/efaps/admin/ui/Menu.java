@@ -72,13 +72,7 @@ public class Menu
                        final long _id)
         throws CacheReloadException
     {
-        final Command command = Command.get(_id);
-        if (command == null) {
-            final Menu subMenu = Menu.get(_id);
-            add(_sortId, subMenu);
-        } else {
-            add(_sortId, command);
-        }
+        getCommandsInternal().put(_sortId,_id);
     }
 
     /**
