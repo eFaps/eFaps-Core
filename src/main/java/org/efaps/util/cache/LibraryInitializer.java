@@ -15,6 +15,7 @@
  */
 package org.efaps.util.cache;
 
+import org.efaps.admin.access.AccessTypeAdapter;
 import org.efaps.admin.common.SystemConfigurationAdapter;
 import org.efaps.admin.datamodel.AttributeAdapter;
 import org.efaps.admin.datamodel.AttributeSetAdapter;
@@ -34,6 +35,7 @@ import org.efaps.admin.user.CompanyAdapter;
 import org.efaps.admin.user.JAASSystemAdapter;
 import org.efaps.admin.user.PersonAdapter;
 import org.efaps.admin.user.RoleAdapter;
+import org.efaps.db.store.StoreAdapter;
 import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoSyntax;
@@ -42,6 +44,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
 @AutoProtoSchemaBuilder(dependsOn = {
                 CommonContainerTypes.class
 }, includeClasses = {
+                AccessTypeAdapter.class,
                 AssociationAdapter.class,
                 AttributeAdapter.class,
                 AttributeSetAdapter.class,
@@ -57,6 +60,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 PersonAdapter.class,
                 RoleAdapter.class,
                 SearchAdapter.class,
+                StoreAdapter.class,
                 SQLTableAdapter.class,
                 SystemConfigurationAdapter.class,
                 TableAdapter.class,

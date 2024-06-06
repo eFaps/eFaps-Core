@@ -36,6 +36,7 @@ import org.efaps.util.cache.CacheReloadException;
 public abstract class AbstractMenu
     extends AbstractCommand
 {
+
     /**
      * Needed for serialization.
      */
@@ -118,7 +119,8 @@ public abstract class AbstractMenu
 
         if (ret && commands.size() > 0 && !AppAccessHandler.excludeMode()) {
             ret = false;
-            for (final AbstractCommand cmd : getCommands()) {
+            for (final var cmdId : commands.values()) {
+                final var cmd = AbstractCommand.search(cmdId);
                 if (cmd.hasAccess(_targetMode, _instance)) {
                     ret = true;
                     break;
@@ -135,7 +137,7 @@ public abstract class AbstractMenu
 
     protected Map<Long, Long> getCommandsInternal()
     {
-       return this.commands;
+        return this.commands;
     }
 
     /**
@@ -147,8 +149,7 @@ public abstract class AbstractMenu
     public String toString()
     {
         final ToStringBuilder buf = new ToStringBuilder(this).appendSuper(super.toString());
-
-        for (final AbstractCommand cmd : getCommands()) {
+        for (final var cmd : commands.values()) {
             buf.append(" ").append(cmd);
         }
         return buf.toString();
@@ -174,6 +175,7 @@ public abstract class AbstractMenu
      * The instance method reads all needed information for this user interface
      * object. The method extends the original method, because the sub menus and
      * commands must be read.
+     *
      * @throws EFapsException
      *
      * @see #readFromDB4Childs
@@ -205,7 +207,7 @@ public abstract class AbstractMenu
             multi.executeWithoutAccessCheck();
 
             while (multi.next()) {
-                final long commandId = multi.<Long> getAttribute(CIAdminUserInterface.Menu2Command.ToCommand);
+                final long commandId = multi.<Long>getAttribute(CIAdminUserInterface.Menu2Command.ToCommand);
                 add(multi.getCurrentInstance().getId(), commandId);
             }
         } catch (final EFapsException e) {
@@ -228,6 +230,6 @@ public abstract class AbstractMenu
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 }

@@ -99,24 +99,6 @@ public class TypeAdapter extends AbstractAdminObjectAdapter
         return type;
     }
 
-    @ProtoField(number = 101, defaultValue = "0")
-    long getId(Type type)
-    {
-        return type.getId();
-    }
-
-    @ProtoField(number = 102)
-    String getUuid(Type type)
-    {
-        return type.getUUID().toString();
-    }
-
-    @ProtoField(number = 103)
-    String getName(Type type)
-    {
-        return type.getName();
-    }
-
     @ProtoField(number =104)
     Long getParentTypeId(Type type)
     {

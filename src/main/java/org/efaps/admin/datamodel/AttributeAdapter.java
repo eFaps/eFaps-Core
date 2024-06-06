@@ -33,8 +33,9 @@ public class AttributeAdapter
 
     @ProtoFactory
     Attribute create(final long id,
-                     final long parentId,
+                     final String uuid,
                      final String name,
+                     final long parentId,
                      final List<String> sqlColNames,
                      final long sqlTableId,
                      final long attributeTypeId,
@@ -62,22 +63,10 @@ public class AttributeAdapter
         return null;
     }
 
-    @ProtoField(number = 100, defaultValue = "0")
-    long getId(Attribute attribute)
-    {
-        return attribute.getId();
-    }
-
     @ProtoField(number = 101, defaultValue = "0")
     long getParentId(Attribute attribute)
     {
         return attribute.getParentId();
-    }
-
-    @ProtoField(number = 102)
-    String getName(Attribute attribute)
-    {
-        return attribute.getName();
     }
 
     @ProtoField(number = 103)

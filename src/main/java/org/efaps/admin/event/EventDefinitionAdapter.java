@@ -32,6 +32,7 @@ public class EventDefinitionAdapter
     @ProtoFactory
     EventDefinition create(long id,
                            String name,
+                           String uuid,
                            int indexPos,
                            String resourceName,
                            String methodName,
@@ -44,18 +45,6 @@ public class EventDefinitionAdapter
                         resourceName, methodName);
         setPropertiesMap(event, propertyMap);
         return event;
-    }
-
-    @ProtoField(number = 100, defaultValue = "0")
-    long getId(EventDefinition event)
-    {
-        return event.getId();
-    }
-
-    @ProtoField(number = 101)
-    String getName(EventDefinition event)
-    {
-        return event.getName();
     }
 
     @ProtoField(number = 102, defaultValue = "0")

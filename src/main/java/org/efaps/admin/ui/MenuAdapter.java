@@ -48,21 +48,24 @@ public class MenuAdapter
         menu.setTypeMenu(typeMenu);
         menu.setCommandsInternal(ProtoUtils.fromMap(commands));
         setPropertiesMap(menu, propertyMap);
+        setEvents(menu, events);
+        setEventsChecked(menu, eventChecked);
         menu.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
         menu.setTargetMenuId(ProtoUtils.toNullLong(targetMenuId));
         menu.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
         menu.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         menu.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
+
         return menu;
     }
 
-    @ProtoField(number = 5, defaultValue = "false")
+    @ProtoField(number = 100, defaultValue = "false")
     boolean isTypeMenu(Menu menu)
     {
         return menu.isTypeMenu();
     }
 
-    @ProtoField(number = 6)
+    @ProtoField(number = 101)
     Map<String, String> getCommands(Menu menu)
     {
         return ProtoUtils.toMap(menu.getCommandsInternal());

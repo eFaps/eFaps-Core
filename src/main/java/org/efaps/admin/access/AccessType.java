@@ -109,15 +109,16 @@ public final class AccessType
      * @param _uuid universal unique identifier of this access type
      * @param _name name of this access type
      */
-    private AccessType(final long _id,
-                       final String _uuid,
-                       final String _name)
+    protected AccessType(final long _id,
+                         final String _uuid,
+                         final String _name)
     {
         super(_id, _uuid, _name);
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cacheAccessType(this);
     }

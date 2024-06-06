@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.efaps.admin.ui;
+package org.efaps.admin.access;
 
 import java.util.List;
 import java.util.Map;
@@ -23,22 +23,20 @@ import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 
-@ProtoAdapter(Module.class)
-public class ModuleAdapter
+@ProtoAdapter(AccessType.class)
+public class AccessTypeAdapter
     extends AbstractAdminObjectAdapter
 {
 
     @ProtoFactory
-    Module create(final long id,
-                  final String uuid,
-                  final String name,
-                  Map<String, String> propertyMap,
-                  List<EventDefinition> events,
-                  boolean eventChecked)
+    AccessType create(final long id,
+                      final String uuid,
+                      final String name,
+                      Map<String, String> propertyMap,
+                      List<EventDefinition> events,
+                      boolean eventChecked)
     {
-        final var module = new Module(id, uuid, name);
-        setPropertiesMap(module, propertyMap);
-        return module;
+        final var accessType = new AccessType(id, uuid, name);
+        return accessType;
     }
-
 }

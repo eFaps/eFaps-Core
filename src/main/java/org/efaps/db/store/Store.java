@@ -95,9 +95,9 @@ public final class Store
      * @param _uuid uuid of this store
      * @param _name name of thi store
      */
-    private Store(final long _id,
-                  final String _uuid,
-                  final String _name)
+    protected Store(final long _id,
+                    final String _uuid,
+                    final String _name)
     {
         super(_id, _uuid, _name);
     }
@@ -264,13 +264,13 @@ public final class Store
     private static void cacheStore(final Store _store)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE);
-        cache4UUID.putIfAbsent(_store.getUUID(), _store);
+        cache4UUID.put(_store.getUUID(), _store);
 
         final var nameCache = InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE);
-        nameCache.putIfAbsent(_store.getName(), _store);
+        nameCache.put(_store.getName(), _store);
 
         final var idCache = InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE);
-        idCache.putIfAbsent(_store.getId(), _store);
+        idCache.put(_store.getId(), _store);
     }
 
     /**

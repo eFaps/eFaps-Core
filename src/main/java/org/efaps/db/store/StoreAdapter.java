@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.efaps.admin.ui;
+package org.efaps.db.store;
 
 import java.util.List;
 import java.util.Map;
@@ -22,23 +22,29 @@ import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 
-@ProtoAdapter(Module.class)
-public class ModuleAdapter
-    extends AbstractAdminObjectAdapter
+@ProtoAdapter(Store.class)
+public class StoreAdapter extends AbstractAdminObjectAdapter
 {
-
     @ProtoFactory
-    Module create(final long id,
+    Store create(final long id,
                   final String uuid,
                   final String name,
+                  Map<String, String> resourceProperties,
                   Map<String, String> propertyMap,
                   List<EventDefinition> events,
                   boolean eventChecked)
     {
-        final var module = new Module(id, uuid, name);
-        setPropertiesMap(module, propertyMap);
-        return module;
+        final var store = new Store(id, uuid, name);
+        setPropertiesMap(store, propertyMap);
+        store.getResourceProperties().putAll(resourceProperties);
+        return store;
     }
 
+    @ProtoField(number = 101)
+    Map<String, String> getResourceProperties(Store store)
+    {
+        return store.getResourceProperties();
+    }
 }

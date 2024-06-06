@@ -43,7 +43,7 @@ public class CompanyAdapter
     @ProtoField(number = 2)
     String getUuid(Company company)
     {
-        return company.getUUID().toString();
+        return company.getUUID() == null ? null : company.getUUID().toString();
     }
 
     @ProtoField(number = 3)

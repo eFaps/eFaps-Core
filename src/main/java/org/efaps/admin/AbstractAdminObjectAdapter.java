@@ -27,13 +27,31 @@ import org.infinispan.protostream.annotations.ProtoField;
 public class AbstractAdminObjectAdapter
 {
 
-    @ProtoField(number = 1)
+    @ProtoField(number = 1, defaultValue = "0")
+    public long getId(AbstractAdminObject uiObject)
+    {
+        return uiObject.getId();
+    }
+
+    @ProtoField(number = 2)
+    public String getUuid(AbstractAdminObject uiObject)
+    {
+        return uiObject.getUUID() == null ? null : uiObject.getUUID().toString();
+    }
+
+    @ProtoField(number = 3)
+    public String getName(AbstractAdminObject uiObject)
+    {
+        return uiObject.getName();
+    }
+
+    @ProtoField(number = 4)
     public Map<String, String> getPropertyMap(AbstractAdminObject adminObject)
     {
         return adminObject.getPropertyMap();
     }
 
-    @ProtoField(number = 2)
+    @ProtoField(number = 5)
     public List<EventDefinition> getEvents(AbstractAdminObject adminObject)
     {
         final List<EventDefinition> eventDefinitions = new ArrayList<>();
@@ -43,14 +61,14 @@ public class AbstractAdminObjectAdapter
         return eventDefinitions;
     }
 
-    @ProtoField(number = 3, defaultValue = "false")
+    @ProtoField(number = 6, defaultValue = "false")
     public boolean isEventChecked(AbstractAdminObject adminObject)
     {
         return adminObject.isEventChecked();
     }
 
-    protected void setPropertiesMap(AbstractAdminObject adminObject,
-                                    Map<String, String> propertiesMap)
+    public void setPropertiesMap(AbstractAdminObject adminObject,
+                                 Map<String, String> propertiesMap)
     {
         try {
             for (final var entry : propertiesMap.entrySet()) {
@@ -62,8 +80,8 @@ public class AbstractAdminObjectAdapter
         }
     }
 
-    protected void setEvents(final AbstractAdminObject adminObject,
-                             final List<EventDefinition> events)
+    public void setEvents(final AbstractAdminObject adminObject,
+                          final List<EventDefinition> events)
     {
         if (!events.isEmpty()) {
             final var map = events.stream().collect(Collectors.groupingBy(EventDefinition::getEventType));
@@ -71,8 +89,8 @@ public class AbstractAdminObjectAdapter
         }
     }
 
-    protected void setEventsChecked(AbstractAdminObject adminObject,
-                                    boolean eventChecked)
+    public void setEventsChecked(AbstractAdminObject adminObject,
+                                 boolean eventChecked)
     {
         adminObject.setEventChecked(eventChecked);
     }
