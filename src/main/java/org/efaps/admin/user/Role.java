@@ -305,6 +305,7 @@ public final class Role
      */
     private static void cacheRole(final Role _role)
     {
+        
         final var cache4UUID = InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE);
         cache4UUID.putIfAbsent(_role.getUUID(), _role);
 
@@ -313,6 +314,7 @@ public final class Role
 
         final var idCache = InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE);
         idCache.putIfAbsent(_role.getId(), _role);
+        
     }
 
     /**

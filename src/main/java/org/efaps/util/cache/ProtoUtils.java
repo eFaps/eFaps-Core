@@ -21,7 +21,7 @@ import java.util.Map;
 public class ProtoUtils
 {
 
-    public static Map<String, String> toMap(Map<Long, Long> original)
+    public static Map<String, String> toMap(Map<?, Long> original)
     {
         final Map<String, String> map = new HashMap<>();
         for (final var entry : original.entrySet()) {
@@ -39,7 +39,7 @@ public class ProtoUtils
         return map;
     }
 
-    public static String toString(Long original)
+    public static String toString(Object original)
     {
         return original == null ? null : original.toString();
     }

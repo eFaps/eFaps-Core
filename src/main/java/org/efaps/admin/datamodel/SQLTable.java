@@ -150,7 +150,7 @@ public final class SQLTable
      *
      * @see #getMainTable()
      */
-    private SQLTable mainTable = null;
+    private Long mainTableId = null;
 
     /**
      * The instance variable stores all types which stores information in this
@@ -158,7 +158,7 @@ public final class SQLTable
      *
      * @see #getTypes()
      */
-    private final Set<Long> types = new HashSet<>();
+    private final Set<Long> typeIds = new HashSet<>();
 
     /**
      * The instance variables is set to <i>true</i> if this table is only a read
@@ -204,10 +204,7 @@ public final class SQLTable
      */
     protected void addType(final Long _typeId)
     {
-        if (!this.types.contains(_typeId)) {
-            this.types.add(_typeId);
-            setDirty();
-        }
+        this.typeIds.add(_typeId);
     }
 
     /**
@@ -287,7 +284,13 @@ public final class SQLTable
      */
     public SQLTable getMainTable()
     {
-        return this.mainTable;
+        try {
+            return this.mainTableId == null ? null : SQLTable.get(this.mainTableId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -301,7 +304,7 @@ public final class SQLTable
         throws CacheReloadException
     {
         final Set<Type> ret = new HashSet<>();
-        for (final Long id : this.types) {
+        for (final Long id : this.typeIds) {
             ret.add(Type.get(id));
         }
         return Collections.unmodifiableSet(ret);
@@ -318,8 +321,24 @@ public final class SQLTable
         return this.readOnly;
     }
 
+    protected Long getMainTableId()
+    {
+        return mainTableId;
+    }
+
+    protected void setMainTableId(Long mainTableId)
+    {
+        this.mainTableId = mainTableId;
+    }
+
+    protected Set<Long> getTypeIds()
+    {
+        return typeIds;
+    }
+
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheSQLTable(this);
     }
@@ -349,21 +368,9 @@ public final class SQLTable
      */
     public static void initialize(final Class<?> _class)
     {
-        if (InfinispanCache.get().exists(SQLTable.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE, SQLTable.LOG);
-        }
-        if (InfinispanCache.get().exists(SQLTable.IDCACHE)) {
-            InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE, SQLTable.LOG);
-        }
-        if (InfinispanCache.get().exists(SQLTable.NAMECACHE)) {
-            InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE, SQLTable.LOG);
-        }
+        InfinispanCache.get().<UUID, SQLTable>initCache(SQLTable.UUIDCACHE, SQLTable.LOG);
+        InfinispanCache.get().<Long, SQLTable>initCache(SQLTable.IDCACHE, SQLTable.LOG);
+        InfinispanCache.get().<String, SQLTable>initCache(SQLTable.NAMECACHE, SQLTable.LOG);
     }
 
     /**
@@ -433,17 +440,19 @@ public final class SQLTable
     /**
      * @param _sqlTable SQLTable to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORE")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORE")
     private static void cacheSQLTable(final SQLTable _sqlTable)
     {
+        
         final var cache4UUID = InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE);
-        cache4UUID.putIfAbsent(_sqlTable.getUUID(), _sqlTable);
+        cache4UUID.put(_sqlTable.getUUID(), _sqlTable);
 
         final var nameCache = InfinispanCache.get().<String, SQLTable>getCache(SQLTable.NAMECACHE);
-        nameCache.putIfAbsent(_sqlTable.getName(), _sqlTable);
+        nameCache.put(_sqlTable.getName(), _sqlTable);
 
         final var idCache = InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE);
-        idCache.putIfAbsent(_sqlTable.getId(), _sqlTable);
+        idCache.put(_sqlTable.getId(), _sqlTable);
+        
     }
 
     /**
@@ -491,8 +500,7 @@ public final class SQLTable
             if (table != null) {
                 table.readFromDB4Properties();
                 if (tableMainId > 0) {
-                    final SQLTable mainTable = SQLTable.get(tableMainId);
-                    table.mainTable = mainTable;
+                    table.mainTableId = tableMainId;
                 }
                 // needed due to cluster serialization that does not update
                 // automatically

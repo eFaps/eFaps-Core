@@ -260,7 +260,7 @@ public final class Store
     /**
      * @param _store Store to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     private static void cacheStore(final Store _store)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE);

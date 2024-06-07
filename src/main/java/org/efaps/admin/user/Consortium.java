@@ -301,11 +301,11 @@ public final class Consortium
     /**
      * @param _consortium Consortium to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     private static void cacheConsortium(final Consortium _consortium)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE);
-        cache4UUID.putIfAbsent(_consortium.getUUID(), _consortium);
+        cache4UUID.put(_consortium.getUUID(), _consortium);
 
         final var nameCache = InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE);
         nameCache.put(_consortium.getName(), _consortium);

@@ -218,13 +218,13 @@ public class Association
     private static void cacheAssociation(final Association _association)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, Association>getCache(Association.UUIDCACHE);
-        cache4UUID.putIfAbsent(_association.getUUID(), _association);
+        cache4UUID.put(_association.getUUID(), _association);
 
         final var nameCache = InfinispanCache.get().<String, Association>getCache(Association.NAMECACHE);
-        nameCache.putIfAbsent(_association.getName(), _association);
+        nameCache.put(_association.getName(), _association);
 
         final var idCache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
-        idCache.putIfAbsent(_association.getId(), _association);
+        idCache.put(_association.getId(), _association);
     }
 
     public static Association evaluate(final Type _type)

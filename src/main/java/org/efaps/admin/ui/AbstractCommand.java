@@ -256,7 +256,7 @@ public abstract class AbstractCommand
      */
     private Long targetFormId = null;
 
-    private UUID targetModule = null;
+    private Long targetModuleId = null;
 
     /**
      * The instance method stores the complete menu. Default value is a null and
@@ -534,10 +534,15 @@ public abstract class AbstractCommand
         return null;
     }
 
+    public boolean hasTargetForm()
+    {
+        return targetFormId != null;
+    }
+
     public Module getTargetModule()
         throws CacheReloadException
     {
-        return targetModule == null ? null : Module.get(targetModule);
+        return targetModuleId == null ? null : Module.get(targetModuleId);
     }
 
     /**
@@ -705,6 +710,11 @@ public abstract class AbstractCommand
         return null;
     }
 
+    public boolean hasTargetSearch()
+    {
+        return targetSearchId != null;
+    }
+
     /**
      * This is the setter method for the instance variable {@link #targetTable}.
      *
@@ -721,6 +731,11 @@ public abstract class AbstractCommand
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean hasTargetTable()
+    {
+        return targetTableId != null;
     }
 
     /**
@@ -934,33 +949,30 @@ public abstract class AbstractCommand
      * {@inheritDoc}
      */
     @Override
-    protected void setLinkProperty(final UUID _linkTypeUUID,
-                                   final long _toId,
-                                   final UUID _toTypeUUID,
-                                   final String _toName)
+    protected void setLinkProperty(final UUID linkTypeUUID,
+                                   final long toId,
+                                   final UUID toTypeUUID,
+                                   final String toName)
         throws EFapsException
     {
-        if (_linkTypeUUID.equals(CIAdminUserInterface.LinkIcon.uuid)) {
-            icon = _toName;
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetForm.uuid)) {
-            targetFormId = Form.get(_toId).getId();
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetModule.uuid)) {
-            final var module = Module.get(_toId);
-            if (module != null) {
-                targetModule = module.getUUID();
-            }
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetMenu.uuid)) {
-            targetMenuId = Menu.get(_toId).getId();
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetSearch.uuid)) {
-            targetSearchId = Search.get(_toId).getId();
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetTable.uuid)) {
-            targetTableId = Table.get(_toId).getId();
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetCommand.uuid)) {
-            targetCommandId = Command.get(_toId).getId();
-        } else if (_linkTypeUUID.equals(CIAdminUserInterface.LinkTargetHelp.uuid)) {
-            targeHelp = _toName;
+        if (linkTypeUUID.equals(CIAdminUserInterface.LinkIcon.uuid)) {
+            icon = toName;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetForm.uuid)) {
+            targetFormId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetModule.uuid)) {
+            targetModuleId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetMenu.uuid)) {
+            targetMenuId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetSearch.uuid)) {
+            targetSearchId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetTable.uuid)) {
+            targetTableId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetCommand.uuid)) {
+            targetCommandId = toId;
+        } else if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetHelp.uuid)) {
+            targeHelp = toName;
         } else {
-            super.setLinkProperty(_linkTypeUUID, _toId, _toTypeUUID, _toName);
+            super.setLinkProperty(linkTypeUUID, toId, toTypeUUID, toName);
         }
     }
 

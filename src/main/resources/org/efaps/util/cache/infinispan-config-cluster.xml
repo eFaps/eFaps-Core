@@ -14,55 +14,75 @@
      See the License for the specific language governing permissions and
  -->
 
-<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<infinispan
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="urn:infinispan:config:15.0 https://www.infinispan.org/schemas/infinispan-config-15.0.xsd"
-    xmlns="urn:infinispan:config:15.0">
-    <cache-container default-cache="eFaps-Default" name="eFaps-Cache-Container" statistics="true">
+    xmlns="urn:infinispan:config:15.0"
+>
+    <cache-container
+        default-cache="eFaps-Default"
+        name="eFaps-Cache-Container"
+        statistics="true"
+    >
 
-        <transport cluster="${infinispan.cluster.name:cluster}"
-                stack="${infinispan.cluster.stack:tcp}"
-                node-name="${infinispan.node.name:}"/>
-
+        <transport
+            cluster="${infinispan.cluster.name:cluster}"
+            stack="${infinispan.cluster.stack:tcp}"
+            node-name="${infinispan.node.name:}" />
+        <serialization>
+            <context-initializer class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
+        </serialization>
         <local-cache-configuration name="eFaps-Default">
         </local-cache-configuration>
 
         <!-- the Access cache -->
         <local-cache name="org.efaps.admin.access.user.AccessCache.PermissionCache">
-            <memory max-count="5000"/>
+            <memory max-count="5000" />
             <!--10 minutes, 5 minutes (miliseconds) -->
-            <expiration lifespan="600000" max-idle="300000" />
-            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan">
+            <expiration
+                lifespan="600000"
+                max-idle="300000" />
+            <indexing
+                storage="filesystem"
+                path="${java.io.tmpdir}/infinispan"
+            >
                 <indexed-entities>
                     <indexed-entity>org.efaps.admin.access.user.PermissionSet</indexed-entity>
                 </indexed-entities>
             </indexing>
         </local-cache>
-        <local-cache name="org.efaps.admin.access.user.AccessCache.StatusCache"/>
-        <local-cache name="org.efaps.admin.common.Association.UUID"/>
-        <local-cache name="org.efaps.admin.common.Association.ID"/>
-        <local-cache name="org.efaps.admin.common.Association.Name"/>
-        <local-cache name="org.efaps.admin.common.Association.Key"/>
-        <local-cache name="org.efaps.util.cache.InfinispanCache.InternalCounter"/>
-        <local-cache name="org.efaps.admin.ui.Module.UUID"/>
-        <local-cache name="org.efaps.admin.ui.Module.ID"/>
-        <local-cache name="org.efaps.admin.ui.Module.Name"/>
-        <local-cache name="org.efaps.admin.ui.Search.UUID"/>
-        <local-cache name="org.efaps.admin.ui.Search.ID"/>
-        <local-cache name="org.efaps.admin.ui.Search.Name"/>
-        <local-cache name="org.efaps.admin.ui.Form.UUID"/>
-        <local-cache name="org.efaps.admin.ui.Form.ID"/>
-        <local-cache name="org.efaps.admin.ui.Form.Name"/>
-        <local-cache name="org.efaps.admin.ui.Table.UUID"/>
-        <local-cache name="org.efaps.admin.ui.Table.ID"/>
-        <local-cache name="org.efaps.admin.ui.Table.Name"/>
-        <local-cache name="org.efaps.admin.index.Queue.Cache"/>
-        <local-cache name="org.efaps.admin.index.IndexDefinition.UUID"/>
+        <local-cache name="org.efaps.admin.access.user.AccessCache.StatusCache" />
+        <local-cache name="org.efaps.admin.common.Association.UUID" />
+        <local-cache name="org.efaps.admin.common.Association.ID" />
+        <local-cache name="org.efaps.admin.common.Association.Name" />
+        <local-cache name="org.efaps.admin.common.Association.Key" />
+        <local-cache name="org.efaps.util.cache.InfinispanCache.InternalCounter" />
+        <local-cache name="org.efaps.admin.ui.Module.UUID" />
+        <local-cache name="org.efaps.admin.ui.Module.ID" />
+        <local-cache name="org.efaps.admin.ui.Module.Name" />
+        <local-cache name="org.efaps.admin.ui.Search.UUID" />
+        <local-cache name="org.efaps.admin.ui.Search.ID" />
+        <local-cache name="org.efaps.admin.ui.Search.Name" />
+        <local-cache name="org.efaps.admin.ui.Form.UUID" />
+        <local-cache name="org.efaps.admin.ui.Form.ID" />
+        <local-cache name="org.efaps.admin.ui.Form.Name" />
+        <local-cache name="org.efaps.admin.ui.Table.UUID" />
+        <local-cache name="org.efaps.admin.ui.Table.ID" />
+        <local-cache name="org.efaps.admin.ui.Table.Name" />
+        <local-cache name="org.efaps.admin.index.Queue.Cache" />
+        <local-cache name="org.efaps.admin.index.IndexDefinition.UUID" />
 
         <!-- the Sql Query cache -->
         <local-cache name="org.efaps.db.QueryCache">
             <!--Only experation no eviction 10 minutes, 5 minutes (miliseconds) -->
-            <expiration lifespan="600000" max-idle="300000" />
-            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan" startup-mode="purge">
+            <expiration
+                lifespan="600000"
+                max-idle="300000" />
+            <indexing
+                storage="filesystem"
+                path="${java.io.tmpdir}/infinispan"
+                startup-mode="purge"
+            >
                 <indexed-entities>
                     <indexed-entity>org.efaps.db.QueryValue</indexed-entity>
                 </indexed-entities>
@@ -80,10 +100,10 @@
             </indexing>
         </local-cache>
             -->
-        <local-cache name="org.efaps.admin.dbproperty.DBProperties"/>
+        <local-cache name="org.efaps.admin.dbproperty.DBProperties" />
 
         <!-- UserInterface -->
-        <local-cache name="org.efaps.admin.ui.field.Field"/>
+        <local-cache name="org.efaps.admin.ui.field.Field" />
 
         <local-cache name="org.efaps.admin.ui.Command.UUID" />
         <local-cache name="org.efaps.admin.ui.Command.ID" />
@@ -100,31 +120,66 @@
             <!-- DateModel -->
         <local-cache name="org.efaps.admin.datamodel.AttributeType.ID" />
         <local-cache name="org.efaps.admin.datamodel.AttributeType.Name" />
-
-        <local-cache name="org.efaps.admin.datamodel.SQLTable.UUID" />
-        <local-cache name="org.efaps.admin.datamodel.SQLTable.ID" />
-        <local-cache name="org.efaps.admin.datamodel.SQLTable.Name" />
+        <replicated-cache
+            name="org.efaps.admin.datamodel.SQLTable.UUID"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+             <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
+        <replicated-cache
+            name="org.efaps.admin.datamodel.SQLTable.ID"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
+        <replicated-cache
+            name="org.efaps.admin.datamodel.SQLTable.Name"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
 
         <local-cache name="org.efaps.admin.access.AccessType.UUID" />
         <local-cache name="org.efaps.admin.access.AccessType.ID" />
         <local-cache name="org.efaps.admin.access.AccessType.Name" />
 
-        <local-cache name="org.efaps.admin.datamodel.Type.UUID" />
-        <local-cache name="org.efaps.admin.datamodel.Type.ID" />
-        <!--
-        <local-cache name="org.efaps.admin.datamodel.Type.Name" />
-         -->
+        <replicated-cache
+            name="org.efaps.admin.datamodel.Type.UUID"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
+        <replicated-cache
+            name="org.efaps.admin.datamodel.Type.ID"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
+        <replicated-cache
+            name="org.efaps.admin.datamodel.Type.Name"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
 
-   <!--
-<replicated-cache name="org.efaps.admin.datamodel.Type.Name"
-                    segments="256"
-                  mode="SYNC"
-                  statistics="true">
-  <locking isolation="REPEATABLE_READ"/>
-  <transaction mode="FULL_XA"  locking="OPTIMISTIC"/>
-
-</replicated-cache>
--->
 
 
 
@@ -204,9 +259,13 @@
         <local-cache name="org.efaps.ui.servlet.ImageServlet.Cache" />
 
         <local-cache-configuration
-            name="org.efaps.ui.wicket.connectionregistry.RegistryManager.Session">
-            <memory max-count="5000"/>
-            <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan">
+            name="org.efaps.ui.wicket.connectionregistry.RegistryManager.Session"
+        >
+            <memory max-count="5000" />
+            <indexing
+                storage="filesystem"
+                path="${java.io.tmpdir}/infinispan"
+            >
                 <!-- the entity will be added during webapp loading
                 <indexed-entities>
                     <indexed-entity>org.efaps.ui.wicket.connectionregistry.UserSession</indexed-entity>

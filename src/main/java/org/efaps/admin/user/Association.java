@@ -175,9 +175,10 @@ public class Association
      */
     private static void cacheAssociation(final Association _association)
     {
+        
         final var idCache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
-        idCache.putIfAbsent(_association.getId(), _association);
-
+        idCache.put(_association.getId(), _association);
+        
     }
 
     /**

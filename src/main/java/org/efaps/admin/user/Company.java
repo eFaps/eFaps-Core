@@ -303,17 +303,17 @@ public final class Company
     /**
      * @param _role Company to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     private static void cacheCompany(final Company _role)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE);
-        cache4UUID.putIfAbsent(_role.getUUID(), _role);
+        cache4UUID.put(_role.getUUID(), _role);
 
         final var naCache = InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE);
-        naCache.putIfAbsent(_role.getName(), _role);
+        naCache.put(_role.getName(), _role);
 
         final var idCache = InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE);
-        idCache.putIfAbsent(_role.getId(), _role);
+        idCache.put(_role.getId(), _role);
     }
 
     /**

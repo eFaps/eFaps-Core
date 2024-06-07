@@ -333,13 +333,13 @@ public final class Group
     private static void cacheGroup(final Group _group)
     {
         final var nameCache = InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE);
-        nameCache.putIfAbsent(_group.getName(), _group);
+        nameCache.put(_group.getName(), _group);
 
         final var idCache = InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE);
-        idCache.putIfAbsent(_group.getId(), _group);
+        idCache.put(_group.getId(), _group);
 
         final var uuidCache = InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE);
-        uuidCache.putIfAbsent(_group.getUUID(), _group);
+        uuidCache.put(_group.getUUID(), _group);
     }
 
     /**

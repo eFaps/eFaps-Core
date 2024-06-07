@@ -846,7 +846,10 @@ public class Attribute
     {
         final var cache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         if (!cache.containsKey(_id)) {
-            Type.get(Attribute.getTypeID(_id));
+           final var type = Type.get(Attribute.getTypeID(_id));
+           if (!cache.containsKey(_id)) {
+               Attribute.add4Type(type);
+           }
         }
         return cache.get(_id);
     }
@@ -860,7 +863,7 @@ public class Attribute
      * @throws CacheReloadException on error
      * @see #getCache
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORE")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORE")
     public static Attribute get(final String _name)
         throws CacheReloadException
     {
@@ -881,6 +884,7 @@ public class Attribute
     private static void cacheAttribute(final Attribute _attr,
                                        final Type _type)
     {
+        
         final var nameCache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
         if (_type != null) {
             nameCache.put(_type.getName() + "/" + _attr.getName(), _attr);
@@ -890,6 +894,7 @@ public class Attribute
 
         final var idCache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         idCache.put(_attr.getId(), _attr);
+        
     }
 
     /**
@@ -972,8 +977,8 @@ public class Attribute
      * @param _type Type the attributes are wanted for
      * @throws EFapsException on error
      */
-    protected static void add4Type(final Type _type)
-        throws EFapsException
+    protected static void add4Type(final Type type)
+        throws CacheReloadException
     {
         Connection con = null;
         try {
@@ -983,7 +988,7 @@ public class Attribute
             final List<Object[]> values = new ArrayList<>();
             try {
                 stmt = con.prepareStatement(Attribute.SQL_TYPE);
-                stmt.setObject(1, _type.getId());
+                stmt.setObject(1, type.getId());
                 final ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     values.add(new Object[] {
@@ -1025,14 +1030,14 @@ public class Attribute
                 final String dimensionUUID = (String) row[9];
                 final String className = (String) row[10];
 
-                Attribute.LOG.debug("read attribute '{}/{}' (id = {})", _type.getName(), name, id);
+                Attribute.LOG.debug("read attribute '{}/{}' (id = {})", type.getName(), name, id);
 
                 if (Type.check4Type(typeAttrId, CIAdminDataModel.AttributeSet.uuid)) {
-                    final AttributeSet set = new AttributeSet(id, _type.getId(),_type.getName(), name, attrTypeId,
+                    final AttributeSet set = new AttributeSet(id, type.getId(),type.getName(), name, attrTypeId,
                                     sqlCol, tableId, typeLinkId, dimensionUUID);
                     id2Set.put(id, set);
                 } else {
-                    final Attribute attr = new Attribute(id, _type.getId(), name, sqlCol, tableId,
+                    final Attribute attr = new Attribute(id, type.getId(), name, sqlCol, tableId,
                                     attrTypeId, defaultval, dimensionUUID);
 
                     final UUID uuid = attr.getAttributeType().getUUID();
@@ -1068,7 +1073,7 @@ public class Attribute
                         attribute2setId.put(attr, parentSetId);
                     } else {
                         attributes.add(attr);
-                        Attribute.cacheAttribute(attr, _type);
+                        Attribute.cacheAttribute(attr, type);
                     }
                 }
             }
@@ -1086,8 +1091,8 @@ public class Attribute
                 Type.cacheType(set);
             }
 
-            _type.addAttributes(false, attributes.toArray(new Attribute[attributes.size()]));
-        } catch (final SQLException e) {
+            type.addAttributes(false, attributes.toArray(new Attribute[attributes.size()]));
+        } catch (final SQLException | EFapsException e) {
             throw new CacheReloadException("Cannot read attributes.", e);
         } finally {
             try {

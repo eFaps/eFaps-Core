@@ -152,12 +152,7 @@ public abstract class AbstractUserInterfaceObject
                             + "where T_UIACCESS.UIABSTRACT=" + getId());
             while (resultset.next()) {
                 final long userId = resultset.getLong(1);
-                final AbstractUserObject userObject = AbstractUserObject.getUserObject(userId);
-                if (userObject == null) {
-                    throw new CacheReloadException("user " + userId + " does not exists!");
-                } else {
-                    getAccess().add(userId);
-                }
+                getAccess().add(userId);
             }
             resultset.close();
         } catch (final SQLException e) {
@@ -350,7 +345,7 @@ public abstract class AbstractUserInterfaceObject
      * @throws CacheReloadException on error
      */
     @SuppressWarnings("unchecked")
-    protected static <V extends AbstractUserInterfaceObject> V get(final Long _id,
+    protected static synchronized <V extends AbstractUserInterfaceObject> V get(final Long _id,
                                final Class<V> _componentType,
                                final Type _type)
         throws CacheReloadException
@@ -419,9 +414,10 @@ public abstract class AbstractUserInterfaceObject
     /**
      * @param _object UIObject to be cache
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     protected static void cacheUIObject(final AbstractUserInterfaceObject _object)
     {
+        
         final var cache4UUID = InfinispanCache.get().<UUID, AbstractUserInterfaceObject>getCache(
                                         AbstractUserInterfaceObject.getUUIDCacheName(_object.getClass()));
         cache4UUID.put(_object.getUUID(), _object);
@@ -433,6 +429,7 @@ public abstract class AbstractUserInterfaceObject
         final var idCache = InfinispanCache.get().<Long, AbstractUserInterfaceObject>getCache(
                                         AbstractUserInterfaceObject.getIDCacheName(_object.getClass()));
         idCache.put(_object.getId(), _object);
+        
     }
 
     /**
@@ -575,5 +572,6 @@ public abstract class AbstractUserInterfaceObject
 
         }
         BundleMaker.initialize();
+
     }
 }

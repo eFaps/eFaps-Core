@@ -18,14 +18,13 @@ package org.efaps.admin.ui;
 import java.util.List;
 import java.util.Map;
 
-import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 
 @ProtoAdapter(Form.class)
 public class FormAdapter
-    extends AbstractAdminObjectAdapter
+    extends AbstractCollectionAdapter
 {
 
     @ProtoFactory
@@ -34,10 +33,12 @@ public class FormAdapter
                 final String name,
                 Map<String, String> propertyMap,
                 List<EventDefinition> events,
-                boolean eventChecked)
+                boolean eventChecked,
+                List<Long> fieldIds)
     {
         final var form = new Form(id, uuid, name);
         setPropertiesMap(form, propertyMap);
+        setFields(form, fieldIds);
         return form;
     }
 

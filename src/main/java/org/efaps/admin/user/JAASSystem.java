@@ -411,14 +411,14 @@ public final class JAASSystem
     /**
      * @param _group Group to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     private static void cacheJAASSystem(final JAASSystem _group)
     {
         final var nameCache = InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE);
-        nameCache.putIfAbsent(_group.getName(), _group);
+        nameCache.put(_group.getName(), _group);
 
         final var idCache = InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE);
-        idCache.putIfAbsent(_group.getId(), _group);
+        idCache.put(_group.getId(), _group);
     }
 
     /**

@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.ui;
 
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +44,7 @@ import org.efaps.util.cache.CacheReloadException;
 public abstract class AbstractCollection
     extends AbstractUserInterfaceObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -67,12 +66,7 @@ public abstract class AbstractCollection
      * @see #getFields
      * @see #add(Field)
      */
-    private final Map<Long, Field> fields = new TreeMap<>();
-
-    /**
-     * Map to have the fields belonging to this collection accessible for name.
-     */
-    private final Map<String, Field> fieldName2Field = new TreeMap<>();
+    private List<Long> fieldIds = new ArrayList<>();
 
     /**
      * Instance variable for the length of the field expression list.
@@ -88,6 +82,8 @@ public abstract class AbstractCollection
      * @see #getSelect
      */
     private String select = null;
+
+    private final Map<Long, Field> fields = new TreeMap<>();
 
     /**
      * Constructor passing on to the super constructor.
@@ -111,7 +107,7 @@ public abstract class AbstractCollection
     public void add(final Field _field)
     {
         this.fields.put(_field.getId(), _field);
-        this.fieldName2Field.put(_field.getName(), _field);
+        this.fieldIds.add(_field.getId());
         if (_field.getReference() != null && _field.getReference().length() > 0) {
             final String ref = _field.getReference();
             int index;
@@ -178,6 +174,7 @@ public abstract class AbstractCollection
     /**
      * The instance method reads all needed information for this user interface
      * object.
+     *
      * @throws EFapsException
      *
      * @see #readFromDB4Fields
@@ -204,12 +201,12 @@ public abstract class AbstractCollection
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.Field.Collection, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
             multi.addAttribute(CIAdminUserInterface.Field.Type,
-                               CIAdminUserInterface.Field.Name);
+                            CIAdminUserInterface.Field.Name);
             multi.executeWithoutAccessCheck();
 
             while (multi.next()) {
                 final long id = multi.getCurrentInstance().getId();
-                final String name =  multi.<String>getAttribute(CIAdminUserInterface.Field.Name);
+                final String name = multi.<String>getAttribute(CIAdminUserInterface.Field.Name);
                 final Type type = multi.<Type>getAttribute(CIAdminUserInterface.Field.Type);
                 final Field field;
                 if (type.equals(CIAdminUserInterface.FieldCommand.getType())) {
@@ -247,6 +244,15 @@ public abstract class AbstractCollection
     public List<Field> getFields()
     {
         return new ArrayList<>(this.fields.values());
+    }
+
+    protected List<Long> getFieldIds()
+    {
+        return this.fieldIds;
+    }
+
+    protected void setFieldIds(List<Long> fieldIds) {
+        this.fieldIds = fieldIds;
     }
 
     /**
@@ -305,11 +311,12 @@ public abstract class AbstractCollection
 
     /**
      * Method to get a field belonging to this collection by its name.
+     *
      * @param _fieldName name of the field wanted
      * @return Field if found, else null
      */
-    public Field getField(final String _fieldName)
+    public Field getField(final String fieldName)
     {
-        return this.fieldName2Field.get(_fieldName);
+        return getFields().stream().filter(field -> field.getName().equals(fieldName)).findFirst().orElse(null);
     }
 }

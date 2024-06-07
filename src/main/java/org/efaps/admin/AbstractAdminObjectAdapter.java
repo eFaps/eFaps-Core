@@ -81,17 +81,13 @@ public class AbstractAdminObjectAdapter
     }
 
     public void setEvents(final AbstractAdminObject adminObject,
-                          final List<EventDefinition> events)
+                          final List<EventDefinition> events,
+                          boolean eventChecked)
     {
         if (!events.isEmpty()) {
             final var map = events.stream().collect(Collectors.groupingBy(EventDefinition::getEventType));
             adminObject.getEvents().putAll(map);
         }
-    }
-
-    public void setEventsChecked(AbstractAdminObject adminObject,
-                                 boolean eventChecked)
-    {
         adminObject.setEventChecked(eventChecked);
     }
 }

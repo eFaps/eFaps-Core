@@ -700,6 +700,8 @@ public final class SystemConfiguration
      */
     private static void cacheSytemConfig(final SystemConfiguration _sysConfig)
     {
+        
+
         final var cache4UUID = InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE);
         cache4UUID.put(_sysConfig.getUUID(), _sysConfig);
 
@@ -707,7 +709,9 @@ public final class SystemConfiguration
         nameCache.put(_sysConfig.getName(), _sysConfig);
 
         final var idCache = InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE);
-        idCache.putIfAbsent(_sysConfig.getId(), _sysConfig);
+        idCache.put(_sysConfig.getId(), _sysConfig);
+
+        
     }
 
     /**

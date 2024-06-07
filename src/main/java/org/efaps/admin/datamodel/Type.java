@@ -522,7 +522,7 @@ public class Type
         Type parent = getParentType();
         final List<Attribute> attributesTmp = new ArrayList<>();
         while (parent != null) {
-            for (final Attribute attribute : getParentType().getAttributes().values()) {
+            for (final Attribute attribute : parent.getAttributes().values()) {
                 attributesTmp.add(attribute.copy(getId()));
             }
             parent = parent.getParentType();
@@ -1436,24 +1436,10 @@ public class Type
     public static void initialize(final Class<?> _class)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(Type.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE, Type.LOG);
-        }
-        if (InfinispanCache.get().exists(Type.IDCACHE)) {
-            InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE, Type.LOG);
-        }
-        if (InfinispanCache.get().exists(Type.NAMECACHE)) {
-            InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE, Type.LOG);
-        }
-        if (InfinispanCache.get().exists(EnumType.CACHE)) {
-            InfinispanCache.get().getCache(EnumType.CACHE).clear();
-        }
+        InfinispanCache.get().<UUID, Type>initCache(Type.UUIDCACHE, Type.LOG);
+        InfinispanCache.get().<Long, Type>initCache(Type.IDCACHE, Type.LOG);
+        InfinispanCache.get().<String, Type>initCache(Type.NAMECACHE, Type.LOG);
+        InfinispanCache.get().<String, Object>initCache(EnumType.CACHE, Type.LOG);
         QueryCache.initialize();
     }
 
@@ -1483,13 +1469,7 @@ public class Type
         if (!cache.containsKey(_id)) {
             Type.getTypeFromDB(Type.SQL_ID, _id);
         }
-        Type ret = cache.get(_id);
-        if (ret != null && ret.isDirty()) {
-            Type.LOG.debug("Recaching dirty Type for id: {}", ret);
-            Type.cacheType(ret);
-            ret = cache.get(_id);
-        }
-        return ret;
+        return cache.get(_id);
     }
 
     /**
@@ -1507,13 +1487,7 @@ public class Type
         if (!cache.containsKey(_name)) {
             Type.getTypeFromDB(Type.SQL_NAME, _name);
         }
-        Type ret = cache.get(_name);
-        if (ret != null && ret.isDirty()) {
-            Type.LOG.debug("Recaching dirty Type for name: {}", ret);
-            Type.cacheType(ret);
-            ret = cache.get(_name);
-        }
-        return ret;
+        return cache.get(_name);
     }
 
     /**
@@ -1531,13 +1505,7 @@ public class Type
         if (!cache.containsKey(_uuid)) {
             Type.getTypeFromDB(Type.SQL_UUID, _uuid.toString());
         }
-        Type ret = cache.get(_uuid);
-        if (ret != null && ret.isDirty()) {
-            Type.LOG.debug("Recaching dirty Type for uuid: {}", ret);
-            Type.cacheType(ret);
-            ret = cache.get(_uuid);
-        }
-        return ret;
+        return cache.get(_uuid);
     }
 
     /**
@@ -1545,7 +1513,8 @@ public class Type
      */
     protected static void cacheType(final Type _type)
     {
-        _type.setUndirty();
+        
+
         final var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         cache4UUID.put(_type.getUUID(), _type);
 
@@ -1554,6 +1523,8 @@ public class Type
 
         final var idCache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         idCache.put(_type.getId(), _type);
+
+        
     }
 
     /**
@@ -1697,14 +1668,6 @@ public class Type
             con.commit();
             con.close();
             if (ret != null) {
-                if (parentTypeId != 0) {
-                    Type.LOG.trace("get parent for id = {}", parentTypeId);
-                    final Type parent = Type.get(parentTypeId);
-                    // TODO: test if loop
-                    if (ret.getId() == parent.getId()) {
-                        throw new CacheReloadException("child and parent type is equal!child is " + ret);
-                    }
-                }
                 if (!ret.checked4Children) {
                     ret.checked4Children = true;
                     for (final Object[] childIDs : Type.getChildTypeIDs(ret.getId(), Type.SQL_CHILD)) {
@@ -1718,7 +1681,6 @@ public class Type
                             ((Classification) ret).getChildren().add((Long) childIDs[0]);
                         }
                     }
-                    ret.setDirty();
                 }
                 Attribute.add4Type(ret);
                 ret.readFromDB4Links();

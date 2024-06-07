@@ -503,7 +503,7 @@ public final class MsgPhrase
         nameCache.put(_phrase.getName(), _phrase);
 
        final var idCache = InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE);
-        idCache.putIfAbsent(_phrase.getId(), _phrase);
+        idCache.put(_phrase.getId(), _phrase);
     }
 
 

@@ -48,7 +48,7 @@ public class CommandAdapter
         command.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         command.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
         setPropertiesMap(command, propertyMap);
-        setEvents(command, events);
+        setEvents(command, events, eventChecked);
         return command;
     }
 

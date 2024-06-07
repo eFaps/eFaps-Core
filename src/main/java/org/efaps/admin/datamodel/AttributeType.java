@@ -334,14 +334,14 @@ public class AttributeType
     /**
      * @param _role AttributeType to be cached
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORE")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORE")
     private static void cacheAttributeType(final AttributeType _role)
     {
         final var nameCache = InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE);
-        nameCache.putIfAbsent(_role.getName(), _role);
+        nameCache.put(_role.getName(), _role);
 
         final var idCache = InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE);
-        idCache.putIfAbsent(_role.getId(), _role);
+        idCache.put(_role.getId(), _role);
     }
 
     /**

@@ -66,7 +66,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 TableAdapter.class,
                 TypeAdapter.class
 },
-                schemaFileName = "library.proto",
+                schemaFileName = "efaps.proto",
                 schemaFilePath = "proto/",
                 schemaPackageName = "efaps",
                 syntax = ProtoSyntax.PROTO3)

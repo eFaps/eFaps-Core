@@ -16,18 +16,15 @@
 package org.efaps.util.cache;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.ClientIntelligence;
-import org.infinispan.client.hotrod.configuration.NearCacheMode;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
-import org.infinispan.client.hotrod.transaction.lookup.GenericTransactionManagerLookup;
 import org.infinispan.commons.api.BasicCache;
-import org.infinispan.commons.api.BasicCacheContainer;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
@@ -63,7 +60,7 @@ public final class InfinispanCache
     /**
      * The manager for Infinspan.
      */
-    private BasicCacheContainer container;
+    private EmbeddedCacheManager container;
 
     /**
      * Singelton is wanted.
@@ -77,62 +74,65 @@ public final class InfinispanCache
      */
     private void init()
     {
-        if (true) {
-            final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
-                            .uri("hotrod://admin:secret@localhost:11222")
-                            .clientIntelligence(ClientIntelligence.BASIC)
-                            .addContextInitializer(new LibraryInitializerImpl())
-                            .connectionTimeout(20).batchSize(100)
-                            .connectionPool().minIdle(5)
-                            .transactionTimeout(1, TimeUnit.HOURS)
-                            .build();
-            container = new RemoteCacheManager(config);
-            registerSchemas((RemoteCacheManager) container);
-        } else if (this.container == null) {
-            try {
-                this.container = new DefaultCacheManager(this.getClass().getResourceAsStream(
-                                "/org/efaps/util/cache/infinispan-config.xml"));
-                if (this.container instanceof EmbeddedCacheManager) {
-                    ((EmbeddedCacheManager) this.container).addListener(new CacheLogListener(InfinispanCache.LOG));
+        registerSchemas();
+        try {
+            this.container = new DefaultCacheManager(this.getClass().getResourceAsStream(
+                            "/org/efaps/util/cache/infinispan-config-cluster.xml"), false);
+            final var remoteCacheManager = getRemoteCacheManager();
+            for (final var cacheName : this.container.getCacheNames()) {
+                final var cacheConfig = container.getCacheConfiguration(cacheName);
+                if (cacheConfig.clustering() != null && cacheConfig.clustering().cacheMode() != CacheMode.LOCAL) {
+                    final var xml = cacheConfig.toStringConfiguration(cacheName);
+                    System.out.println(xml);
+                    final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
+                                    .configuration(xml)
+                                    .transactionMode(TransactionMode.NONE);
+
+                    final var config = remoteCacheManager.getConfiguration();
+                    config.addRemoteCache(cacheName, consumer);
+                    remoteCacheManager.getCache(cacheName);
+
+                    // remoteCacheManager.administration().getOrCreateCache(cacheName,
+                    // xml);
                 }
-                final var cache = this.container
-                                .<String, Integer>getCache(InfinispanCache.COUNTERCACHE);
-                cache.put(InfinispanCache.COUNTERCACHE, 1);
-            } catch (final IOException e) {
-                InfinispanCache.LOG.error("IOException", e);
             }
-        } else {
-            final var cache = this.container
-                            .<String, Integer>getCache(InfinispanCache.COUNTERCACHE);
-            Integer count = cache.get(InfinispanCache.COUNTERCACHE);
-            if (count == null) {
-                count = 1;
-            } else {
-                count = count + 1;
-            }
-            cache.put(InfinispanCache.COUNTERCACHE, count);
+            remoteCacheManager.close();
+            this.container.start();
+        } catch (final IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
-    private void registerSchemas(RemoteCacheManager remoteCacheManager)
+    private RemoteCacheManager getRemoteCacheManager()
     {
+        final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
+                        .uri("hotrod://admin:secret@localhost:11222")
+                        .addContextInitializer(new LibraryInitializerImpl())
+                        .build();
+        return new RemoteCacheManager(config);
+    }
+
+    private void registerSchemas()
+    {
+        final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
+                        .uri("hotrod://admin:secret@localhost:11222")
+                        .addContextInitializer(new LibraryInitializerImpl())
+                        .build();
+
+        final var remoteCacheManager = new RemoteCacheManager(config);
 
         final var initializer = remoteCacheManager.getConfiguration().getContextInitializers().get(0);
-        // Store schemas in the '___protobuf_metadata' cache to register them.
-        // Using ProtobufMetadataManagerConstants might require the query
-        // dependency.
         final RemoteCache<String, String> protoMetadataCache = remoteCacheManager
                         .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-        protoMetadataCache.putIfAbsent(initializer.getProtoFileName(), initializer.getProtoFile());
-        // Ensure the registered Protobuf schemas do not contain errors.
-        // Throw an exception if errors exist.
+        protoMetadataCache.put(initializer.getProtoFileName(), initializer.getProtoFile());
         final String errors = protoMetadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
         if (errors != null) {
             throw new IllegalStateException("Some Protobuf schema files contain errors: " +
                             errors + "\nSchema :\n" + initializer.getProtoFileName());
         }
+        remoteCacheManager.close();
     }
-
 
     /**
      * Terminate the manager.
@@ -160,29 +160,6 @@ public final class InfinispanCache
      */
     public synchronized <K, V> BasicCache<K, V> getCache(final String cacheName)
     {
-        if (this.container instanceof RemoteCacheManager) {
-
-            final var config = ((RemoteCacheManager) this.container).getConfiguration();
-            if (!config.remoteCaches().containsKey(cacheName)) {
-
-                final var tep = """
-<replicated-cache name=\"org.efaps.admin.common.SystemConfiguration.UUID\" mode=\"SYNC\" statistics=\"true\">
-    <encoding media-type=\"application/x-protostream\"/>
-    <locking isolation=\"REPEATABLE_READ\"/>
-    <transaction mode=\"NON_XA\" locking=\"OPTIMISTIC\"/>
-</replicated-cache>
-                            """;
-                final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
-                                //.templateName(DefaultTemplate.REPL_ASYNC)
-                                .configuration(tep)
-                                .nearCacheMode(NearCacheMode.DISABLED)
-                                .nearCacheMaxEntries(1000)
-                                .nearCacheUseBloomFilter(false)
-                                .transactionManagerLookup(GenericTransactionManagerLookup.getInstance())
-                                .transactionMode(TransactionMode.NON_XA);
-                config.addRemoteCache(cacheName, consumer);
-            }
-        }
         return this.container.getCache(cacheName);
     }
 
@@ -197,7 +174,7 @@ public final class InfinispanCache
      *
      * @return the manager for Infinspan
      */
-    public BasicCacheContainer getContainer()
+    public EmbeddedCacheManager getContainer()
     {
         return this.container;
     }
@@ -215,18 +192,19 @@ public final class InfinispanCache
         return this.initCache(cacheName, null);
     }
 
-    public <K, V> BasicCache<K, V> initCache(final String cacheName,
-                                             final Consumer<RemoteCacheConfigurationBuilder> consumer)
+    public <K, V> Cache<K, V> initCache(final String cacheName,
+                                        final Logger logger)
     {
-        if (this.container instanceof RemoteCacheManager) {
-            final var config = ((RemoteCacheManager) this.container).getConfiguration();
-            config.addRemoteCache(cacheName, consumer);
-        } else if (!exists(cacheName)
-                        && ((EmbeddedCacheManager) getContainer()).getCacheConfiguration(cacheName) == null) {
-            ((EmbeddedCacheManager) getContainer()).defineConfiguration(cacheName, "eFaps-Default",
+        final var cacheConfig = container.getCacheConfiguration(cacheName);
+        if (!exists(cacheName) && cacheConfig == null) {
+            getContainer().defineConfiguration(cacheName, "eFaps-Default",
                             new ConfigurationBuilder().build());
         }
-        return this.container.getCache(cacheName);
+        final Cache<K, V> cache = this.container.getCache(cacheName);
+        if (logger != null) {
+            cache.addListener(new CacheLogListener(logger));
+        }
+        return cache;
     }
 
     /**
@@ -235,13 +213,7 @@ public final class InfinispanCache
      */
     public boolean exists(final String _cacheName)
     {
-        final boolean ret;
-        if (this.container instanceof EmbeddedCacheManager) {
-            ret = ((EmbeddedCacheManager) this.container).cacheExists(_cacheName);
-        } else {
-            ret = true;
-        }
-        return ret;
+        return this.container.cacheExists(_cacheName);
     }
 
     /**
@@ -260,7 +232,9 @@ public final class InfinispanCache
                 InfinispanCache.CACHEINSTANCE.init();
             }
         }
-        return InfinispanCache.CACHEINSTANCE;
+        synchronized (InfinispanCache.CACHEINSTANCE) {
+            return InfinispanCache.CACHEINSTANCE;
+        }
     }
 
     /**

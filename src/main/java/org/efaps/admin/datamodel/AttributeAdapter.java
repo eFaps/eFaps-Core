@@ -53,8 +53,7 @@ public class AttributeAdapter
             final var attr =  new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
                             dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId));
             setPropertiesMap(attr, propertyMap);
-            setEvents(attr, events);
-            setEventsChecked(attr, eventChecked);
+            setEvents(attr, events, eventChecked);
             return attr;
         } catch (final EFapsException e) {
             // TODO Auto-generated catch block

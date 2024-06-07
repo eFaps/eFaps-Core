@@ -232,13 +232,13 @@ public final class AccessType
     private static void cacheAccessType(final AccessType _accessType)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE);
-        cache4UUID.putIfAbsent(_accessType.getUUID(), _accessType);
+        cache4UUID.put(_accessType.getUUID(), _accessType);
 
         final var nameCache = InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE);
-        nameCache.putIfAbsent(_accessType.getName(), _accessType);
+        nameCache.put(_accessType.getName(), _accessType);
 
         final var idCache = InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE);
-        idCache.putIfAbsent(_accessType.getId(), _accessType);
+        idCache.put(_accessType.getId(), _accessType);
     }
 
     /**

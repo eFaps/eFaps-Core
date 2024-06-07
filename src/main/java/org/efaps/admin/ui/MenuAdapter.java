@@ -48,8 +48,7 @@ public class MenuAdapter
         menu.setTypeMenu(typeMenu);
         menu.setCommandsInternal(ProtoUtils.fromMap(commands));
         setPropertiesMap(menu, propertyMap);
-        setEvents(menu, events);
-        setEventsChecked(menu, eventChecked);
+        setEvents(menu, events, eventChecked);
         menu.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
         menu.setTargetMenuId(ProtoUtils.toNullLong(targetMenuId));
         menu.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));

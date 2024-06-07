@@ -381,13 +381,13 @@ public final class NumberGenerator
     private static void cacheNumberGenerator(final NumberGenerator _numberGenerator)
     {
         final var cache4UUID = InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE);
-        cache4UUID.putIfAbsent(_numberGenerator.getUUID(), _numberGenerator);
+        cache4UUID.put(_numberGenerator.getUUID(), _numberGenerator);
 
         final var nameCache = InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE);
-        nameCache.putIfAbsent(_numberGenerator.getName(), _numberGenerator);
+        nameCache.put(_numberGenerator.getName(), _numberGenerator);
 
         final var idCache = InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE);
-        idCache.putIfAbsent(_numberGenerator.getId(), _numberGenerator);
+        idCache.put(_numberGenerator.getId(), _numberGenerator);
     }
 
     /**

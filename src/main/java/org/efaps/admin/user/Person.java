@@ -1673,10 +1673,11 @@ public final class Person
      * @param _person Person to be cached
      * @throws EFapsException on error
      */
-    @SuppressFBWarnings("RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED")
+    @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORED")
     private static void cachePerson(final Person _person)
         throws EFapsException
     {
+
         final var nameCache = InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE);
         nameCache.put(_person.getName(), _person, 15, TimeUnit.MINUTES);
 
@@ -1687,6 +1688,7 @@ public final class Person
             final var uuidCache = InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE);
             uuidCache.put(_person.getUUID(), _person, 15, TimeUnit.MINUTES);
         }
+
     }
 
     /**

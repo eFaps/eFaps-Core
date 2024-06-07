@@ -24,12 +24,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.CacheReloadException;
+import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 
 @ProtoAdapter(Type.class)
-public class TypeAdapter extends AbstractAdminObjectAdapter
+public class TypeAdapter
+    extends AbstractAdminObjectAdapter
 {
 
     @ProtoFactory
@@ -89,9 +91,7 @@ public class TypeAdapter extends AbstractAdminObjectAdapter
             type.setAttributeIds(ret);
 
             setPropertiesMap(type, propertyMap);
-            setEvents(type, events);
-            setEventsChecked(type, eventChecked);
-
+            setEvents(type, events, eventChecked);
         } catch (final CacheReloadException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -99,7 +99,7 @@ public class TypeAdapter extends AbstractAdminObjectAdapter
         return type;
     }
 
-    @ProtoField(number =104)
+    @ProtoField(number = 104)
     Long getParentTypeId(Type type)
     {
         return type.getParentTypeId();
@@ -210,10 +210,6 @@ public class TypeAdapter extends AbstractAdminObjectAdapter
     @ProtoField(number = 122)
     Map<String, String> getAttributeIds(Type type)
     {
-        final Map<String, String> ret = new HashMap<>();
-        for (final var entry : type.getAttributeIds().entrySet()) {
-            ret.put(entry.getKey(), entry.getValue().toString());
-        }
-        return ret;
+        return ProtoUtils.toMap(type.getAttributeIds());
     }
 }
