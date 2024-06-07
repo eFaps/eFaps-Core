@@ -123,13 +123,6 @@ public abstract class AbstractAdminObject
     private boolean eventChecked = false;
 
     /**
-     * Is this Admin Object dirty, meaning was it altered after first initialization
-     * and it might be necessary to cache it again.
-     */
-    private boolean dirty = false;
-
-
-    /**
      * Constructor to set instance variables {@link #id}, {@link #uuid} and
      * {@link #name} of this administrational object.
      *
@@ -164,7 +157,7 @@ public abstract class AbstractAdminObject
                                    final String _toName)
         throws EFapsException
     {
-        setDirty();
+
     }
 
     /**
@@ -181,7 +174,6 @@ public abstract class AbstractAdminObject
         throws CacheReloadException
     {
         getProperties().put(_name, _value);
-        setDirty();
     }
 
     /**
@@ -265,7 +257,6 @@ public abstract class AbstractAdminObject
         if (evenList.size() > 1) {
             Collections.sort(evenList, Comparator.comparing(EventDefinition::getIndexPos));
         }
-        setDirty();
     }
 
     /**
@@ -568,37 +559,11 @@ public abstract class AbstractAdminObject
         this.eventChecked = eventChecked;
     }
 
-
     protected boolean isEventChecked()
     {
         return eventChecked;
     }
 
-    /**
-     * Getter method for the instance variable {@link #dirty}.
-     *
-     * @return value of instance variable {@link #dirty}
-     */
-    public boolean isDirty()
-    {
-        return dirty;
-    }
-
-    /**
-     * Declare Object as dirty.
-     */
-    protected void setDirty()
-    {
-        dirty = true;
-    }
-
-    /**
-     * Declare Object as undirty.
-     */
-    protected void setUndirty()
-    {
-        dirty = false;
-    }
     /**
      * The method overrides the original method 'toString' and returns the name
      * of the user interface object.

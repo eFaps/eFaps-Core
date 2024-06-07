@@ -53,7 +53,7 @@ public class AttributeSetAdapter
                         Long typeIconId,
                         Long typeFormId,
                         Long storeId,
-                        Map<String, String> attributeIds,
+                        Set<Long> attributeIds,
                         long attributeTypeId,
                         String attributeName,
                         final Map<String, String> propertyMap,

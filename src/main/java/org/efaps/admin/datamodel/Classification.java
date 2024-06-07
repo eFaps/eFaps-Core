@@ -164,7 +164,6 @@ public class Classification
     protected void setParentClassification(final Long _parentClassification)
     {
         this.parent = _parentClassification;
-        setDirty();
     }
 
     /**

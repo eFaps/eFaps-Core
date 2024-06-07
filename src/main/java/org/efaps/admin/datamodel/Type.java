@@ -232,7 +232,7 @@ public class Type
      * Caching
      *
      */
-    private Map<String, Long> attributeIds = new HashMap<>();
+    private Set<Long> attributeIds = new HashSet<>();
 
     /**
      * Internal
@@ -478,7 +478,7 @@ public class Type
         throws CacheReloadException
     {
         for (final Attribute attribute : _attributes) {
-            if (!attributeIds.containsKey(attribute.getName())) {
+            if (!attributeIds.contains(attribute.getId())) {
                 Type.LOG.trace("adding Attribute:'{}' to type: '{}'", attribute.getName(), getName());
                 // evaluate for type attribute
                 if (attribute.getAttributeType().getClassRepr().equals(TypeType.class)) {
@@ -498,7 +498,7 @@ public class Type
                     // evaluate for association
                     associationAttributeName = attribute.getName();
                 }
-                attributeIds.put(attribute.getName(), attribute.getId());
+                attributeIds.add(attribute.getId());
                 if (attribute.getTable() != null) {
                     tableIds.add(attribute.getTable().getId());
                     attribute.getTable().addType(getId());
@@ -506,7 +506,6 @@ public class Type
                         setMainTable(attribute.getTable());
                     }
                 }
-                setDirty();
             }
         }
     }
@@ -811,7 +810,6 @@ public class Type
     public void addAccessSet(final AccessSet _accessSet)
     {
         accessSetIds.add(_accessSet.getId());
-        setDirty();
     }
 
     /**
@@ -836,7 +834,6 @@ public class Type
                 AccessSet.get(accessSet);
                 accessSetIds.add(accessSet);
             }
-            setDirty();
         }
         final Set<AccessSet> ret = new HashSet<>();
         for (final Long id : accessSetIds) {
@@ -934,7 +931,6 @@ public class Type
     {
         checked4classifiedBy = true;
         classifiedByTypeIds.add(_classification.getId());
-        setDirty();
     }
 
     protected Set<Long> getClassifiedByTypeIds()
@@ -970,7 +966,6 @@ public class Type
                 Type.get(query.getCurrentValue().getId());
             }
             checked4classifiedBy = true;
-            setDirty();
         }
         final Set<Classification> ret = new HashSet<>();
         if (getParentType() != null) {
@@ -1030,9 +1025,10 @@ public class Type
             ret = attributesInternal;
         } else {
             ret = new HashMap<>();
-            for (final var entry : attributeIds.entrySet()) {
+            for (final var attributeId : attributeIds) {
                 try {
-                    ret.put(entry.getKey(), Attribute.get(entry.getValue()));
+                    final var attr = Attribute.get(attributeId);
+                    ret.put(attr.getName(), attr);
                 } catch (final CacheReloadException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -1201,7 +1197,6 @@ public class Type
             } else {
                 typeMenuId = (long) 0;
             }
-            setDirty();
         }
         if (typeMenuId == 0 && getParentType() != null) {
             ret = getParentType().getTypeMenu();
@@ -1237,7 +1232,6 @@ public class Type
             } else {
                 typeIconId = (long) 0;
             }
-            setDirty();
         }
         if (typeIconId == 0 && getParentType() != null) {
             ret = getParentType().getTypeIcon();
@@ -1272,7 +1266,6 @@ public class Type
             } else {
                 typeFormId = (long) 0;
             }
-            setDirty();
         }
         if (typeFormId == 0 && getParentType() != null) {
             ret = getParentType().getTypeForm();
@@ -1367,12 +1360,12 @@ public class Type
         this.associationAttributeName = associationAttributeName;
     }
 
-    protected Map<String, Long> getAttributeIds()
+    protected Set<Long> getAttributeIds()
     {
         return attributeIds;
     }
 
-    protected void setAttributeIds(final Map<String, Long> attributeIds)
+    protected void setAttributeIds(final Set<Long> attributeIds)
     {
         this.attributeIds = attributeIds;
     }
@@ -1405,7 +1398,6 @@ public class Type
                         .append("checked4AccessSet", checked4AccessSet)
                         .append("checked4Children", checked4Children)
                         .append("checked4classifiedBy", checked4classifiedBy)
-                        .append("dirty", isDirty())
                         .toString();
     }
 
@@ -1513,7 +1505,7 @@ public class Type
      */
     protected static void cacheType(final Type _type)
     {
-        
+
 
         final var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         cache4UUID.put(_type.getUUID(), _type);
@@ -1524,45 +1516,7 @@ public class Type
         final var idCache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         idCache.put(_type.getId(), _type);
 
-        
-    }
 
-    /**
-     * In case of a cluster the types must be cached after the final loading
-     * again to be sure that the last instance including all the changes like
-     * attribute links etc are up to date.
-     *
-     * @param _type Type the Hierachy must be cached
-     * @throws CacheReloadException on error
-     *
-     *             protected static void cacheTypesByHierachy(final Type _type)
-     *             throws CacheReloadException { var cache4UUID =
-     *             InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
-     *             if (cache4UUID.getCacheConfiguration().clustering() != null
-     *             &&
-     *             !cache4UUID.getCacheConfiguration().clustering().cacheMode().equals(CacheMode.LOCAL))
-     *             { Type type = _type; while (type.getParentTypeId() != null) {
-     *             var cache = InfinispanCache.get().<Long,
-     *             Type>getCache(Type.IDCACHE); if
-     *             (cache.containsKey(type.getParentTypeId())) { type =
-     *             cache.get(type.getParentTypeId()); } else { type =
-     *             type.getParentType(); } } type.recacheChildren(); } }
-     */
-
-    /**
-     * Recache the children in dropdown. Used for Caching in cluster.
-     *
-     * @throws CacheReloadException on error
-     */
-    private void recacheChildren()
-        throws CacheReloadException
-    {
-        if (isDirty()) {
-            Type.cacheType(this);
-        }
-        for (final Type child : getChildTypes()) {
-            child.recacheChildren();
-        }
     }
 
     /**

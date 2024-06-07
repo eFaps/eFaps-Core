@@ -15,7 +15,6 @@
  */
 package org.efaps.admin.datamodel;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +55,7 @@ public class TypeAdapter
                 Long typeIconId,
                 Long typeFormId,
                 Long storeId,
-                Map<String, String> attributeIds,
+                Set<Long> attributeIds,
                 final Map<String, String> propertyMap,
                 List<EventDefinition> events,
                 boolean eventChecked)
@@ -68,7 +67,7 @@ public class TypeAdapter
             type.setAbstract(abstractB);
             type.setHistory(history);
             type.setGeneralInstance(generalInstance);
-            type.setMainTableId(mainTableId);
+            type.setMainTableId(ProtoUtils.toNullLong(mainTableId));
             type.setChildTypeIds(childTypeIds);
             type.setClassifiedByTypeIds(classifiedByTypeIds);
             type.setTableIds(tableIds);
@@ -83,13 +82,7 @@ public class TypeAdapter
             type.setTypeIconId(typeIconId);
             type.setTypeFormId(typeFormId);
             type.setStoreId(storeId);
-
-            final Map<String, Long> ret = new HashMap<>();
-            for (final var entry : attributeIds.entrySet()) {
-                ret.put(entry.getKey(), Long.valueOf(entry.getValue()));
-            }
-            type.setAttributeIds(ret);
-
+            type.setAttributeIds(attributeIds);
             setPropertiesMap(type, propertyMap);
             setEvents(type, events, eventChecked);
         } catch (final CacheReloadException e) {
@@ -208,8 +201,8 @@ public class TypeAdapter
     }
 
     @ProtoField(number = 122)
-    Map<String, String> getAttributeIds(Type type)
+    Set<Long> getAttributeIds(Type type)
     {
-        return ProtoUtils.toMap(type.getAttributeIds());
+        return type.getAttributeIds();
     }
 }
