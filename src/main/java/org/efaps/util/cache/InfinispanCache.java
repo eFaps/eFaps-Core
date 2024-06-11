@@ -63,7 +63,7 @@ public final class InfinispanCache
      */
     private EmbeddedCacheManager container;
 
-    private String prefix;
+    private String prefix = "";
 
     /**
      * Singelton is wanted.
@@ -78,32 +78,43 @@ public final class InfinispanCache
     private void init()
     {
         final var config = ConfigProvider.getConfig();
-        prefix = config.getOptionalValue("core.cache.prefix", String.class).orElse("");
+        final boolean clustered = config.getOptionalValue("core.cache.cluster.active", Boolean.class).orElse(false);
 
-        registerSchemas();
+        if (clustered) {
+            prefix = config.getOptionalValue("core.cache.cluster.prefix", String.class).orElse("");
+            registerSchemas();
+        }
         try {
-            this.container = new DefaultCacheManager(this.getClass().getResourceAsStream(
-                            "/org/efaps/util/cache/infinispan-config-cluster.xml"), false);
-            final var remoteCacheManager = getRemoteCacheManager();
-            for (final var cacheName : this.container.getCacheNames()) {
-                final var cacheConfig = container.getCacheConfiguration(cacheName);
-                if (cacheConfig.clustering() != null && cacheConfig.clustering().cacheMode() != CacheMode.LOCAL) {
-                    final var xml = cacheConfig.toStringConfiguration(cacheName);
-                    System.out.println(xml);
-                    final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
-                                    .configuration(xml)
-                                    .transactionMode(TransactionMode.NONE);
-
-                    final var remoteConfig = remoteCacheManager.getConfiguration();
-                    remoteConfig.addRemoteCache(cacheName, consumer);
-                    remoteCacheManager.getCache(cacheName);
-                }
+            if (StringUtils.isNotEmpty(this.prefix)) {
+                System.getProperties().put("prefix", prefix + "-");
             }
-            remoteCacheManager.close();
+
+            this.container = new DefaultCacheManager(this.getClass()
+                            .getResourceAsStream(clustered ? "/org/efaps/util/cache/infinispan-config-cluster.xml"
+                                            : "/org/efaps/util/cache/infinispan-config.xml"),
+                            false);
+
+            if (clustered) {
+                final var remoteCacheManager = getRemoteCacheManager();
+                for (final var cacheName : this.container.getCacheNames()) {
+                    final var cacheConfig = container.getCacheConfiguration(cacheName);
+                    if (cacheConfig.clustering() != null && cacheConfig.clustering().cacheMode() != CacheMode.LOCAL) {
+                        final var xml = cacheConfig.toStringConfiguration(cacheName);
+                        System.out.println(xml);
+                        final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
+                                        .configuration(xml)
+                                        .transactionMode(TransactionMode.NONE);
+
+                        final var remoteConfig = remoteCacheManager.getConfiguration();
+                        remoteConfig.addRemoteCache(cacheName, consumer);
+                        remoteCacheManager.getCache(cacheName);
+                    }
+                }
+                remoteCacheManager.close();
+            }
             this.container.start();
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+           LOG.error("Catched", e);
         }
     }
 
@@ -192,13 +203,14 @@ public final class InfinispanCache
     public <K, V> Cache<K, V> initCache(final String cacheName,
                                         final Logger logger)
     {
-        LOG.info("Initializing Cache {}", cacheName);
-        final var cacheConfig = container.getCacheConfiguration(cacheName);
+        final var name = getCacheName(cacheName);
+        LOG.info("Initializing Cache {}", name);
+        final var cacheConfig = container.getCacheConfiguration(name);
         if (!exists(cacheName) && cacheConfig == null) {
-            getContainer().defineConfiguration(cacheName, "eFaps-Default",
+            getContainer().defineConfiguration(name, "eFaps-Default",
                             new ConfigurationBuilder().build());
         }
-        final Cache<K, V> cache = this.container.getCache(cacheName);
+        final Cache<K, V> cache = this.container.getCache(name);
         if (logger != null) {
             cache.addListener(new CacheLogListener(logger));
         }

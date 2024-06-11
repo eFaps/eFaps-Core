@@ -32,11 +32,11 @@
         <serialization>
             <context-initializer class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
         </serialization>
-        <local-cache-configuration name="eFaps-Default">
-        </local-cache-configuration>
+
+        <local-cache-configuration name="eFaps-Default"></local-cache-configuration>
 
         <!-- the Access cache -->
-        <local-cache name="org.efaps.admin.access.user.AccessCache.PermissionCache">
+        <local-cache name="${prefix:}org.efaps.admin.access.user.AccessCache.PermissionCache">
             <memory max-count="5000" />
             <!--10 minutes, 5 minutes (miliseconds) -->
             <expiration
@@ -51,29 +51,29 @@
                 </indexed-entities>
             </indexing>
         </local-cache>
-        <local-cache name="org.efaps.admin.access.user.AccessCache.StatusCache" />
-        <local-cache name="org.efaps.admin.common.Association.UUID" />
-        <local-cache name="org.efaps.admin.common.Association.ID" />
-        <local-cache name="org.efaps.admin.common.Association.Name" />
-        <local-cache name="org.efaps.admin.common.Association.Key" />
-        <local-cache name="org.efaps.util.cache.InfinispanCache.InternalCounter" />
-        <local-cache name="org.efaps.admin.ui.Module.UUID" />
-        <local-cache name="org.efaps.admin.ui.Module.ID" />
-        <local-cache name="org.efaps.admin.ui.Module.Name" />
-        <local-cache name="org.efaps.admin.ui.Search.UUID" />
-        <local-cache name="org.efaps.admin.ui.Search.ID" />
-        <local-cache name="org.efaps.admin.ui.Search.Name" />
-        <local-cache name="org.efaps.admin.ui.Form.UUID" />
-        <local-cache name="org.efaps.admin.ui.Form.ID" />
-        <local-cache name="org.efaps.admin.ui.Form.Name" />
-        <local-cache name="org.efaps.admin.ui.Table.UUID" />
-        <local-cache name="org.efaps.admin.ui.Table.ID" />
-        <local-cache name="org.efaps.admin.ui.Table.Name" />
-        <local-cache name="org.efaps.admin.index.Queue.Cache" />
-        <local-cache name="org.efaps.admin.index.IndexDefinition.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.access.user.AccessCache.StatusCache" />
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.Key" />
+        <local-cache name="${prefix:}org.efaps.util.cache.InfinispanCache.InternalCounter" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Table.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Table.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Table.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" />
+        <local-cache name="${prefix:}org.efaps.admin.index.IndexDefinition.UUID" />
 
         <!-- the Sql Query cache -->
-        <local-cache name="org.efaps.db.QueryCache">
+        <local-cache name="${prefix:}org.efaps.db.QueryCache">
             <!--Only experation no eviction 10 minutes, 5 minutes (miliseconds) -->
             <expiration
                 lifespan="600000"
@@ -90,7 +90,7 @@
         </local-cache>
         <!---Only experation no eviction, 10 minutes, 5 minutes (miliseconds) -->
         <!--
-        <local-cache name="org.efaps.db.QueryCache.Index">
+        <local-cache name="${prefix:}org.efaps.db.QueryCache.Index">
 
             <expiration lifespan="600000" max-idle="300000" />
             <indexing storage="filesystem" path="${java.io.tmpdir}/infinispan" startup-mode="purge">
@@ -100,28 +100,28 @@
             </indexing>
         </local-cache>
             -->
-        <local-cache name="org.efaps.admin.dbproperty.DBProperties" />
+        <local-cache name="${prefix:}org.efaps.admin.dbproperty.DBProperties" />
 
         <!-- UserInterface -->
-        <local-cache name="org.efaps.admin.ui.field.Field" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.field.Field" />
 
-        <local-cache name="org.efaps.admin.ui.Command.UUID" />
-        <local-cache name="org.efaps.admin.ui.Command.ID" />
-        <local-cache name="org.efaps.admin.ui.Command.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Command.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Command.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Command.Name" />
 
-        <local-cache name="org.efaps.admin.ui.Menu.UUID" />
-        <local-cache name="org.efaps.admin.ui.Menu.ID" />
-        <local-cache name="org.efaps.admin.ui.Menu.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.Name" />
 
-        <local-cache name="org.efaps.admin.ui.Image.UUID" />
-        <local-cache name="org.efaps.admin.ui.Image.ID" />
-        <local-cache name="org.efaps.admin.ui.Image.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Image.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Image.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Image.Name" />
 
             <!-- DateModel -->
-        <local-cache name="org.efaps.admin.datamodel.AttributeType.ID" />
-        <local-cache name="org.efaps.admin.datamodel.AttributeType.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.AttributeType.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.AttributeType.Name" />
         <replicated-cache
-            name="org.efaps.admin.datamodel.SQLTable.UUID"
+            name="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID"
             mode="ASYNC"
             statistics="true"
         >
@@ -130,7 +130,7 @@
             <state-transfer timeout="60000"/>
         </replicated-cache>
         <replicated-cache
-            name="org.efaps.admin.datamodel.SQLTable.ID"
+            name="${prefix:}org.efaps.admin.datamodel.SQLTable.ID"
             mode="ASYNC"
             statistics="true"
         >
@@ -139,7 +139,7 @@
             <state-transfer timeout="60000"/>
         </replicated-cache>
         <replicated-cache
-            name="org.efaps.admin.datamodel.SQLTable.Name"
+            name="${prefix:}org.efaps.admin.datamodel.SQLTable.Name"
             mode="ASYNC"
             statistics="true"
         >
@@ -148,21 +148,12 @@
             <state-transfer timeout="60000"/>
         </replicated-cache>
 
-        <local-cache name="org.efaps.admin.access.AccessType.UUID" />
-        <local-cache name="org.efaps.admin.access.AccessType.ID" />
-        <local-cache name="org.efaps.admin.access.AccessType.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessType.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessType.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessType.Name" />
 
         <replicated-cache
-            name="org.efaps.admin.datamodel.Type.UUID"
-            mode="ASYNC"
-            statistics="true"
-        >
-            <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
-        </replicated-cache>
-        <replicated-cache
-            name="org.efaps.admin.datamodel.Type.ID"
+            name="${prefix:}org.efaps.admin.datamodel.Type.UUID"
             mode="ASYNC"
             statistics="true"
         >
@@ -171,7 +162,16 @@
             <state-transfer timeout="60000"/>
         </replicated-cache>
         <replicated-cache
-            name="org.efaps.admin.datamodel.Type.Name"
+            name="${prefix:}org.efaps.admin.datamodel.Type.ID"
+            mode="ASYNC"
+            statistics="true"
+        >
+            <encoding media-type="application/x-protostream" />
+            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+            <state-transfer timeout="60000"/>
+        </replicated-cache>
+        <replicated-cache
+            name="${prefix:}org.efaps.admin.datamodel.Type.Name"
             mode="ASYNC"
             statistics="true"
         >
@@ -183,96 +183,80 @@
 
 
 
-        <local-cache name="org.efaps.admin.datamodel.Attribute.Name" />
-        <local-cache name="org.efaps.admin.datamodel.Attribute.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.ID" />
 
-        <local-cache name="org.efaps.admin.datamodel.Dimension.UUID" />
-        <local-cache name="org.efaps.admin.datamodel.Dimension.ID" />
-        <local-cache name="org.efaps.admin.datamodel.Dimension.Name" />
-        <local-cache name="org.efaps.admin.datamodel.Dimension.UoM4ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.UoM4ID" />
 
-        <local-cache name="org.efaps.admin.common.NumberGenerator.UUID" />
-        <local-cache name="org.efaps.admin.common.NumberGenerator.ID" />
-        <local-cache name="org.efaps.admin.common.NumberGenerator.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.Name" />
 
-        <local-cache name="org.efaps.admin.common.SystemConfiguration.UUID" />
-        <local-cache name="org.efaps.admin.common.SystemConfiguration.ID" />
-        <local-cache name="org.efaps.admin.common.SystemConfiguration.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.Name" />
 
-        <local-cache name="org.efaps.admin.datamodel.Status.Group4UUID" />
-        <local-cache name="org.efaps.admin.datamodel.Status.Group4Name" />
-        <local-cache name="org.efaps.admin.datamodel.Status.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4Name" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.ID" />
 
-        <local-cache name="org.efaps.admin.datamodel.attributetype.EnumType.Object" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.attributetype.EnumType.Object" />
 
-        <local-cache name="org.efaps.admin.access.AccessSet.UUID" />
-        <local-cache name="org.efaps.admin.access.AccessSet.ID" />
-        <local-cache name="org.efaps.admin.access.AccessSet.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessSet.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessSet.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.access.AccessSet.Name" />
 
-        <local-cache name="org.efaps.admin.common.MsgPhrase.UUID" />
-        <local-cache name="org.efaps.admin.common.MsgPhrase.ID" />
-        <local-cache name="org.efaps.admin.common.MsgPhrase.Name" />
-        <local-cache name="org.efaps.admin.common.MsgPhrase.Argument" />
-        <local-cache name="org.efaps.admin.common.MsgPhrase.Label" />
+        <local-cache name="${prefix:}org.efaps.admin.common.MsgPhrase.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.MsgPhrase.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.common.MsgPhrase.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.common.MsgPhrase.Argument" />
+        <local-cache name="${prefix:}org.efaps.admin.common.MsgPhrase.Label" />
 
         <!-- User Caches This Caches are accessed in the given sequence during
             the search for a UserObject. That means that for e.g. RoleCache null-Values
             for ids will be cached that are not a Role -->
-        <local-cache name="org.efaps.admin.user.Role.UUID" />
-        <local-cache name="org.efaps.admin.user.Role.ID" />
-        <local-cache name="org.efaps.admin.user.Role.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Role.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Role.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Role.Name" />
 
-        <local-cache name="org.efaps.admin.user.Group.ID" />
-        <local-cache name="org.efaps.admin.user.Group.Name" />
-        <local-cache name="org.efaps.admin.user.Group.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Group.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Group.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Group.UUID" />
 
-        <local-cache name="org.efaps.admin.user.Company.UUID" />
-        <local-cache name="org.efaps.admin.user.Company.ID" />
-        <local-cache name="org.efaps.admin.user.Company.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Company.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Company.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Company.Name" />
 
-        <local-cache name="org.efaps.admin.user.Consortium.UUID" />
-        <local-cache name="org.efaps.admin.user.Consortium.ID" />
-        <local-cache name="org.efaps.admin.user.Consortium.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Consortium.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Consortium.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Consortium.Name" />
 
-        <local-cache name="org.efaps.admin.user.Person.UUID" />
-        <local-cache name="org.efaps.admin.user.Person.ID" />
-        <local-cache name="org.efaps.admin.user.Person.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Person.UUID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Person.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Person.Name" />
 
         <!-- JAASSystme is not clusterable due to use of java.lang.reflect.Method
             instance variables -->
-        <local-cache name="org.efaps.admin.user.JAASSystem.ID" />
-        <local-cache name="org.efaps.admin.user.JAASSystem.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.user.JAASSystem.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.JAASSystem.Name" />
 
-        <local-cache name="org.efaps.admin.user.Association.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.user.Association.ID" />
 
         <!-- Stores are not clusterable. Where to store if they are clustered? -->
-        <local-cache name="org.efaps.db.store.Store.UUID" />
-        <local-cache name="org.efaps.db.store.Store.ID" />
-        <local-cache name="org.efaps.db.store.Store.Name" />
+        <local-cache name="${prefix:}org.efaps.db.store.Store.UUID" />
+        <local-cache name="${prefix:}org.efaps.db.store.Store.ID" />
+        <local-cache name="${prefix:}org.efaps.db.store.Store.Name" />
 
-        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Name" />
-        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.BundleMapper" />
-        <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Bundles" />
+        <local-cache name="${prefix:}org.efaps.admin.program.bundle.BundleMaker.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.program.bundle.BundleMaker.BundleMapper" />
+        <local-cache name="${prefix:}org.efaps.admin.program.bundle.BundleMaker.Bundles" />
 
-        <local-cache name="org.efaps.ui.servlet.StaticContentServlet.Cache" />
+        <local-cache name="${prefix:}org.efaps.ui.servlet.StaticContentServlet.Cache" />
 
-        <local-cache name="org.efaps.ui.servlet.ImageServlet.Cache" />
-
-        <local-cache-configuration
-            name="org.efaps.ui.wicket.connectionregistry.RegistryManager.Session"
-        >
-            <memory max-count="5000" />
-            <indexing
-                storage="filesystem"
-                path="${java.io.tmpdir}/infinispan"
-            >
-                <!-- the entity will be added during webapp loading
-                <indexed-entities>
-                    <indexed-entity>org.efaps.ui.wicket.connectionregistry.UserSession</indexed-entity>
-                </indexed-entities>
-                 -->
-            </indexing>
-        </local-cache-configuration>
+        <local-cache name="${prefix:}org.efaps.ui.servlet.ImageServlet.Cache" />
     </cache-container>
 </infinispan>
 
