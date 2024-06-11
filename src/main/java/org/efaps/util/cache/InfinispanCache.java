@@ -65,6 +65,7 @@ public final class InfinispanCache
 
     private String prefix = "";
 
+    private String hotrodUrl = "";
     /**
      * Singelton is wanted.
      */
@@ -82,6 +83,7 @@ public final class InfinispanCache
 
         if (clustered) {
             prefix = config.getOptionalValue("core.cache.cluster.prefix", String.class).orElse("");
+            hotrodUrl = config.getOptionalValue("core.cache.cluster.hotrodUrl", String.class).orElse("");
             registerSchemas();
         }
         try {
@@ -121,7 +123,7 @@ public final class InfinispanCache
     private RemoteCacheManager getRemoteCacheManager()
     {
         final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
-                        .uri("hotrod://admin:secret@localhost:11222")
+                        .uri(hotrodUrl)
                         .addContextInitializer(new LibraryInitializerImpl())
                         .build();
         return new RemoteCacheManager(config);
@@ -129,12 +131,7 @@ public final class InfinispanCache
 
     private void registerSchemas()
     {
-        final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
-                        .uri("hotrod://admin:secret@localhost:11222")
-                        .addContextInitializer(new LibraryInitializerImpl())
-                        .build();
-
-        final var remoteCacheManager = new RemoteCacheManager(config);
+        final var remoteCacheManager = getRemoteCacheManager();
 
         final var initializer = remoteCacheManager.getConfiguration().getContextInitializers().get(0);
         final RemoteCache<String, String> protoMetadataCache = remoteCacheManager
