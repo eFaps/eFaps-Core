@@ -18,6 +18,8 @@ package org.efaps.util.cache;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -61,6 +63,8 @@ public final class InfinispanCache
      */
     private EmbeddedCacheManager container;
 
+    private String prefix;
+
     /**
      * Singelton is wanted.
      */
@@ -73,6 +77,9 @@ public final class InfinispanCache
      */
     private void init()
     {
+        final var config = ConfigProvider.getConfig();
+        prefix = config.getOptionalValue("core.cache.prefix", String.class).orElse("");
+
         registerSchemas();
         try {
             this.container = new DefaultCacheManager(this.getClass().getResourceAsStream(
@@ -87,12 +94,9 @@ public final class InfinispanCache
                                     .configuration(xml)
                                     .transactionMode(TransactionMode.NONE);
 
-                    final var config = remoteCacheManager.getConfiguration();
-                    config.addRemoteCache(cacheName, consumer);
+                    final var remoteConfig = remoteCacheManager.getConfiguration();
+                    remoteConfig.addRemoteCache(cacheName, consumer);
                     remoteCacheManager.getCache(cacheName);
-
-                    // remoteCacheManager.administration().getOrCreateCache(cacheName,
-                    // xml);
                 }
             }
             remoteCacheManager.close();
@@ -159,13 +163,7 @@ public final class InfinispanCache
      */
     public synchronized <K, V> Cache<K, V> getCache(final String cacheName)
     {
-        return this.container.getCache(cacheName);
-    }
-
-    public <K, V> Cache<K, V> getCache(final String _cacheName,
-                                            final Logger addListener)
-    {
-        return this.container.getCache(_cacheName);
+        return this.container.getCache(getCacheName(cacheName));
     }
 
     /**
@@ -194,6 +192,7 @@ public final class InfinispanCache
     public <K, V> Cache<K, V> initCache(final String cacheName,
                                         final Logger logger)
     {
+        LOG.info("Initializing Cache {}", cacheName);
         final var cacheConfig = container.getCacheConfiguration(cacheName);
         if (!exists(cacheName) && cacheConfig == null) {
             getContainer().defineConfiguration(cacheName, "eFaps-Default",
@@ -210,9 +209,18 @@ public final class InfinispanCache
      * @param _cacheName cache wanted
      * @return true if cache exists
      */
-    public boolean exists(final String _cacheName)
+    public boolean exists(final String cacheName)
     {
-        return this.container.cacheExists(_cacheName);
+        return this.container.cacheExists(getCacheName(cacheName));
+    }
+
+    protected String getCacheName(String cacheName)
+    {
+        String ret = cacheName;
+        if (StringUtils.isNotEmpty(this.prefix)) {
+            ret = prefix + "-" + ret;
+        }
+        return ret;
     }
 
     /**

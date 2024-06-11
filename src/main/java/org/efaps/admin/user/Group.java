@@ -195,21 +195,9 @@ public final class Group
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Group.IDCACHE)) {
-            InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Group>getCache(Group.IDCACHE, Group.LOG);
-        }
-        if (InfinispanCache.get().exists(Group.NAMECACHE)) {
-            InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Group>getCache(Group.NAMECACHE, Group.LOG);
-        }
-        if (InfinispanCache.get().exists(Group.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Group>getCache(Group.UUIDCACHE, Group.LOG);
-        }
+        InfinispanCache.get().<Long, Group>initCache(Group.IDCACHE, Group.LOG);
+        InfinispanCache.get().<String, Group>initCache(Group.NAMECACHE, Group.LOG);
+        InfinispanCache.get().<UUID, Group>initCache(Group.UUIDCACHE, Group.LOG);
     }
 
     /**

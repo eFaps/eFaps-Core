@@ -464,31 +464,11 @@ public final class MsgPhrase
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(MsgPhrase.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, MsgPhrase>getCache(MsgPhrase.UUIDCACHE, MsgPhrase.LOG);
-        }
-        if (InfinispanCache.get().exists(MsgPhrase.IDCACHE)) {
-            InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, MsgPhrase>getCache(MsgPhrase.IDCACHE, MsgPhrase.LOG);
-        }
-        if (InfinispanCache.get().exists(MsgPhrase.NAMECACHE)) {
-            InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, MsgPhrase>getCache(MsgPhrase.NAMECACHE, MsgPhrase.LOG);
-        }
-        if (InfinispanCache.get().exists(MsgPhrase.LABELCACHE)) {
-            InfinispanCache.get().getCache(MsgPhrase.LABELCACHE).clear();
-        } else {
-            InfinispanCache.get().<String, String>getCache(MsgPhrase.LABELCACHE, MsgPhrase.LOG);
-        }
-        if (InfinispanCache.get().exists(MsgPhrase.ARGUMENTCACHE)) {
-            InfinispanCache.get().getCache(MsgPhrase.ARGUMENTCACHE).clear();
-        } else {
-            InfinispanCache.get().<String, List<String>>getCache(MsgPhrase.ARGUMENTCACHE, MsgPhrase.LOG);
-        }
+        InfinispanCache.get().<UUID, MsgPhrase>initCache(MsgPhrase.UUIDCACHE, MsgPhrase.LOG);
+        InfinispanCache.get().<Long, MsgPhrase>initCache(MsgPhrase.IDCACHE, MsgPhrase.LOG);
+        InfinispanCache.get().<String, MsgPhrase>initCache(MsgPhrase.NAMECACHE, MsgPhrase.LOG);
+        InfinispanCache.get().<String, String>initCache(MsgPhrase.LABELCACHE, MsgPhrase.LOG);
+        InfinispanCache.get().<String, List<String>>initCache(MsgPhrase.ARGUMENTCACHE, MsgPhrase.LOG);
     }
 
     /**

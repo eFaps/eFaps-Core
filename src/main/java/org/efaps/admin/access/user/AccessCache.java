@@ -59,18 +59,9 @@ public final class AccessCache
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(AccessCache.PERMISSIONCACHE)) {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessCache.PERMISSIONCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessCache.PERMISSIONCACHE, AccessCache.LOG);
-        }
-        if (InfinispanCache.get().exists(AccessCache.STATUSCACHE)) {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessCache.STATUSCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessCache.STATUSCACHE, AccessCache.LOG);
-        }
+        InfinispanCache.get().<UUID, AccessType>initCache(AccessCache.PERMISSIONCACHE, AccessCache.LOG);
+        InfinispanCache.get().<Long, AccessType>initCache(AccessCache.STATUSCACHE, AccessCache.LOG);
     }
-
 
     /**
      * @return the Cache for AccessKey

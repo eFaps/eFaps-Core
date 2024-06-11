@@ -136,13 +136,7 @@ public final class IndexDefinition
     private static void initialize(final boolean _restart)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(IndexDefinition.UUIDCACHE)) {
-            if (_restart) {
-                InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE).clear();
-            }
-        } else {
-            InfinispanCache.get().<UUID, Type>getCache(IndexDefinition.UUIDCACHE, IndexDefinition.LOG);
-        }
+        InfinispanCache.get().<UUID, Type>initCache(IndexDefinition.UUIDCACHE, IndexDefinition.LOG);
     }
 
     /**

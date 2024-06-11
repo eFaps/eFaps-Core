@@ -46,6 +46,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class Dimension
     extends AbstractAdminObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -218,7 +219,8 @@ public class Dimension
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheDimension(this);
     }
@@ -232,26 +234,10 @@ public class Dimension
     public static void initialize(final Class<?> _class)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(Dimension.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Dimension>getCache(Dimension.UUIDCACHE, Dimension.LOG);
-        }
-        if (InfinispanCache.get().exists(Dimension.IDCACHE)) {
-            InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Dimension>getCache(Dimension.IDCACHE, Dimension.LOG);
-        }
-        if (InfinispanCache.get().exists(Dimension.NAMECACHE)) {
-            InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Dimension>getCache(Dimension.NAMECACHE, Dimension.LOG);
-        }
-        if (InfinispanCache.get().exists(Dimension.IDCACHE4UOM)) {
-            InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM).clear();
-        } else {
-            InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM, Dimension.LOG);
-        }
+        InfinispanCache.get().<UUID, Dimension>initCache(Dimension.UUIDCACHE, Dimension.LOG);
+        InfinispanCache.get().<Long, Dimension>initCache(Dimension.IDCACHE, Dimension.LOG);
+        InfinispanCache.get().<String, Dimension>initCache(Dimension.NAMECACHE, Dimension.LOG);
+        InfinispanCache.get().<Long, UoM>initCache(Dimension.IDCACHE4UOM, Dimension.LOG);
     }
 
     /**
@@ -394,7 +380,8 @@ public class Dimension
                     dim.addUoM(uom);
                     cache.put(uom.getId(), uom);
                 }
-                // needed due to cluster serialization that does not update automatically
+                // needed due to cluster serialization that does not update
+                // automatically
                 Dimension.cacheDimension(dim);
             }
         } catch (final SQLException e) {
@@ -500,7 +487,7 @@ public class Dimension
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**

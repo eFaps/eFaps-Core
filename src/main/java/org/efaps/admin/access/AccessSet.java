@@ -467,21 +467,9 @@ public final class AccessSet
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(AccessSet.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, AccessSet>getCache(AccessSet.UUIDCACHE, AccessSet.LOG);
-        }
-        if (InfinispanCache.get().exists(AccessSet.IDCACHE)) {
-            InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, AccessSet>getCache(AccessSet.IDCACHE, AccessSet.LOG);
-        }
-        if (InfinispanCache.get().exists(AccessSet.NAMECACHE)) {
-            InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, AccessSet>getCache(AccessSet.NAMECACHE, AccessSet.LOG);
-        }
+        InfinispanCache.get().<UUID, AccessSet>initCache(AccessSet.UUIDCACHE, AccessSet.LOG);
+        InfinispanCache.get().<Long, AccessSet>initCache(AccessSet.IDCACHE, AccessSet.LOG);
+        InfinispanCache.get().<String, AccessSet>initCache(AccessSet.NAMECACHE, AccessSet.LOG);
     }
 
     /**

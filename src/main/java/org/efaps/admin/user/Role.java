@@ -224,21 +224,9 @@ public final class Role
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Role.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE, Role.LOG);
-        }
-        if (InfinispanCache.get().exists(Role.IDCACHE)) {
-            InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE, Role.LOG);
-        }
-        if (InfinispanCache.get().exists(Role.NAMECACHE)) {
-            InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Role>getCache(Role.NAMECACHE, Role.LOG);
-        }
+        InfinispanCache.get().<UUID, Role>initCache(Role.UUIDCACHE, Role.LOG);
+        InfinispanCache.get().<Long, Role>initCache(Role.IDCACHE, Role.LOG);
+        InfinispanCache.get().<String, Role>initCache(Role.NAMECACHE, Role.LOG);
     }
 
     /**
@@ -305,7 +293,7 @@ public final class Role
      */
     private static void cacheRole(final Role _role)
     {
-        
+
         final var cache4UUID = InfinispanCache.get().<UUID, Role>getCache(Role.UUIDCACHE);
         cache4UUID.putIfAbsent(_role.getUUID(), _role);
 
@@ -314,7 +302,7 @@ public final class Role
 
         final var idCache = InfinispanCache.get().<Long, Role>getCache(Role.IDCACHE);
         idCache.putIfAbsent(_role.getId(), _role);
-        
+
     }
 
     /**

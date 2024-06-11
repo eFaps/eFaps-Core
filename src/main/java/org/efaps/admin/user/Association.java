@@ -144,11 +144,7 @@ public class Association
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Association.IDCACHE)) {
-            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE, Association.LOG);
-        }
+        InfinispanCache.get().<Long, Association>initCache(Association.IDCACHE, Association.LOG);
     }
 
     /**
@@ -175,10 +171,10 @@ public class Association
      */
     private static void cacheAssociation(final Association _association)
     {
-        
+
         final var idCache = InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE);
         idCache.put(_association.getId(), _association);
-        
+
     }
 
     /**

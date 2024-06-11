@@ -273,16 +273,8 @@ public class AttributeType
      */
     public static void initialize(final Class<?> _class)
     {
-        if (InfinispanCache.get().exists(AttributeType.IDCACHE)) {
-            InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, AttributeType>getCache(AttributeType.IDCACHE, AttributeType.LOG);
-        }
-        if (InfinispanCache.get().exists(AttributeType.NAMECACHE)) {
-            InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, AttributeType>getCache(AttributeType.NAMECACHE, AttributeType.LOG);
-        }
+        InfinispanCache.get().<Long, AttributeType>initCache(AttributeType.IDCACHE, AttributeType.LOG);
+        InfinispanCache.get().<String, AttributeType>initCache(AttributeType.NAMECACHE, AttributeType.LOG);
     }
 
     /**

@@ -305,21 +305,9 @@ public final class NumberGenerator
     public static void initialize(final Class<?> _class)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(NumberGenerator.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, NumberGenerator>getCache(NumberGenerator.UUIDCACHE, NumberGenerator.LOG);
-        }
-        if (InfinispanCache.get().exists(NumberGenerator.IDCACHE)) {
-            InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, NumberGenerator>getCache(NumberGenerator.IDCACHE, NumberGenerator.LOG);
-        }
-        if (InfinispanCache.get().exists(NumberGenerator.NAMECACHE)) {
-            InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, NumberGenerator>getCache(NumberGenerator.NAMECACHE, NumberGenerator.LOG);
-        }
+        InfinispanCache.get().<UUID, NumberGenerator>initCache(NumberGenerator.UUIDCACHE, NumberGenerator.LOG);
+        InfinispanCache.get().<Long, NumberGenerator>initCache(NumberGenerator.IDCACHE, NumberGenerator.LOG);
+        InfinispanCache.get().<String, NumberGenerator>initCache(NumberGenerator.NAMECACHE, NumberGenerator.LOG);
     }
 
     /**

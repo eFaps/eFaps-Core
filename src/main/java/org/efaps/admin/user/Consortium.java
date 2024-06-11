@@ -223,21 +223,9 @@ public final class Consortium
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Consortium.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Consortium>getCache(Consortium.UUIDCACHE, Consortium.LOG);
-        }
-        if (InfinispanCache.get().exists(Consortium.IDCACHE)) {
-            InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Consortium>getCache(Consortium.IDCACHE, Consortium.LOG);
-        }
-        if (InfinispanCache.get().exists(Consortium.NAMECACHE)) {
-            InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Consortium>getCache(Consortium.NAMECACHE, Consortium.LOG);
-        }
+        InfinispanCache.get().<UUID, Consortium>initCache(Consortium.UUIDCACHE, Consortium.LOG);
+        InfinispanCache.get().<Long, Consortium>initCache(Consortium.IDCACHE, Consortium.LOG);
+        InfinispanCache.get().<String, Consortium>initCache(Consortium.NAMECACHE, Consortium.LOG);
     }
 
     /**

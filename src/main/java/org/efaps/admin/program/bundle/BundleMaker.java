@@ -77,15 +77,9 @@ public final class BundleMaker
     public static void initialize()
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(BundleMaker.NAMECACHE)) {
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.NAMECACHE).clear();
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLE).clear();
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLEMAP).clear();
-        } else {
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.NAMECACHE, BundleMaker.LOG);
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLE, BundleMaker.LOG);
-            InfinispanCache.get().<UUID, Type>getCache(BundleMaker.CACHE4BUNDLEMAP, BundleMaker.LOG);
-        }
+        InfinispanCache.get().<UUID, Type>initCache(BundleMaker.NAMECACHE, BundleMaker.LOG);
+        InfinispanCache.get().<UUID, Type>initCache(BundleMaker.CACHE4BUNDLE, BundleMaker.LOG);
+        InfinispanCache.get().<UUID, Type>initCache(BundleMaker.CACHE4BUNDLEMAP, BundleMaker.LOG);
     }
 
     /**

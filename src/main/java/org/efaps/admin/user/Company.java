@@ -225,21 +225,10 @@ public final class Company
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Company.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Company>getCache(Company.UUIDCACHE, Company.LOG);
-        }
-        if (InfinispanCache.get().exists(Company.IDCACHE)) {
-            InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Company>getCache(Company.IDCACHE, Company.LOG);
-        }
-        if (InfinispanCache.get().exists(Company.NAMECACHE)) {
-            InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Company>getCache(Company.NAMECACHE, Company.LOG);
-        }
+        InfinispanCache.get().<UUID, Company>initCache(Company.UUIDCACHE, Company.LOG);
+        InfinispanCache.get().<Long, Company>initCache(Company.IDCACHE, Company.LOG);
+        InfinispanCache.get().<String, Company>initCache(Company.NAMECACHE, Company.LOG);
+
     }
 
     /**

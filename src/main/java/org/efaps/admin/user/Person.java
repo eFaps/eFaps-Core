@@ -70,6 +70,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class Person
     extends AbstractUserObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -79,7 +80,9 @@ public final class Person
      * Enum for all known and updated attributes from a person. Only this could
      * be defined which are in the SQL table T_USERPERSON.
      */
-    public enum AttrName {
+    public enum AttrName
+    {
+
         /** Attribute Name for the First Name of the person. */
         FIRSTNAME("FIRSTNAME"),
         /** Attribute Name for the Last Name of the person. */
@@ -128,7 +131,8 @@ public final class Person
     }
 
     /**
-     * This is the SQL select statement to select a Person from the database by ID.
+     * This is the SQL select statement to select a Person from the database by
+     * ID.
      */
     private static final String SQL_ID = new SQLSelect()
                     .column("ID")
@@ -139,7 +143,8 @@ public final class Person
                     .addPart(SQLPart.WHERE).addColumnPart(0, "ID").addPart(SQLPart.EQUAL).addValuePart("?").toString();
 
     /**
-     * This is the SQL select statement to select a Person from the database by Name.
+     * This is the SQL select statement to select a Person from the database by
+     * Name.
      */
     private static final String SQL_NAME = new SQLSelect()
                     .column("ID")
@@ -151,7 +156,8 @@ public final class Person
                     .toString();
 
     /**
-     * This is the SQL select statement to select a Person from the database by UUID.
+     * This is the SQL select statement to select a Person from the database by
+     * UUID.
      */
     private static final String SQL_UUID = new SQLSelect()
                     .column("ID")
@@ -163,7 +169,8 @@ public final class Person
                     .toString();
 
     /**
-     * This is the SQL select statement to select a Role from the database using the JAAS key..
+     * This is the SQL select statement to select a Role from the database using
+     * the JAAS key..
      */
     private static final String SQL_JAASKEY = new SQLSelect().column("ID")
                     .from("V_USERPERSONJASSKEY", 0)
@@ -180,10 +187,11 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
     /**
-     * SQL select statement to select the relation to active companies including the JAASYSTEM as filter.
+     * SQL select statement to select the relation to active companies including
+     * the JAASYSTEM as filter.
      */
     private static final String SQL_COMPANYJAASKEY = new SQLSelect()
                     .column("USERABSTRACTTO")
@@ -191,7 +199,7 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .addPart(SQLPart.AND).addColumnPart(0, "JAASSYSID").addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
 
@@ -204,10 +212,11 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
     /**
-     * SQL select statement to select the relation to active roles including the JAASYSTEM as filter.
+     * SQL select statement to select the relation to active roles including the
+     * JAASYSTEM as filter.
      */
     private static final String SQL_ROLEJAASKEY = new SQLSelect()
                     .column("USERABSTRACTTO")
@@ -215,7 +224,7 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .addPart(SQLPart.AND).addColumnPart(0, "JAASSYSID").addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
 
@@ -228,10 +237,11 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
     /**
-     * SQL select statement to select the relation to active groups including the JAASYSTEM as filter.
+     * SQL select statement to select the relation to active groups including
+     * the JAASYSTEM as filter.
      */
     private static final String SQL_GROUPJAASKEY = new SQLSelect()
                     .column("USERABSTRACTTO")
@@ -239,10 +249,9 @@ public final class Person
                     .innerJoin("T_USERABSTRACT", 1, "ID", 0, "USERABSTRACTTO")
                     .addPart(SQLPart.WHERE).addColumnPart(1, "STATUS").addPart(SQLPart.EQUAL).addBooleanValue(true)
                     .addPart(SQLPart.AND).addColumnPart(0, "USERABSTRACTFROM")
-                        .addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.EQUAL).addValuePart("?")
                     .addPart(SQLPart.AND).addColumnPart(0, "JAASSYSID").addPart(SQLPart.EQUAL).addValuePart("?")
                     .toString();
-
 
     /**
      * Name of the Cache by ID.
@@ -422,7 +431,7 @@ public final class Person
      *
      * @param _association Association to test
      * @return <code>true</code> if Association is assigned to this person,
-     *          otherwise <code>false</code>
+     *         otherwise <code>false</code>
      */
     public boolean isAssigned(final Association _association)
     {
@@ -717,10 +726,10 @@ public final class Person
         boolean ret = false;
         final PrintQuery query = new PrintQuery(CIAdminUser.Person.getType(), getId());
         query.addAttribute(CIAdminUser.Person.Password,
-                           CIAdminUser.Person.LastLogin,
-                           CIAdminUser.Person.LoginTry,
-                           CIAdminUser.Person.LoginTriesCounter,
-                           CIAdminUser.Person.Status);
+                        CIAdminUser.Person.LastLogin,
+                        CIAdminUser.Person.LoginTry,
+                        CIAdminUser.Person.LoginTriesCounter,
+                        CIAdminUser.Person.Status);
         if (query.executeWithoutAccessCheck()) {
             final PasswordStore pwd = query.<PasswordStore>getAttribute(CIAdminUser.Person.Password);
             if (pwd.checkCurrent(_passwd)) {
@@ -924,8 +933,9 @@ public final class Person
     }
 
     /**
-     * The method reads directly from the database all stored Association for this
-     * person. The found Association are returned as instance of {@link Set}.
+     * The method reads directly from the database all stored Association for
+     * this person. The found Association are returned as instance of
+     * {@link Set}.
      *
      * @param _jaasSystem JAAS system for which the roles must get from eFaps
      *            (if value is <code>null</code>, all companies independent from
@@ -947,16 +957,16 @@ public final class Person
             try {
                 final StringBuilder cmd = new StringBuilder();
                 cmd.append("select ").append("ID ")
-                    .append("from T_USERASSOC ")
-                    .append("where GROUPID in (")
-                        .append("select ").append("USERABSTRACTTO ")
-                        .append("from V_USERPERSON2GROUP ")
-                        .append("where USERABSTRACTFROM =").append(getId())
-                    .append(") and ROLEID in (")
-                        .append("select ").append("USERABSTRACTTO ")
-                        .append("from V_USERPERSON2ROLE ")
-                        .append("where USERABSTRACTFROM =").append(getId())
-                    .append(")");
+                                .append("from T_USERASSOC ")
+                                .append("where GROUPID in (")
+                                .append("select ").append("USERABSTRACTTO ")
+                                .append("from V_USERPERSON2GROUP ")
+                                .append("where USERABSTRACTFROM =").append(getId())
+                                .append(") and ROLEID in (")
+                                .append("select ").append("USERABSTRACTTO ")
+                                .append("from V_USERPERSON2ROLE ")
+                                .append("where USERABSTRACTFROM =").append(getId())
+                                .append(")");
 
                 stmt = con.createStatement();
                 final ResultSet resultset = stmt.executeQuery(cmd.toString());
@@ -1090,7 +1100,8 @@ public final class Person
             }
         }
 
-        // compare current Companies with new Companies (remove Companies which are to much)
+        // compare current Companies with new Companies (remove Companies which
+        // are to much)
         for (final Company company : companiesInDb) {
             if (!_companies.contains(company)) {
                 unassignCompanyInDb(_jaasSystem, company);
@@ -1523,7 +1534,8 @@ public final class Person
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cachePerson(this);
     }
@@ -1569,21 +1581,9 @@ public final class Person
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Person.IDCACHE)) {
-            InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Person>getCache(Person.IDCACHE, Person.LOG);
-        }
-        if (InfinispanCache.get().exists(Person.NAMECACHE)) {
-            InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Person>getCache(Person.NAMECACHE,Person.LOG);
-        }
-        if (InfinispanCache.get().exists(Person.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Person>getCache(Person.UUIDCACHE, Person.LOG);
-        }
+        InfinispanCache.get().<Long, Person>initCache(Person.IDCACHE, Person.LOG);
+        InfinispanCache.get().<String, Person>initCache(Person.NAMECACHE, Person.LOG);
+        InfinispanCache.get().<UUID, Person>initCache(Person.UUIDCACHE, Person.LOG);
     }
 
     /**
@@ -1692,7 +1692,7 @@ public final class Person
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @return true if successful
      * @throws EFapsException on error
@@ -1848,17 +1848,17 @@ public final class Person
                     persId = Context.getDbType().getNewId(new ConnectionResource(con),
                                     persType.getMainTable().getSqlTable(), "ID");
                     cmd.append("insert into ").append(persType.getMainTable().getSqlTable())
-                        .append("(ID,TYPEID,NAME,UUID,STATUS,CREATOR,CREATED,MODIFIER,MODIFIED) ")
-                        .append("values (").append(persId).append(",");
+                                    .append("(ID,TYPEID,NAME,UUID,STATUS,CREATOR,CREATED,MODIFIER,MODIFIED) ")
+                                    .append("values (").append(persId).append(",");
                 }
                 cmd.append(persType.getId()).append(",")
-                    .append("'").append(_userName).append("',")
-                    .append("'").append(_uuid == null ? "" : _uuid).append("',")
-                    .append("").append(_active).append(",")
-                    .append(context.getPersonId())
-                    .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",")
-                    .append(context.getPersonId()).append(",")
-                    .append(Context.getDbType().getCurrentTimeStamp()).append(")");
+                                .append("'").append(_userName).append("',")
+                                .append("'").append(_uuid == null ? "" : _uuid).append("',")
+                                .append("").append(_active).append(",")
+                                .append(context.getPersonId())
+                                .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",")
+                                .append(context.getPersonId()).append(",")
+                                .append(Context.getDbType().getCurrentTimeStamp()).append(")");
 
                 if (persId == 0) {
                     stmt = con.prepareStatement(cmd.toString(), new String[] { "ID" });
@@ -1885,7 +1885,7 @@ public final class Person
 
                 cmd = new StringBuilder();
                 cmd.append("insert into T_USERPERSON").append("(ID,FIRSTNAME,LASTNAME) ")
-                    .append("values (").append(persId).append(",'-','-')");
+                                .append("values (").append(persId).append(",'-','-')");
                 stmt = con.prepareStatement(cmd.toString());
                 rows = stmt.executeUpdate();
                 if (rows == 0) {
@@ -1897,7 +1897,7 @@ public final class Person
                 }
                 cmd = new StringBuilder();
                 cmd.append("insert into T_CMGENINST").append("(INSTTYPEID,INSTID,EXID,EXSYSID) ")
-                    .append("values (").append(persType.getId()).append(",").append(persId).append(",0,0)");
+                                .append("values (").append(persType.getId()).append(",").append(persId).append(",0,0)");
                 stmt = con.prepareStatement(cmd.toString());
                 stmt.executeUpdate();
             } catch (final SQLException e) {

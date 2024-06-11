@@ -154,26 +154,10 @@ public class Association
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Association.UUIDCACHE)) {
-            InfinispanCache.get().getCache(Association.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Association>getCache(Association.UUIDCACHE, Association.LOG);
-        }
-        if (InfinispanCache.get().exists(Association.IDCACHE)) {
-            InfinispanCache.get().getCache(Association.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Association>getCache(Association.IDCACHE, Association.LOG);
-        }
-        if (InfinispanCache.get().exists(Association.NAMECACHE)) {
-            InfinispanCache.get().getCache(Association.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Association>getCache(Association.NAMECACHE, Association.LOG);
-        }
-        if (InfinispanCache.get().exists(Association.KEYCACHE)) {
-            InfinispanCache.get().getCache(Association.KEYCACHE).clear();
-        } else {
-            InfinispanCache.get().<AssociationKey, Long>getCache(Association.KEYCACHE, Association.LOG);
-        }
+        InfinispanCache.get().<UUID, Association>initCache(Association.UUIDCACHE, Association.LOG);
+        InfinispanCache.get().<Long, Association>initCache(Association.IDCACHE, Association.LOG);
+        InfinispanCache.get().<String, Association>initCache(Association.NAMECACHE, Association.LOG);
+        InfinispanCache.get().<AssociationKey, Long>initCache(Association.KEYCACHE, Association.LOG);
     }
 
     public static Association get(final long _id)

@@ -245,21 +245,9 @@ public final class Status
     public static void initialize(final Class<?> _class)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(Status.UUIDCACHE4GRP)) {
-            InfinispanCache.get().<UUID, Status>getCache(Status.UUIDCACHE4GRP).clear();
-        } else {
-            InfinispanCache.get().<UUID, Status>getCache(Status.UUIDCACHE4GRP, Status.LOG);
-        }
-        if (InfinispanCache.get().exists(Status.IDCACHE4STATUS)) {
-            InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS).clear();
-        } else {
-            InfinispanCache.get().<Long, Status>getCache(Status.IDCACHE4STATUS, Status.LOG);
-        }
-        if (InfinispanCache.get().exists(Status.NAMECACHE4GRP)) {
-            InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP).clear();
-        } else {
-            InfinispanCache.get().<String, StatusGroup>getCache(Status.NAMECACHE4GRP, Status.LOG);
-        }
+        InfinispanCache.get().<UUID, Status>initCache(Status.UUIDCACHE4GRP, Status.LOG);
+        InfinispanCache.get().<Long, Status>initCache(Status.IDCACHE4STATUS, Status.LOG);
+        InfinispanCache.get().<String, StatusGroup>initCache(Status.NAMECACHE4GRP, Status.LOG);
     }
 
     /**

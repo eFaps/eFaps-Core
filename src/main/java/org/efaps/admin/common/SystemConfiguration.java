@@ -675,21 +675,12 @@ public final class SystemConfiguration
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(SystemConfiguration.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE, SystemConfiguration.LOG);
-        }
-        if (InfinispanCache.get().exists(SystemConfiguration.IDCACHE)) {
-            InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE, SystemConfiguration.LOG);
-        }
-        if (InfinispanCache.get().exists(SystemConfiguration.NAMECACHE)) {
-            InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE, SystemConfiguration.LOG);
-        }
+        InfinispanCache.get().<UUID, SystemConfiguration>initCache(SystemConfiguration.UUIDCACHE,
+                        SystemConfiguration.LOG);
+        InfinispanCache.get().<Long, SystemConfiguration>initCache(SystemConfiguration.IDCACHE,
+                        SystemConfiguration.LOG);
+        InfinispanCache.get().<String, SystemConfiguration>initCache(SystemConfiguration.NAMECACHE,
+                        SystemConfiguration.LOG);
 
         SystemConfiguration.ENCRYPTOR = new StandardPBEStringEncryptor();
         SystemConfiguration.ENCRYPTOR.setConfig(SystemConfiguration.getPBEConfig());
@@ -700,7 +691,7 @@ public final class SystemConfiguration
      */
     private static void cacheSytemConfig(final SystemConfiguration _sysConfig)
     {
-        
+
 
         final var cache4UUID = InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE);
         cache4UUID.put(_sysConfig.getUUID(), _sysConfig);
@@ -711,7 +702,7 @@ public final class SystemConfiguration
         final var idCache = InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE);
         idCache.put(_sysConfig.getId(), _sysConfig);
 
-        
+
     }
 
     /**

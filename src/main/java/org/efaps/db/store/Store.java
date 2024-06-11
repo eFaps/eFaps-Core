@@ -186,21 +186,9 @@ public final class Store
     public static void initialize()
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(Store.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, Store>getCache(Store.UUIDCACHE, Store.LOG);
-        }
-        if (InfinispanCache.get().exists(Store.IDCACHE)) {
-            InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Store>getCache(Store.IDCACHE, Store.LOG);
-        }
-        if (InfinispanCache.get().exists(Store.NAMECACHE)) {
-            InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Store>getCache(Store.NAMECACHE, Store.LOG);
-        }
+        InfinispanCache.get().<UUID, Store>initCache(Store.UUIDCACHE, Store.LOG);
+        InfinispanCache.get().<Long, Store>initCache(Store.IDCACHE, Store.LOG);
+        InfinispanCache.get().<String, Store>initCache(Store.NAMECACHE, Store.LOG);
     }
 
     /**

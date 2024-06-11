@@ -154,21 +154,9 @@ public final class AccessType
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(AccessType.UUIDCACHE)) {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE).clear();
-        } else {
-            InfinispanCache.get().<UUID, AccessType>getCache(AccessType.UUIDCACHE, AccessType.LOG);
-        }
-        if (InfinispanCache.get().exists(AccessType.IDCACHE)) {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, AccessType>getCache(AccessType.IDCACHE, AccessType.LOG);
-        }
-        if (InfinispanCache.get().exists(AccessType.NAMECACHE)) {
-            InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, AccessType>getCache(AccessType.NAMECACHE, AccessType.LOG);
-        }
+        InfinispanCache.get().<UUID, AccessType>initCache(AccessType.UUIDCACHE, AccessType.LOG);
+        InfinispanCache.get().<Long, AccessType>initCache(AccessType.IDCACHE, AccessType.LOG);
+        InfinispanCache.get().<String, AccessType>initCache(AccessType.NAMECACHE, AccessType.LOG);
         AccessCache.initialize();
     }
 

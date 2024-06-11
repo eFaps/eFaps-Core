@@ -765,12 +765,7 @@ public class Field
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(Field.IDCACHE)) {
-            InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
-            InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE, Field.LOG);
-        }
+        InfinispanCache.get().<Long, Field>initCache(Field.IDCACHE, Field.LOG);
     }
 
     /**

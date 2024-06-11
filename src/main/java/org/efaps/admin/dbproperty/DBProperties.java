@@ -418,11 +418,7 @@ public final class DBProperties
      */
     public static void initialize()
     {
-        if (InfinispanCache.get().exists(DBProperties.CACHENAME)) {
-            InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME).clear();
-        } else {
-            InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME, DBProperties.LOG);
-        }
+        InfinispanCache.get().<String, String>initCache(DBProperties.CACHENAME, DBProperties.LOG);
         DBProperties.cacheOnStart();
     }
 }

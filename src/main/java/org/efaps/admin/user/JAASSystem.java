@@ -298,16 +298,9 @@ public final class JAASSystem
     public static void initialize()
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(JAASSystem.IDCACHE)) {
-            InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, JAASSystem>getCache(JAASSystem.IDCACHE, JAASSystem.LOG);
-        }
-        if (InfinispanCache.get().exists(JAASSystem.NAMECACHE)) {
-            InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, JAASSystem>getCache(JAASSystem.NAMECACHE, JAASSystem.LOG);
-        }
+        InfinispanCache.get().<Long, JAASSystem>initCache(JAASSystem.IDCACHE, JAASSystem.LOG);
+        InfinispanCache.get().<String, JAASSystem>initCache(JAASSystem.NAMECACHE, JAASSystem.LOG);
+
         JAASSystem.getJAASSystemFromDB(JAASSystem.SQL_SELECT, null);
     }
 
