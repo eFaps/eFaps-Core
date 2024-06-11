@@ -597,7 +597,7 @@
         <dependency>
             <groupId>org.mnode.ical4j</groupId>
             <artifactId>ical4j</artifactId>
-            <version>3.0.13</version>
+            <version>3.2.18</version>
         </dependency>
         <!-- to not accidently use any of the jaxb implementation code only
         provide with runtime scope.
