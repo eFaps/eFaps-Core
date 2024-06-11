@@ -49,7 +49,7 @@ public class AttributeSet
     /**
      * attributes of this set.
      */
-    private final Set<String> setAttributes = new HashSet<>();
+    private Set<String> setAttributes = new HashSet<>();
 
     /**
      * @param _id               id of this set
@@ -87,10 +87,12 @@ public class AttributeSet
                         .get("Link").getId(), null, null);
         addAttributes(false, attr);
         attr.setLinkId(_typeId);
+        Attribute.cacheAttribute(attr, this);
         if (_typeLinkId > 0) {
             setParentTypeID(_typeLinkId);
         }
         inheritAttributes();
+
     }
 
     protected AttributeSet(final long _id,
@@ -180,6 +182,11 @@ public class AttributeSet
         return this.setAttributes;
     }
 
+    protected void setSetAttributes(Set<String> setAttributes)
+    {
+        this.setAttributes = setAttributes;
+    }
+
     /**
      * Evaluate the name. (Build the name as the set is cached).
      *
@@ -231,4 +238,5 @@ public class AttributeSet
         }
         return ret;
     }
+
 }

@@ -125,6 +125,7 @@ public class Menu
     public static Menu get(final long _id)
         throws CacheReloadException
     {
+
         return AbstractUserInterfaceObject.<Menu>get(_id, Menu.class, CIAdminUserInterface.Menu.getType());
     }
 

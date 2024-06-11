@@ -711,6 +711,13 @@ public class Field
         return this.classificationName;
     }
 
+    @Override
+    protected void updateCache()
+    {
+        final var cache = InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
+        cache.put(getId(), this);
+    }
+
     /**
      * Returns for given parameter <i>_id</i> the instance of class
      * {@link Field}.

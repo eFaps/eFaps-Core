@@ -52,8 +52,10 @@ public class TypeAdapter
                 String groupAttributeName,
                 String typeAttributeName,
                 Long typeMenuId,
+                boolean typeMenuChecked,
                 Long typeIconId,
                 Long typeFormId,
+                boolean typeFormChecked,
                 Long storeId,
                 Set<Long> attributeIds,
                 final Map<String, String> propertyMap,
@@ -78,9 +80,11 @@ public class TypeAdapter
                             StringUtils.isNotBlank(associationAttributeName) ? associationAttributeName : null);
             type.setGroupAttributeName(StringUtils.isNotBlank(groupAttributeName) ? groupAttributeName : null);
             type.setTypeAttributeName(StringUtils.isNotBlank(typeAttributeName) ? typeAttributeName : null);
-            type.setTypeMenuId(typeMenuId);
+            type.setTypeMenuId(ProtoUtils.toNullLong(typeMenuId));
+            type.setTypeMenuChecked(typeMenuChecked);
             type.setTypeIconId(typeIconId);
             type.setTypeFormId(typeFormId);
+            type.setTypeFormChecked(typeFormChecked);
             type.setStoreId(storeId);
             type.setAttributeIds(attributeIds);
             setPropertiesMap(type, propertyMap);
@@ -204,5 +208,17 @@ public class TypeAdapter
     Set<Long> getAttributeIds(Type type)
     {
         return type.getAttributeIds();
+    }
+
+    @ProtoField(number = 123, defaultValue = "false")
+    boolean isTypeMenuChecked(Type type)
+    {
+        return type.isTypeMenuChecked();
+    }
+
+    @ProtoField(number = 124, defaultValue = "false")
+    boolean isTypeFormChecked(Type type)
+    {
+        return type.isTypeFormChecked();
     }
 }

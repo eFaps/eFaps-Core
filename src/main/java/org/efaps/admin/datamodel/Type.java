@@ -358,6 +358,8 @@ public class Type
      */
     private Long typeMenuId;
 
+    private boolean typeMenuChecked = false;
+
     /**
      * Id of the Icon defined as TypeIcon for this Type.<br/>
      * TRISTATE:<br/>
@@ -380,6 +382,7 @@ public class Type
      */
     private Long typeFormId;
 
+    private boolean typeFormChecked = false;
     /**
      * This is the constructor for class Type. Every instance of class Type must
      * have a name (parameter <i>_name</i>).
@@ -989,7 +992,10 @@ public class Type
     {
         final Set<Type> ret = new LinkedHashSet<>();
         for (final Long id : childTypeIds) {
-            final Type child = Type.get(id);
+            Type child = Type.get(id);
+            if (child == null) {
+                child = Type.get(id);
+            }
             ret.add(child);
             ret.addAll(child.getChildTypes());
         }
@@ -1179,7 +1185,7 @@ public class Type
         throws EFapsException
     {
         Menu ret = null;
-        if (typeMenuId == null) {
+        if (!typeMenuChecked) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.LinkIsTypeTreeFor);
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.LinkIsTypeTreeFor.To, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -1191,19 +1197,26 @@ public class Type
                 if (ret != null) {
                     typeMenuId = ret.getId();
                     ret.setTypeMenu(true);
-                } else {
-                    typeMenuId = (long) 0;
                 }
-            } else {
-                typeMenuId = (long) 0;
             }
+            typeMenuChecked = true;
         }
-        if (typeMenuId == 0 && getParentType() != null) {
+        if (typeMenuId == null && getParentType() != null) {
             ret = getParentType().getTypeMenu();
         } else {
             ret = Menu.get(typeMenuId);
         }
         return ret;
+    }
+
+    protected boolean isTypeMenuChecked()
+    {
+        return typeMenuChecked;
+    }
+
+    protected void setTypeMenuChecked(boolean typeMenuChecked)
+    {
+        this.typeMenuChecked = typeMenuChecked;
     }
 
     /**
@@ -1249,7 +1262,7 @@ public class Type
         throws EFapsException
     {
         Form ret = null;
-        if (typeFormId == null) {
+        if (!typeFormChecked) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.LinkIsTypeFormFor);
             queryBldr.addWhereAttrEqValue(CIAdminUserInterface.LinkIsTypeFormFor.To, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -1260,20 +1273,28 @@ public class Type
                 ret = Form.get(formId);
                 if (ret != null) {
                     typeFormId = ret.getId();
-                } else {
-                    typeFormId = (long) 0;
                 }
-            } else {
-                typeFormId = (long) 0;
             }
+            typeFormChecked = true;
         }
-        if (typeFormId == 0 && getParentType() != null) {
+        if (typeFormId == null && getParentType() != null) {
             ret = getParentType().getTypeForm();
         } else {
             ret = Form.get(typeFormId);
         }
         return ret;
     }
+
+    protected boolean isTypeFormChecked()
+    {
+        return typeFormChecked;
+    }
+
+    protected void setTypeFormChecked(boolean typeFormChecked)
+    {
+        this.typeFormChecked = typeFormChecked;
+    }
+
 
     protected String getCompanyAttributeName()
     {
@@ -1636,6 +1657,7 @@ public class Type
                         }
                     }
                 }
+                Type.cacheType(ret);
                 Attribute.add4Type(ret);
                 ret.readFromDB4Links();
                 ret.readFromDB4Properties();

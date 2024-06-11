@@ -23,7 +23,6 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
-import org.infinispan.commons.api.BasicCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.lifecycle.ComponentStatus;
@@ -158,12 +157,12 @@ public final class InfinispanCache
      * @param <V> Value
      * @return a cache from Infinspan
      */
-    public synchronized <K, V> BasicCache<K, V> getCache(final String cacheName)
+    public synchronized <K, V> Cache<K, V> getCache(final String cacheName)
     {
         return this.container.getCache(cacheName);
     }
 
-    public <K, V> BasicCache<K, V> getCache(final String _cacheName,
+    public <K, V> Cache<K, V> getCache(final String _cacheName,
                                             final Logger addListener)
     {
         return this.container.getCache(_cacheName);
@@ -187,7 +186,7 @@ public final class InfinispanCache
      * @param <V> Value
      * @return a cache from Infinspan
      */
-    public <K, V> BasicCache<K, V> initCache(final String cacheName)
+    public <K, V> Cache<K, V> initCache(final String cacheName)
     {
         return this.initCache(cacheName, null);
     }

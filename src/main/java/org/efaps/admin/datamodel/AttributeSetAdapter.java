@@ -56,12 +56,16 @@ public class AttributeSetAdapter
                         Set<Long> attributeIds,
                         long attributeTypeId,
                         String attributeName,
+                        Set<String> setAttributes,
                         final Map<String, String> propertyMap,
                         List<EventDefinition> events,
-                        boolean eventChecked)
+                        boolean eventChecked,
+                        boolean typeMenuChecked,
+                        boolean typeFormChecked)
     {
+        AttributeSet attributeSet = null;
         try {
-            final var attributeSet = new AttributeSet(id, uuid, name);
+            attributeSet = new AttributeSet(id, uuid, name);
             attributeSet.setParentTypeID(parentTypeId);
             attributeSet.setAbstract(abstractB);
             attributeSet.setHistory(history);
@@ -83,11 +87,15 @@ public class AttributeSetAdapter
             attributeSet.setStoreId(storeId);
             attributeSet.setAttributeTypeId(attributeTypeId);
             attributeSet.setAttributeName(attributeName);
+            attributeSet.setAttributeIds(attributeIds);
+            attributeSet.setSetAttributes(setAttributes);
+            setPropertiesMap(attributeSet, propertyMap);
+            setEvents(attributeSet, events, eventChecked);
         } catch (final EFapsException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;
+        return attributeSet;
     }
 
     @ProtoField(number = 23, defaultValue = "0")
@@ -102,4 +110,9 @@ public class AttributeSetAdapter
         return attributeSet.getAttributeName();
     }
 
+    @ProtoField(number = 25)
+    Set<String> getSetAttributes(AttributeSet attributeSet)
+    {
+        return attributeSet.getSetAttributes();
+    }
 }

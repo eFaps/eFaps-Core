@@ -221,7 +221,7 @@ public class Attribute
     /**
      * The parent this attribute belongs to.
      */
-    private AttributeSet parentSet;
+    private Long parentSetId;
 
     /**
      * Size of the attribute (for string). Precision of the attribute (for
@@ -324,7 +324,8 @@ public class Attribute
                         int size,
                         int scale,
                         boolean required,
-                        final Long linkId)
+                        final Long linkId,
+                        final Long parentSetId)
         // CHECKSTYLE:ON
         throws EFapsException
     {
@@ -339,6 +340,7 @@ public class Attribute
         this.scale = scale;
         this.required = required;
         this.linkId = linkId;
+        this.parentSetId = parentSetId;
     }
 
 
@@ -534,7 +536,18 @@ public class Attribute
      */
     public AttributeSet getParentSet()
     {
-        return parentSet;
+        try {
+            return parentSetId == null ? null : (AttributeSet) Type.get(parentSetId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected Long getParentSetId()
+    {
+        return this.parentSetId;
     }
 
     /**
@@ -542,9 +555,9 @@ public class Attribute
      *
      * @param _parentSet new instance of class {@link AttributeSet} to set
      */
-    private void setParentSet(final AttributeSet _parentSet)
+    private void setParentSet(final AttributeSet parentSet)
     {
-        parentSet = _parentSet;
+        parentSetId = parentSet.getId();
     }
 
     /**
@@ -808,17 +821,9 @@ public class Attribute
     public static void initialize(final Class<?> _class)
         throws CacheReloadException
     {
-        if (InfinispanCache.get().exists(Attribute.NAMECACHE)) {
-            InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE).clear();
-        } else {
-            InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE, Attribute.LOG);
-        }
-
-        if (InfinispanCache.get().exists(Attribute.IDCACHE)) {
-            InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE).clear();
-        } else {
-            InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE, Attribute.LOG);
-        }
+        InfinispanCache.get().<String, Attribute>initCache(Attribute.NAMECACHE, Attribute.LOG);
+        InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE).clear();
+        InfinispanCache.get().<Long, Attribute>initCache(Attribute.IDCACHE, Attribute.LOG);
     }
 
     /**
@@ -881,10 +886,10 @@ public class Attribute
      * @param _attr Attribute to be cached
      * @param _type Parent Type
      */
-    private static void cacheAttribute(final Attribute _attr,
+    static void cacheAttribute(final Attribute _attr,
                                        final Type _type)
     {
-        
+
         final var nameCache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
         if (_type != null) {
             nameCache.put(_type.getName() + "/" + _attr.getName(), _attr);
@@ -894,7 +899,7 @@ public class Attribute
 
         final var idCache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         idCache.put(_attr.getId(), _attr);
-        
+
     }
 
     /**

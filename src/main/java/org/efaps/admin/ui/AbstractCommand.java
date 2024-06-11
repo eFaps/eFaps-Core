@@ -558,12 +558,12 @@ public abstract class AbstractCommand
     public Menu getTargetMenu()
         throws EFapsException
     {
-        Menu ret = Menu.get(targetMenuId);
+        Menu ret = targetMenuId == null ? null : Menu.get(targetMenuId);
         if (targetDefaultMenu
                         && EFapsSystemConfiguration.get().getAttributeValue(KernelSettings.DEFAULTMENU) != null) {
             // reads the Value from "Common_Main_DefaultMenu"
             if (EFapsSystemConfiguration.get().getAttributeValue(KernelSettings.DEFAULTMENU).equals("none")) {
-                ret = Menu.get(targetMenuId);
+                ret = targetMenuId == null ? null : Menu.get(targetMenuId);
             } else {
                 final Properties prop = EFapsSystemConfiguration.get()
                                 .getAttributeValueAsProperties(KernelSettings.DEFAULTMENU);

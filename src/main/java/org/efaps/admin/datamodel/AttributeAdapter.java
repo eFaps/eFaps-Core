@@ -45,13 +45,15 @@ public class AttributeAdapter
                      int scale,
                      boolean required,
                      Long linkId,
+                     Long parentSetId,
                      final Map<String, String> propertyMap,
                      List<EventDefinition> events,
                      boolean eventChecked)
     {
         try {
-            final var attr =  new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
-                            dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId));
+            final var attr = new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
+                            dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId),
+                            ProtoUtils.toNullLong(parentSetId));
             setPropertiesMap(attr, propertyMap);
             setEvents(attr, events, eventChecked);
             return attr;
@@ -116,10 +118,16 @@ public class AttributeAdapter
         return attribute.isRequired();
     }
 
-    @ProtoField(number = 112, defaultValue = "0")
+    @ProtoField(number = 112)
     Long getLinkId(Attribute attribute)
     {
         return attribute.getLinkId();
+    }
+
+    @ProtoField(number = 113)
+    Long getParentSetId(Attribute attribute)
+    {
+        return attribute.getParentSetId();
     }
 
 }
