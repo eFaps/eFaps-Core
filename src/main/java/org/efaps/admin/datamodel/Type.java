@@ -1653,7 +1653,7 @@ public class Type
                         for (final Object[] childIDs : Type.getChildTypeIDs(ret.getId(), Type.SQL_CLASSCHILD)) {
                             Type.LOG.trace("reading Child class Type with id: {} for type :{}",
                                             childIDs[0], ret.getName());
-                            ((Classification) ret).getChildren().add((Long) childIDs[0]);
+                            ((Classification) ret).getChildrenIds().add((Long) childIDs[0]);
                         }
                     }
                 }

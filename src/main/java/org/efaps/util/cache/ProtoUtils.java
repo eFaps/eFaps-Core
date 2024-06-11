@@ -18,6 +18,8 @@ package org.efaps.util.cache;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class ProtoUtils
 {
 
@@ -52,5 +54,10 @@ public class ProtoUtils
     public static Long toNullLong(Long original)
     {
         return original == null ? null : original == 0 ? null : original;
+    }
+
+    public static String toNullString(String original)
+    {
+        return StringUtils.isNotBlank(original) ? original : null;
     }
 }

@@ -20,6 +20,7 @@ import org.efaps.admin.common.SystemConfigurationAdapter;
 import org.efaps.admin.datamodel.AttributeAdapter;
 import org.efaps.admin.datamodel.AttributeSetAdapter;
 import org.efaps.admin.datamodel.AttributeTypeAdapter;
+import org.efaps.admin.datamodel.ClassificationAdapter;
 import org.efaps.admin.datamodel.SQLTableAdapter;
 import org.efaps.admin.datamodel.TypeAdapter;
 import org.efaps.admin.event.EventDefinitionAdapter;
@@ -49,6 +50,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 AttributeAdapter.class,
                 AttributeSetAdapter.class,
                 AttributeTypeAdapter.class,
+                ClassificationAdapter.class,
                 CommandAdapter.class,
                 CompanyAdapter.class,
                 EventDefinitionAdapter.class,

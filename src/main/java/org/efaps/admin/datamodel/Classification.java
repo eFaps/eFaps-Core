@@ -35,6 +35,7 @@ import org.efaps.util.cache.CacheReloadException;
 public class Classification
     extends Type
 {
+
     /**
      * Needed for serialization.
      */
@@ -43,18 +44,29 @@ public class Classification
     /**
      * Enum contains the keys for the attributes.
      */
-    public enum Keys {
+    public enum Keys
+    {
+
         /** key to the type {@link Classification#multipleSelect}. */
         MULTI("multipleSelect"),
         /** key to the type {@link Classification#classifiesType}. */
         TYPE("type"),
         /** key to the relation type {@link Classification#classifyRelation}. */
         RELTYPE("relType"),
-        /** key to attribute of the relation type {@link Classification#relLinkAttributeName}. */
+        /**
+         * key to attribute of the relation type
+         * {@link Classification#relLinkAttributeName}.
+         */
         RELLINKATTR("relLinkAttribute"),
-        /**  key to attribute of the relation type {@link Classification#relTypeAttributeName}. */
+        /**
+         * key to attribute of the relation type
+         * {@link Classification#relTypeAttributeName}.
+         */
         RELTYPEATTR("relTypeAttribute"),
-        /** key to attribute of the type {@link Classification#linkAttributeName}. */
+        /**
+         * key to attribute of the type
+         * {@link Classification#linkAttributeName}.
+         */
         LINKATTR("classLinkAttribute");
 
         /** value. */
@@ -62,7 +74,8 @@ public class Classification
 
         /**
          * Private constructor setting the instance variable.
-         * @param _value  value
+         *
+         * @param _value value
          */
         Keys(final String _value)
         {
@@ -84,7 +97,7 @@ public class Classification
      * Instance variable for the parent classification this classification is
      * child of.
      */
-    private Long parent = null;
+    private Long parentId = null;
 
     /**
      * Can multiple Classifications be selected.
@@ -94,28 +107,29 @@ public class Classification
     /**
      * Instance variable for all child classification of this classification.
      */
-    private final Set<Long> children = new HashSet<>();
+    private Set<Long> childrenIds = new HashSet<>();
 
     /**
      * Type this Classification is classifying.
      */
-    private Long classifiesType;
+    private Long classifiesTypeId;
 
     /**
      * Relation belonging to the type this Classification is classifying.
      */
-    private Long classifyRelation;
+    private Long classifyRelationId;
 
     /**
      * Name of the Attribute of the Relation {@link #classifyRelation} that
-     * links the Relation to the type {@link #classifiesType} that is classified.
+     * links the Relation to the type {@link #classifiesType} that is
+     * classified.
      */
     private String relLinkAttributeName;
 
     /**
      * Name of the Attribute of the Relation {@link #classifyRelation} that
      * contains the ids of the classifications that are classifying the type
-     *  {@link #classifiesType}.
+     * {@link #classifiesType}.
      */
     private String relTypeAttributeName;
 
@@ -128,12 +142,12 @@ public class Classification
     /**
      * Companies this Classification is assigned to.
      */
-    private final Set<Company> companies = new HashSet<>();
+    private Set<Long> companyIds = new HashSet<>();
 
     /**
-     * @param _id       id of this Classification
-     * @param _uuid     uuid of this Classification
-     * @param _name     name of this Classification
+     * @param _id id of this Classification
+     * @param _uuid uuid of this Classification
+     * @param _name name of this Classification
      * @throws CacheReloadException on error
      */
     protected Classification(final long _id,
@@ -153,7 +167,12 @@ public class Classification
     public Classification getParentClassification()
         throws CacheReloadException
     {
-        return isRoot() ? null : Classification.get(this.parent);
+        return isRoot() ? null : Classification.get(this.parentId);
+    }
+
+    protected Long getParentId()
+    {
+        return this.parentId;
     }
 
     /**
@@ -161,13 +180,14 @@ public class Classification
      *
      * @param _parentClassification value for instance variable {@link #parent}
      */
-    protected void setParentClassification(final Long _parentClassification)
+    protected void setParentClassification(final Long _parentClassificationId)
     {
-        this.parent = _parentClassification;
+        this.parentId = _parentClassificationId;
     }
 
     /**
      * Getter method for instance variable {@link #childs}.
+     *
      * @return value of instance variable {@link #childs}
      * @throws CacheReloadException on error
      */
@@ -175,7 +195,7 @@ public class Classification
         throws CacheReloadException
     {
         final Set<Classification> ret = new HashSet<>();
-        for (final Long id : this.children) {
+        for (final Long id : this.childrenIds) {
             final Classification child = Classification.get(id);
             ret.add(child);
         }
@@ -187,16 +207,11 @@ public class Classification
      *
      * @return value of instance variable {@link #children}
      */
-    protected Set<Long> getChildren()
+    protected Set<Long> getChildrenIds()
     {
-        return this.children;
+        return this.childrenIds;
     }
 
-    /**
-     * Getter method for instance variable {@link #linkAttributeName}.
-     *
-     * @return value of instance variable {@link #linkAttributeName}
-     */
     public String getLinkAttributeName()
     {
         return this.linkAttributeName;
@@ -214,10 +229,10 @@ public class Classification
         throws CacheReloadException
     {
         final Type ret;
-        if (this.classifiesType == null && this.parent != null) {
+        if (this.classifiesTypeId == null && this.parentId != null) {
             ret = getParentClassification().getClassifiesType();
         } else {
-            ret = Type.get(this.classifiesType);
+            ret = Type.get(this.classifiesTypeId);
         }
         return ret;
     }
@@ -234,10 +249,10 @@ public class Classification
         throws CacheReloadException
     {
         final Type ret;
-        if (this.classifyRelation == null && this.parent != null) {
+        if (this.classifyRelationId == null && this.parentId != null) {
             ret = getParentClassification().getClassifyRelationType();
         } else {
-            ret = Type.get(this.classifyRelation);
+            ret = Type.get(this.classifyRelationId);
         }
         return ret;
     }
@@ -254,7 +269,7 @@ public class Classification
         throws CacheReloadException
     {
         final String ret;
-        if (this.relLinkAttributeName == null && this.parent != null) {
+        if (this.relLinkAttributeName == null && this.parentId != null) {
             ret = getParentClassification().getRelLinkAttributeName();
         } else {
             ret = this.relLinkAttributeName;
@@ -266,6 +281,7 @@ public class Classification
      * Getter method for instance variable {@link #relTypeAttributeName}. If the
      * variable is null the value for this instance variable of the parent
      * classification will be returned.
+     *
      * @return value of instance variable {@link #relTypeAttributeName}
      * @throws CacheReloadException on error
      */
@@ -273,7 +289,7 @@ public class Classification
         throws CacheReloadException
     {
         final String ret;
-        if (this.relTypeAttributeName == null && this.parent != null) {
+        if (this.relTypeAttributeName == null && this.parentId != null) {
             ret = getParentClassification().getRelTypeAttributeName();
         } else {
             ret = this.relTypeAttributeName;
@@ -282,13 +298,14 @@ public class Classification
     }
 
     /**
-     * Is this Classification the root Classification.
-     * (Meaning that it does not have a parent).
+     * Is this Classification the root Classification. (Meaning that it does not
+     * have a parent).
+     *
      * @return true if root classification
      */
     public boolean isRoot()
     {
-        return this.parent == null;
+        return this.parentId == null;
     }
 
     /**
@@ -309,6 +326,81 @@ public class Classification
         return ret;
     }
 
+    boolean isMultipleSelectInternal()
+    {
+        return multipleSelect;
+    }
+
+    void setMultipleSelect(boolean multipleSelect)
+    {
+        this.multipleSelect = multipleSelect;
+    }
+
+    public void setChildrenIds(Set<Long> childrenIds)
+    {
+       this.childrenIds = childrenIds;
+    }
+
+    Long getClassifiesTypeId()
+    {
+        return classifiesTypeId;
+    }
+
+    void setClassifiesTypeId(Long classifiesTypeId)
+    {
+        this.classifiesTypeId = classifiesTypeId;
+    }
+
+    Long getClassifyRelationId()
+    {
+        return classifyRelationId;
+    }
+
+    void setClassifyRelationId(Long classifyRelationId)
+    {
+        this.classifyRelationId = classifyRelationId;
+    }
+
+    void setParentId(Long parentId)
+    {
+        this.parentId = parentId;
+    }
+
+    void setRelLinkAttributeName(String relLinkAttributeName)
+    {
+        this.relLinkAttributeName = relLinkAttributeName;
+    }
+
+    String getRelLinkAttributeNameInternal()
+    {
+        return this.relLinkAttributeName;
+    }
+
+    void setRelTypeAttributeName(String relTypeAttributeName)
+    {
+        this.relTypeAttributeName = relTypeAttributeName;
+    }
+
+    String getRelTypeAttributeNameInternal()
+    {
+        return this.relTypeAttributeName;
+    }
+
+    void setLinkAttributeName(String linkAttributeName)
+    {
+        this.linkAttributeName = linkAttributeName;
+    }
+
+    void setCompanyIds(Set<Long> companyIds)
+    {
+        this.companyIds = companyIds;
+    }
+
+    Set<Long> getCompanyIds()
+    {
+        return companyIds;
+    }
+
     /**
      * Check if the root classification of this classification is assigned to
      * the given company.
@@ -324,7 +416,7 @@ public class Classification
     {
         final boolean ret;
         if (isRoot()) {
-            ret = this.companies.isEmpty() ? true : this.companies.contains(_company);
+            ret = this.companyIds.isEmpty() ? true : this.companyIds.contains(_company.getId());
         } else {
             ret = getParentClassification().isAssigendTo(_company);
         }
@@ -357,12 +449,12 @@ public class Classification
     {
         if (_linkTypeUUID.equals(CIAdminDataModel.TypeClassifies.uuid)) {
             final Type type = Type.get(_toId);
-            this.classifiesType = type.getId();
+            this.classifiesTypeId = _toId;
             type.addClassifiedByType(this);
         } else if (_linkTypeUUID.equals(CIAdminDataModel.TypeClassifyRelation.uuid)) {
-            this.classifyRelation = Type.get(_toId).getId();
+            this.classifyRelationId = _toId;
         } else if (_linkTypeUUID.equals(CIAdminDataModel.TypeClassifyCompany.uuid)) {
-            this.companies.add(Company.get(_toId));
+            this.companyIds.add(_toId);
         }
         super.setLinkProperty(_linkTypeUUID, _toId, _toTypeUUID, _toName);
     }
@@ -393,8 +485,8 @@ public class Classification
     }
 
     /**
-     * Returns for given parameter <i>_id</i> the instance of class {@link Classification}
-     * .
+     * Returns for given parameter <i>_id</i> the instance of class
+     * {@link Classification} .
      *
      * @param _id id of the type to get
      * @return instance of class {@link Classification}
@@ -407,8 +499,8 @@ public class Classification
     }
 
     /**
-     * Returns for given parameter <i>_name</i> the instance of class {@link Classification}
-     * .
+     * Returns for given parameter <i>_name</i> the instance of class
+     * {@link Classification} .
      *
      * @param _name name of the type to get
      * @return instance of class {@link Classification}
@@ -421,8 +513,8 @@ public class Classification
     }
 
     /**
-     * Returns for given parameter <i>_uuid</i> the instance of class {@link Classification}
-     * .
+     * Returns for given parameter <i>_uuid</i> the instance of class
+     * {@link Classification} .
      *
      * @param _uuid UUID of the type to get
      * @return instance of class {@link Classification}
