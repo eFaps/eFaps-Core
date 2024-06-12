@@ -268,7 +268,7 @@ public final class InfinispanCache
         return ret;
     }
 
-    public void clear()
+    public static void clear()
     {
         if (InfinispanCache.CACHEINSTANCE != null) {
             InfinispanCache.CACHEINSTANCE.clearAll();
