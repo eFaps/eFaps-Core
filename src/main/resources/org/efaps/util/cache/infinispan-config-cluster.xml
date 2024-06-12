@@ -196,6 +196,7 @@
                     cache="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>
@@ -208,6 +209,7 @@
                     cache="${prefix:}org.efaps.admin.datamodel.SQLTable.ID-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>
@@ -220,6 +222,7 @@
                     cache="${prefix:}org.efaps.admin.datamodel.SQLTable.Name-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>
@@ -237,6 +240,7 @@
                     cache="${prefix:}org.efaps.admin.datamodel.Type.UUID-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>
@@ -249,6 +253,7 @@
                     cache="${prefix:}org.efaps.admin.datamodel.Type.ID-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>
@@ -258,9 +263,10 @@
             <persistence passivation="false">
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
-                    cache="${prefix:}org.efaps.admin.datamodel.Name.ID-persistence"
+                    cache="${prefix:}org.efaps.admin.datamodel.Type.Name-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
+                    shared="true"
                 >
                 </remote-store>
             </persistence>

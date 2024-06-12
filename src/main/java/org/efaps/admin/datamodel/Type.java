@@ -1596,6 +1596,7 @@ public class Type
                                       final Object _criteria)
         throws CacheReloadException
     {
+        LOG.info("Loading Type from db by: {}", _criteria);
         Type ret = null;
         Connection con = null;
         try {
