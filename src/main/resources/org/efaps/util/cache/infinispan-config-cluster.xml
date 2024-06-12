@@ -19,6 +19,35 @@
     xsi:schemaLocation="urn:infinispan:config:15.0 https://www.infinispan.org/schemas/infinispan-config-15.0.xsd"
     xmlns="urn:infinispan:config:15.0"
 >
+    <jgroups>
+        <stack name="jgroups">
+            <TCP
+                bind_addr="${jgroups.bind.address,jgroups.tcp.address:SITE_LOCAL}"
+                bind_port="${jgroups.bind.port,jgroups.tcp.port:7800}"
+                diag.enabled="${jgroups.diag.enabled:false}"
+                thread_naming_pattern="pl"
+                send_buf_size="640k"
+                sock_conn_timeout="300"
+                linger="${jgroups.tcp.linger:-1}"
+                logical_addr_cache_expiration="360000"
+                port_range="0"
+                bundler_type="${jgroups.bundler.type:transfer-queue}"
+                bundler.max_size="${jgroups.bundler.max_size:64000}"
+                non_blocking_sends="${jgroups.non_blocking_sends:false}"
+
+                thread_pool.min_threads="${jgroups.thread_pool.min_threads:0}"
+                thread_pool.max_threads="${jgroups.thread_pool.max_threads:200}"
+                thread_pool.keep_alive_time="60000"
+
+                thread_pool.thread_dumps_threshold="${jgroups.thread_dumps_threshold:10000}"
+                use_virtual_threads="${jgroups.thread.virtual,org.infinispan.threads.virtual:false}" />
+            <dns.DNS_PING
+                dns_query="${jgroups.dns.query:tasks.infinispan}"
+                dns_record_type="${jgroups.dns.record:A}"
+                num_discovery_runs="3" />
+        </stack>
+    </jgroups>
+
     <cache-container
         default-cache="eFaps-Default"
         name="eFaps-Cache-Container"
@@ -27,7 +56,7 @@
 
         <transport
             cluster="${infinispan.cluster.name:cluster}"
-            stack="${infinispan.cluster.stack:tcp}"
+            stack="${infinispan.cluster.stack:jgroups}"
             node-name="${infinispan.node.name:}" />
         <serialization>
             <context-initializer class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
@@ -126,8 +155,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-             <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
         <replicated-cache
             name="${prefix:}org.efaps.admin.datamodel.SQLTable.ID"
@@ -135,8 +167,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
         <replicated-cache
             name="${prefix:}org.efaps.admin.datamodel.SQLTable.Name"
@@ -144,8 +179,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.access.AccessType.UUID" />
@@ -158,8 +196,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
         <replicated-cache
             name="${prefix:}org.efaps.admin.datamodel.Type.ID"
@@ -167,8 +208,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
         <replicated-cache
             name="${prefix:}org.efaps.admin.datamodel.Type.Name"
@@ -176,8 +220,11 @@
             statistics="true"
         >
             <encoding media-type="application/x-protostream" />
-            <locking concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-            <state-transfer timeout="60000"/>
+            <locking
+                concurrency-level="1000"
+                acquire-timeout="15000"
+                striping="false" />
+            <state-transfer timeout="60000" />
         </replicated-cache>
 
 

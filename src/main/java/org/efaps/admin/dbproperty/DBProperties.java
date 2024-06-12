@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.MissingFormatArgumentException;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
@@ -237,7 +238,7 @@ public final class DBProperties
                 } else {
                     value = DBProperties.getValueFromDB(_key, _language);
                     if (value == null) {
-                        cache.put(cachKey, DBProperties.NULLVALUE);
+                        cache.put(cachKey, DBProperties.NULLVALUE, 15, TimeUnit.MINUTES);
                     } else {
                         cache.put(cachKey, value);
                     }
