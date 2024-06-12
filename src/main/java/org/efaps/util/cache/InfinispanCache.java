@@ -85,6 +85,7 @@ public final class InfinispanCache
         if (clustered) {
             prefix = config.getOptionalValue("core.cache.cluster.prefix", String.class).orElse("");
             hotrodUrl = config.getOptionalValue("core.cache.cluster.hotrodUrl", String.class).orElse("");
+            System.getProperties().put("hotrodUrl", hotrodUrl);
             registerSchemas();
         }
         try {

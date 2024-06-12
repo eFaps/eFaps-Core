@@ -84,7 +84,7 @@
     <remote-cache-containers xmlns="urn:infinispan:config:store:remote:15.0">
         <remote-cache-container
             name="remote-cache"
-            uri="hotrod://admin:secret@localhost:11222?max-active=10&amp;exhausted-action=CREATE_NEW" />
+            uri="${hotrodUrl}?max-active=10&amp;exhausted-action=CREATE_NEW" />
     </remote-cache-containers>
 
     <cache-container
