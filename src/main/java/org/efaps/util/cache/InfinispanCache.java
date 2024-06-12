@@ -118,16 +118,15 @@ public final class InfinispanCache
                         final var storeConfig = cacheConfig.persistence().stores().get(0);
                         final var persitenceCacheName = storeConfig.attributes().<String>attribute("cache").get();
                         LOG.info("Registering persistence cache: {}", persitenceCacheName);
-                        System.out.println(persitenceCacheName);
 
                         final var template = """
-<?xml version=\"1.0\"?>
-<replicated-cache mode=\"ASYNC\" statistics=\"true\">
-    <encoding media-type=\"application/x-protostream\"/>
-    <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
-    <state-transfer timeout=\"60000\"/>
-</replicated-cache>
-                                        """;
+                                        <?xml version=\"1.0\"?>
+                                        <replicated-cache mode=\"ASYNC\" statistics=\"true\">
+                                            <encoding media-type=\"application/x-protostream\"/>
+                                            <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
+                                            <state-transfer timeout=\"60000\"/>
+                                        </replicated-cache>
+                                                                                """;
 
                         final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
                                         .configuration(template)
@@ -186,6 +185,16 @@ public final class InfinispanCache
             } else {
                 count = count - 1;
                 cache.put(InfinispanCache.COUNTERCACHE, count);
+            }
+        }
+    }
+
+    private void clearAll()
+    {
+        for (final var cacheName : this.container.getCacheNames()) {
+            final var cache = this.container.getCache(cacheName, false);
+            if (cache != null) {
+                cache.clear();
             }
         }
     }
@@ -257,6 +266,13 @@ public final class InfinispanCache
             ret = prefix + "-" + ret;
         }
         return ret;
+    }
+
+    public void clear()
+    {
+        if (InfinispanCache.CACHEINSTANCE != null) {
+            InfinispanCache.CACHEINSTANCE.clearAll();
+        }
     }
 
     /**
