@@ -273,7 +273,7 @@ public abstract class AbstractAdminObject
                 EventDefinition.addEvents(this);
                 this.updateCache();
             } catch (final EFapsException e) {
-                AbstractAdminObject.LOG.error("Could not read events for Name:; {}', UUID: {}",  name, uuid);
+                AbstractAdminObject.LOG.error("Could not read events for Name: '{}', UUID: {}",  name, uuid);
             }
         }
         return events.get(_eventType);
