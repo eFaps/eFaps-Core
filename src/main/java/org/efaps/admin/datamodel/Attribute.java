@@ -423,12 +423,15 @@ public class Attribute
         throws CacheReloadException
     {
         super.addEvent(_eventtype, _eventdef);
+        /**
+         * that was to inherit?? not needed any more?
         for (final Type child : getParent().getChildTypes()) {
             final Attribute childAttr = child.getAttribute(getName());
             if (childAttr != null) {
                 childAttr.addEvent(_eventtype, _eventdef);
             }
         }
+        **/
     }
 
     /**
