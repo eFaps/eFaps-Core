@@ -19,7 +19,7 @@
     xsi:schemaLocation="urn:infinispan:config:15.0 https://www.infinispan.org/schemas/infinispan-config-15.0.xsd"
     xmlns="urn:infinispan:config:15.0"
 >
-
+<!--
     <jgroups>
         <stack name="jgroups">
             <TCP
@@ -80,7 +80,7 @@
             <FRAG4 frag_size="${jgroups.frag_size:60000}" />
         </stack>
     </jgroups>
-
+-->
     <remote-cache-containers xmlns="urn:infinispan:config:store:remote:15.0">
         <remote-cache-container
             name="remote-cache"
@@ -92,12 +92,12 @@
         name="eFaps-Cache-Container"
         statistics="true"
     >
-
+<!--
         <transport
             cluster="${infinispan.cluster.name:cluster}"
             stack="${infinispan.cluster.stack:jgroups}"
             node-name="${infinispan.node.name:}" />
-
+ -->
         <serialization>
             <context-initializer class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
         </serialization>
