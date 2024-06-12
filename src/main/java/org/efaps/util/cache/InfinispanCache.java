@@ -66,6 +66,7 @@ public final class InfinispanCache
     private String prefix = "";
 
     private String hotrodUrl = "";
+
     /**
      * Singelton is wanted.
      */
@@ -100,9 +101,10 @@ public final class InfinispanCache
                 final var remoteCacheManager = getRemoteCacheManager();
                 for (final var cacheName : this.container.getCacheNames()) {
                     final var cacheConfig = container.getCacheConfiguration(cacheName);
+
                     if (cacheConfig.clustering() != null && cacheConfig.clustering().cacheMode() != CacheMode.LOCAL) {
                         final var xml = cacheConfig.toStringConfiguration(cacheName);
-                        System.out.println(xml);
+                        LOG.info("Registering clustered cache: {}", xml);
                         final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
                                         .configuration(xml)
                                         .transactionMode(TransactionMode.NONE);
@@ -111,12 +113,36 @@ public final class InfinispanCache
                         remoteConfig.addRemoteCache(cacheName, consumer);
                         remoteCacheManager.getCache(cacheName);
                     }
+                    if (cacheConfig.persistence() != null && cacheConfig.persistence().usingStores()) {
+                        final var storeConfig = cacheConfig.persistence().stores().get(0);
+                        final var persitenceCacheName = storeConfig.attributes().<String>attribute("cache").get();
+                        LOG.info("Registering persistence cache: {}", persitenceCacheName);
+                        System.out.println(persitenceCacheName);
+
+                        final var template = """
+<?xml version=\"1.0\"?>
+<replicated-cache mode=\"ASYNC\" statistics=\"true\">
+    <encoding media-type=\"application/x-protostream\"/>
+    <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
+    <state-transfer timeout=\"60000\"/>
+</replicated-cache>
+                                        """;
+
+                        final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
+                                        .configuration(template)
+                                        .transactionMode(TransactionMode.NONE);
+
+                        final var remoteConfig = remoteCacheManager.getConfiguration();
+                        remoteConfig.addRemoteCache(persitenceCacheName, consumer);
+                        remoteCacheManager.getCache(persitenceCacheName);
+                    }
+
                 }
                 remoteCacheManager.close();
             }
             this.container.start();
         } catch (final IOException e) {
-           LOG.error("Catched", e);
+            LOG.error("Catched", e);
         }
     }
 

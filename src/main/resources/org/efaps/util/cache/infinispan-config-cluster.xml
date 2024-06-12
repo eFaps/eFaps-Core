@@ -19,6 +19,7 @@
     xsi:schemaLocation="urn:infinispan:config:15.0 https://www.infinispan.org/schemas/infinispan-config-15.0.xsd"
     xmlns="urn:infinispan:config:15.0"
 >
+
     <jgroups>
         <stack name="jgroups">
             <TCP
@@ -80,6 +81,12 @@
         </stack>
     </jgroups>
 
+    <remote-cache-containers xmlns="urn:infinispan:config:store:remote:15.0">
+        <remote-cache-container
+            name="remote-cache"
+            uri="hotrod://admin:secret@localhost:11222?max-active=10&amp;exhausted-action=CREATE_NEW" />
+    </remote-cache-containers>
+
     <cache-container
         default-cache="eFaps-Default"
         name="eFaps-Cache-Container"
@@ -90,6 +97,7 @@
             cluster="${infinispan.cluster.name:cluster}"
             stack="${infinispan.cluster.stack:jgroups}"
             node-name="${infinispan.node.name:}" />
+
         <serialization>
             <context-initializer class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
         </serialization>
@@ -181,86 +189,83 @@
             <!-- DateModel -->
         <local-cache name="${prefix:}org.efaps.admin.datamodel.AttributeType.ID" />
         <local-cache name="${prefix:}org.efaps.admin.datamodel.AttributeType.Name" />
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID"
-            mode="ASYNC"
-            statistics="true"
-        >
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.SQLTable.ID"
-            mode="ASYNC"
-            statistics="true"
-        >
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.SQLTable.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SQLTable.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.SQLTable.Name"
-            mode="ASYNC"
-            statistics="true"
-        >
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.SQLTable.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SQLTable.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
+        </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.access.AccessType.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.access.AccessType.ID" />
         <local-cache name="${prefix:}org.efaps.admin.access.AccessType.Name" />
 
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.Type.UUID"
-            mode="ASYNC"
-            statistics="true"
-        >
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Type.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.Type.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.Type.ID"
-            mode="ASYNC"
-            statistics="true"
-        >
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Type.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.Type.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
-        <replicated-cache
-            name="${prefix:}org.efaps.admin.datamodel.Type.Name"
-            mode="ASYNC"
-            statistics="true"
-        >
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Type.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.Name.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                >
+                </remote-store>
+            </persistence>
             <encoding media-type="application/x-protostream" />
-            <locking
-                concurrency-level="1000"
-                acquire-timeout="15000"
-                striping="false" />
-            <state-transfer timeout="60000" />
-        </replicated-cache>
-
-
-
+        </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.Name" />
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.ID" />
