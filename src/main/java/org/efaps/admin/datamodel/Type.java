@@ -1200,6 +1200,7 @@ public class Type
                 }
             }
             typeMenuChecked = true;
+            updateCache();
         }
         if (typeMenuId == null && getParentType() != null) {
             ret = getParentType().getTypeMenu();
@@ -1276,6 +1277,7 @@ public class Type
                 }
             }
             typeFormChecked = true;
+            updateCache();
         }
         if (typeFormId == null && getParentType() != null) {
             ret = getParentType().getTypeForm();
