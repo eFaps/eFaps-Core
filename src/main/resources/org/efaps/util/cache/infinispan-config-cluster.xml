@@ -169,7 +169,20 @@
             </indexing>
         </local-cache>
             -->
-        <local-cache name="${prefix:}org.efaps.admin.dbproperty.DBProperties" />
+        <local-cache name="${prefix:}org.efaps.admin.dbproperty.DBProperties">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.dbproperty.DBProperties-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+
 
         <!-- UserInterface -->
         <local-cache name="${prefix:}org.efaps.admin.ui.field.Field" />
