@@ -191,9 +191,45 @@
         <local-cache name="${prefix:}org.efaps.admin.ui.Command.ID" />
         <local-cache name="${prefix:}org.efaps.admin.ui.Command.Name" />
 
-        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.Name" />
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Menu.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Menu.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Menu.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Menu.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.ui.Image.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.ui.Image.ID" />
