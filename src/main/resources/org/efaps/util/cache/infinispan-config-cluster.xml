@@ -132,10 +132,6 @@
         <local-cache name="${prefix:}org.efaps.admin.ui.Search.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.ui.Search.ID" />
         <local-cache name="${prefix:}org.efaps.admin.ui.Search.Name" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Form.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Form.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Form.Name" />
-
 
         <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" />
         <local-cache name="${prefix:}org.efaps.admin.index.IndexDefinition.UUID" />
@@ -265,8 +261,6 @@
             </persistence>
             <encoding media-type="application/x-protostream" />
         </local-cache>
-
-
         <local-cache name="${prefix:}org.efaps.admin.ui.Table.UUID">
             <persistence passivation="false">
                 <remote-store
@@ -298,6 +292,45 @@
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
                     cache="${prefix:}org.efaps.admin.ui.Table.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Form.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Form.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Form.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Form.Name-persistence"
                     remote-cache-container="remote-cache"
                     raw-values="true"
                     shared="true"
