@@ -83,7 +83,7 @@ public abstract class AbstractCollection
      */
     private String select = null;
 
-    private final Map<Long, Field> fields = new TreeMap<>();
+    private final Map<Long, Field> fieldsMap = new TreeMap<>();
 
     /**
      * Constructor passing on to the super constructor.
@@ -106,7 +106,7 @@ public abstract class AbstractCollection
      */
     public void add(final Field _field)
     {
-        this.fields.put(_field.getId(), _field);
+        this.fieldsMap.put(_field.getId(), _field);
         this.fieldIds.add(_field.getId());
         if (_field.getReference() != null && _field.getReference().length() > 0) {
             final String ref = _field.getReference();
@@ -243,7 +243,7 @@ public abstract class AbstractCollection
      */
     public List<Field> getFields()
     {
-        return new ArrayList<>(this.fields.values());
+        return new ArrayList<>(getFieldsMap().values());
     }
 
     protected List<Long> getFieldIds()
@@ -251,7 +251,8 @@ public abstract class AbstractCollection
         return this.fieldIds;
     }
 
-    protected void setFieldIds(List<Long> fieldIds) {
+    protected void setFieldIds(List<Long> fieldIds)
+    {
         this.fieldIds = fieldIds;
     }
 
@@ -306,7 +307,21 @@ public abstract class AbstractCollection
      */
     public Map<Long, Field> getFieldsMap()
     {
-        return this.fields;
+        if (this.fieldsMap.isEmpty()) {
+            for (final var fieldId : this.fieldIds) {
+                Field field = null;
+                try {
+                    field = Field.get(fieldId);
+                } catch (final CacheReloadException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                if (field != null) {
+                    this.fieldsMap.put(field.getId(), field);
+                }
+            }
+        }
+        return fieldsMap;
     }
 
     /**

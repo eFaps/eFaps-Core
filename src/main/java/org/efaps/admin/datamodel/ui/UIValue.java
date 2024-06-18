@@ -43,7 +43,7 @@ public final class UIValue
 {
 
     /**
-     *Needed foer serialization.
+     * Needed foer serialization.
      */
     private static final long serialVersionUID = 1L;
 
@@ -95,12 +95,12 @@ public final class UIValue
     private Object requestInstances;
 
     /**
-     *  Value in case of readonly.
+     * Value in case of readonly.
      */
     private Object readOnlyValue;
 
     /**
-     *  Value in case of edit.
+     * Value in case of edit.
      */
     private Object editValue;
 
@@ -110,9 +110,9 @@ public final class UIValue
     private Object hiddenValue;
 
     /**
-     * @param _field        Field
-     * @param _attribute    attribute
-     * @param _value        value
+     * @param _field Field
+     * @param _attribute attribute
+     * @param _value value
      */
     private UIValue(final Field _field,
                     final Attribute _attribute,
@@ -129,7 +129,13 @@ public final class UIValue
     @Override
     public Field getField()
     {
-        return Field.get(this.fieldId);
+        try {
+            return Field.get(this.fieldId);
+        } catch (final CacheReloadException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -234,7 +240,7 @@ public final class UIValue
     {
         final IUIProvider ret;
         if (this.attributeId > 0) {
-            ret =  getAttribute().getAttributeType().getUIProvider();
+            ret = getAttribute().getAttributeType().getUIProvider();
         } else {
             ret = getField().getUIProvider();
         }
@@ -286,8 +292,8 @@ public final class UIValue
     /**
      * Executes the field value events for a field.
      *
-     * @param _eventType    type of event to be executed
-     * @param _targetMode   targetmode
+     * @param _eventType type of event to be executed
+     * @param _targetMode targetmode
      * @throws EFapsException on error
      * @return string from called field value events or <code>null</code> if no
      *         field value event is defined
@@ -429,7 +435,8 @@ public final class UIValue
     /**
      * Setter method for instance variable {@link #requestInstances}.
      *
-     * @param _requestInstances value for instance variable {@link #requestInstances}
+     * @param _requestInstances value for instance variable
+     *            {@link #requestInstances}
      * @return this, for chaining
      */
     public UIValue setRequestInstances(final Object _requestInstances)
@@ -486,10 +493,10 @@ public final class UIValue
     }
 
     /**
-     * @param _field        Field
-     * @param _attribute    attribute
-     * @param _value        value
-     * @return  UIValue
+     * @param _field Field
+     * @param _attribute attribute
+     * @param _value value
+     * @return UIValue
      */
     public static UIValue get(final Field _field,
                               final Attribute _attribute,

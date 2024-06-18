@@ -88,8 +88,9 @@ public class FieldPicker
      *
      * @param _id       id to search in the cache
      * @return instance of class {@link Field}
+     * @throws CacheReloadException
      */
-    public static FieldPicker get(final long _id)
+    public static FieldPicker get(final long _id) throws CacheReloadException
     {
         return (FieldPicker) Field.get(_id);
     }

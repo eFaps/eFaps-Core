@@ -114,8 +114,9 @@ public class FieldTable
      *
      * @param _id id to search in the cache
      * @return instance of class {@link Field}
+     * @throws CacheReloadException
      */
-    public static FieldTable get(final long _id)
+    public static FieldTable get(final long _id) throws CacheReloadException
     {
         return (FieldTable) Field.get(_id);
     }

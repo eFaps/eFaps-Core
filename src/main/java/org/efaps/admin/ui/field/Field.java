@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.efaps.admin.common.MsgPhrase;
+import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.datamodel.ui.IUIProvider;
 import org.efaps.admin.ui.AbstractCollection;
 import org.efaps.admin.ui.AbstractCommand.Target;
@@ -724,40 +725,67 @@ public class Field
      *
      * @param _id id to search in the cache
      * @return instance of class {@link Field}
+     * @throws CacheReloadException
      */
-    public static Field get(final long _id)
+    public static Field get(final long id)
+        throws CacheReloadException
     {
-        Field ret = null;
-        final var cache = InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
-        if (cache.containsKey(_id)) {
-            ret = cache.get(_id);
-        } else {
-            AbstractCollection col = null;
-            try {
-                final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.Field);
-                queryBldr.addWhereAttrEqValue(CIAdminUserInterface.Field.ID, _id);
-                final MultiPrintQuery multi = queryBldr.getPrint();
-                multi.addAttribute(CIAdminUserInterface.Field.Collection);
-                multi.executeWithoutAccessCheck();
 
-                if (multi.next()) {
-                    final Long colId = multi.<Long>getAttribute(CIAdminUserInterface.Field.Collection);
-                    col = Form.get(colId);
-                    if (col == null) {
-                        col = Table.get(colId);
-                    }
-                }
-            } catch (final EFapsException e) {
-                Field.LOG.error("get(long)", e);
-            }
-            if (col != null) {
-                ret = col.getFieldsMap().get(_id);
-                if (ret != null) {
-                    cache.put(_id, ret);
-                }
-            }
+        final var cache = InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE);
+        if (!cache.containsKey(id)) {
+            readObjectFromDB(id);
         }
-        return ret;
+        return cache.get(id);
+    }
+
+    private static void readObjectFromDB(long fieldId)
+        throws CacheReloadException
+    {
+        try {
+
+            final QueryBuilder queryBldr = new QueryBuilder(CIAdminUserInterface.Field);
+            queryBldr.addWhereAttrEqValue(CIAdminUserInterface.Field.ID, fieldId);
+            final MultiPrintQuery multi = queryBldr.getPrint();
+            multi.addAttribute(CIAdminUserInterface.Field.Type, CIAdminUserInterface.Field.Name,
+                            CIAdminUserInterface.Field.Collection);
+            multi.executeWithoutAccessCheck();
+
+            while (multi.next()) {
+                final long id = multi.getCurrentInstance().getId();
+                final String name = multi.<String>getAttribute(CIAdminUserInterface.Field.Name);
+                final Type type = multi.<Type>getAttribute(CIAdminUserInterface.Field.Type);
+                final Field field;
+                if (type.equals(CIAdminUserInterface.FieldCommand.getType())) {
+                    field = new FieldCommand(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldHeading.getType())) {
+                    field = new FieldHeading(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldTable.getType())) {
+                    field = new FieldTable(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldGroup.getType())) {
+                    field = new FieldGroup(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldSet.getType())) {
+                    field = new FieldSet(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldClassification.getType())) {
+                    field = new FieldClassification(id, null, name);
+                } else if (type.equals(CIAdminUserInterface.FieldPicker.getType())) {
+                    field = new FieldPicker(id, null, name);
+                } else {
+                    field = new Field(id, null, name);
+                }
+                field.readFromDB();
+                final Long colId = multi.getAttribute(CIAdminUserInterface.Field.Collection);
+                AbstractCollection col = Form.get(colId);
+                if (col == null) {
+                    col = Table.get(colId);
+                }
+                if (col != null) {
+                    field.setCollectionUUID(col.getUUID());
+                }
+                InfinispanCache.get().<Long, Field>getCache(Field.IDCACHE).put(field.getId(), field);
+            }
+        } catch (final EFapsException e) {
+            throw new CacheReloadException("could not read field for id'" + fieldId + "'", e);
+        }
     }
 
     /**

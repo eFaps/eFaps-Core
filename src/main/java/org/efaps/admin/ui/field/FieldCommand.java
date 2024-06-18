@@ -69,8 +69,9 @@ public class FieldCommand
      *
      * @param _id       id to search in the cache
      * @return instance of class {@link Field}
+     * @throws CacheReloadException
      */
-    public static FieldCommand get(final long _id)
+    public static FieldCommand get(final long _id) throws CacheReloadException
     {
         return (FieldCommand) Field.get(_id);
     }
@@ -93,7 +94,7 @@ public class FieldCommand
         throws CacheReloadException
     {
         if ("CmdRenderButton".equals(_name)) {
-            this.renderButton = !("false".equalsIgnoreCase(_value));
+            this.renderButton = !"false".equalsIgnoreCase(_value);
         } else if ("CmdAppend".equals(_name)) {
             this.append = "true".equalsIgnoreCase(_value);
         } else if ("CmdTargetField".equals(_name)) {
