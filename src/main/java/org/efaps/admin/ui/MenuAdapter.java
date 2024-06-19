@@ -41,6 +41,7 @@ public class MenuAdapter
                 Long targetTableId,
                 Long targetSearchId,
                 Long targetCommandId,
+                Long targetModuleId,
                 List<EventDefinition> events,
                 boolean eventChecked)
     {
@@ -54,7 +55,7 @@ public class MenuAdapter
         menu.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
         menu.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         menu.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
-
+        menu.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         return menu;
     }
 

@@ -1113,6 +1113,16 @@ public abstract class AbstractCommand
         this.targetCommandId = targetCommandId;
     }
 
+    protected Long getTargetModuleId()
+    {
+        return this.targetModuleId;
+    }
+
+    protected void setTargetModuleId(Long targetModuleId)
+    {
+        this.targetModuleId = targetModuleId;
+    }
+
     @Override
     public boolean equals(final Object _obj)
     {

@@ -38,6 +38,7 @@ public class SearchAdapter
                   Long targetTableId,
                   Long targetSearchId,
                   Long targetCommandId,
+                  Long targetModuleId,
                   List<EventDefinition> events,
                   boolean eventChecked)
     {
@@ -47,6 +48,7 @@ public class SearchAdapter
         search.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
         search.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         search.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
+        search.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         setPropertiesMap(search, propertyMap);
         return search;
     }

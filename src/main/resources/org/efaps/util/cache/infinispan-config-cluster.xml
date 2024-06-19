@@ -126,12 +126,6 @@
         <local-cache name="${prefix:}org.efaps.admin.common.Association.Name" />
         <local-cache name="${prefix:}org.efaps.admin.common.Association.Key" />
         <local-cache name="${prefix:}org.efaps.util.cache.InfinispanCache.InternalCounter" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Module.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Module.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Module.Name" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Search.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Search.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.ui.Search.Name" />
 
         <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" />
         <local-cache name="${prefix:}org.efaps.admin.index.IndexDefinition.UUID" />
@@ -339,7 +333,84 @@
             </persistence>
             <encoding media-type="application/x-protostream" />
         </local-cache>
-
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Module.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Module.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Module.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Module.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Search.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Search.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.ui.Search.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.ui.Search.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.ui.Image.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.ui.Image.ID" />

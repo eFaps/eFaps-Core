@@ -38,6 +38,7 @@ public class CommandAdapter
                    Long targetTableId,
                    Long targetSearchId,
                    Long targetCommandId,
+                   Long targetModuleId,
                    List<EventDefinition> events,
                    boolean eventChecked)
     {
@@ -47,6 +48,7 @@ public class CommandAdapter
         command.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
         command.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         command.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
+        command.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         setPropertiesMap(command, propertyMap);
         setEvents(command, events, eventChecked);
         return command;

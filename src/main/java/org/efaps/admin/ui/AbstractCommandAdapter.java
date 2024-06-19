@@ -51,4 +51,10 @@ public class AbstractCommandAdapter
     {
         return abstractCommand.getTargetCommandId();
     }
+
+    @ProtoField(number = 205)
+    Long getTargetModuleId(AbstractCommand abstractCommand)
+    {
+        return abstractCommand.getTargetModuleId();
+    }
 }
