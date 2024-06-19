@@ -52,6 +52,8 @@ import org.efaps.jaas.AppAccessHandler;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -88,6 +90,8 @@ public abstract class AbstractUserInterfaceObject
         /** TargetMode for view. */
         VIEW;
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractUserInterfaceObject.class);
 
     /**
      * Needed for serialization.
@@ -447,6 +451,7 @@ public abstract class AbstractUserInterfaceObject
                                             final Object _value)
         throws CacheReloadException
     {
+        LOG.info("Loading {} from db by: {}", _type.getName(), _value);
         boolean ret = false;
         try {
             final QueryBuilder queryBldr = new QueryBuilder(_type);

@@ -44,6 +44,9 @@ import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.protostream.annotations.ProtoEnumValue;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.StringPBEConfig;
 import org.jasypt.iv.IvGenerator;
@@ -168,7 +171,7 @@ public final class SystemConfiguration
     private final String name;
 
     /** The values. */
-    private final List<Value> values = new ArrayList<>();
+    private List<Value> values = new ArrayList<>();
 
     /**
      * Constructor setting instance variables.
@@ -527,7 +530,7 @@ public final class SystemConfiguration
      * @throws EFapsException on error
      */
     private String getValue(final String _key,
-                              final ConfType _type)
+                            final ConfType _type)
         throws EFapsException
     {
         final List<Value> fv = values.stream()
@@ -669,6 +672,16 @@ public final class SystemConfiguration
         }
     }
 
+    protected List<Value> getValues()
+    {
+        return this.values;
+    }
+
+    protected void setValues(final List<Value> values)
+    {
+        this.values = values;
+    }
+
     /**
      * Method to initialize the {@link #CACHE cache} for the system
      * configurations.
@@ -686,7 +699,8 @@ public final class SystemConfiguration
         SystemConfiguration.ENCRYPTOR.setConfig(SystemConfiguration.getPBEConfig());
     }
 
-    public static void clearCache() {
+    public static void clearCache()
+    {
         InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE).clear();
         InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.IDCACHE).clear();
         InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE).clear();
@@ -697,18 +711,15 @@ public final class SystemConfiguration
      */
     private static void cacheSytemConfig(final SystemConfiguration _sysConfig)
     {
-
-
         final var cache4UUID = InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE);
         cache4UUID.put(_sysConfig.getUUID(), _sysConfig);
 
-        final var nameCache = InfinispanCache.get().<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE);
+        final var nameCache = InfinispanCache.get()
+                        .<String, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE);
         nameCache.put(_sysConfig.getName(), _sysConfig);
 
         final var idCache = InfinispanCache.get().<Long, SystemConfiguration>getCache(SystemConfiguration.IDCACHE);
         idCache.put(_sysConfig.getId(), _sysConfig);
-
-
     }
 
     /**
@@ -721,6 +732,7 @@ public final class SystemConfiguration
                                                         final Object _criteria)
         throws CacheReloadException
     {
+        LOG.info("Loading SystemConfiguration from db by: {}", _criteria);
         boolean ret = false;
         Connection con = null;
         try {
@@ -806,14 +818,9 @@ public final class SystemConfiguration
      */
     protected enum ConfType
     {
-
-        /** The attribute. */
-        ATTRIBUTE,
-
-        /** The link. */
-        LINK,
-
-        /** The objattr. */
+        @ProtoEnumValue(number = 1, name = "ATTRIBUTE")
+        ATTRIBUTE, @ProtoEnumValue(number = 2, name = "LINK")
+        LINK, @ProtoEnumValue(number = 3, name = "OBJATTR")
         OBJATTR
     }
 
@@ -826,41 +833,33 @@ public final class SystemConfiguration
 
         private static final long serialVersionUID = 1L;
 
-        /** The type. */
+        @ProtoField(number = 1, defaultValue = "ATTRIBUTE")
         final ConfType type;
 
-        /** The key. */
+        @ProtoField(number = 2)
         final String key;
 
-        /** The value. */
-        private final String value;
+        @ProtoField(number = 3)
+        final String value;
 
-        /** The company id. */
-        private final long companyId;
+        @ProtoField(number = 4, defaultValue = "0")
+        final long companyId;
 
-        /** The app key. */
-        private final String appKey;
+        @ProtoField(number = 5)
+        final String appKey;
 
-        /**
-         * Instantiates a new value.
-         *
-         * @param _confType the conf type
-         * @param _key the key
-         * @param _value the value
-         * @param _companyId the company id
-         * @param _appkey the appkey
-         */
-        Value(final ConfType _confType,
-              final String _key,
-              final String _value,
-              final Long _companyId,
-              final String _appkey)
+        @ProtoFactory
+        Value(final ConfType type,
+              final String key,
+              final String value,
+              final long companyId,
+              final String appKey)
         {
-            type = _confType;
-            key = StringUtils.trim(_key);
-            value = StringUtils.trim(_value);
-            companyId = _companyId;
-            appKey = StringUtils.trim(_appkey);
+            this.type = type;
+            this.key = StringUtils.trim(key);
+            this.value = StringUtils.trim(value);
+            this.companyId = companyId;
+            this.appKey = StringUtils.trim(appKey);
         }
 
         @Override

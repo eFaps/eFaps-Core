@@ -503,6 +503,47 @@
             <encoding media-type="application/x-protostream" />
         </local-cache>
 
+
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.Name" />
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.ID" />
 
@@ -514,10 +555,6 @@
         <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.ID" />
         <local-cache name="${prefix:}org.efaps.admin.common.NumberGenerator.Name" />
-
-        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.common.SystemConfiguration.Name" />
 
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4UUID" />
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4Name" />

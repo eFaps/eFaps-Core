@@ -443,7 +443,7 @@ public final class SQLTable
     @SuppressFBWarnings("RV_RETURN_VALUE_OF_put_IGNORE")
     private static void cacheSQLTable(final SQLTable _sqlTable)
     {
-        
+
         final var cache4UUID = InfinispanCache.get().<UUID, SQLTable>getCache(SQLTable.UUIDCACHE);
         cache4UUID.put(_sqlTable.getUUID(), _sqlTable);
 
@@ -452,7 +452,7 @@ public final class SQLTable
 
         final var idCache = InfinispanCache.get().<Long, SQLTable>getCache(SQLTable.IDCACHE);
         idCache.put(_sqlTable.getId(), _sqlTable);
-        
+
     }
 
     /**
@@ -465,6 +465,7 @@ public final class SQLTable
                                              final Object _criteria)
         throws CacheReloadException
     {
+        LOG.info("Loading SQLTable from db by: {}", _criteria);
         final boolean ret = false;
         Connection con = null;
         try {

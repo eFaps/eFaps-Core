@@ -15,6 +15,9 @@
  */
 package org.efaps.admin.common;
 
+import java.util.List;
+
+import org.efaps.admin.common.SystemConfiguration.Value;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -22,13 +25,17 @@ import org.infinispan.protostream.annotations.ProtoField;
 @ProtoAdapter(SystemConfiguration.class)
 public class SystemConfigurationAdapter
 {
-    @ProtoFactory
-    SystemConfiguration create(final long id,
-                               final String name,
-                               final String uuid) {
-      return new SystemConfiguration(id, name, uuid);
-    }
 
+    @ProtoFactory
+    SystemConfiguration create(long id,
+                               String name,
+                               String uuid,
+                               List<Value> values)
+    {
+        final var systemConfiguration = new SystemConfiguration(id, name, uuid);
+        systemConfiguration.setValues(values);
+        return systemConfiguration;
+    }
 
     @ProtoField(number = 1, defaultValue = "0")
     long getId(SystemConfiguration systemConfiguration)
@@ -46,5 +53,11 @@ public class SystemConfigurationAdapter
     String getName(SystemConfiguration systemConfiguration)
     {
         return systemConfiguration.getName();
+    }
+
+    @ProtoField(number = 4)
+    List<Value> getValues(SystemConfiguration systemConfiguration)
+    {
+        return systemConfiguration.getValues();
     }
 }
