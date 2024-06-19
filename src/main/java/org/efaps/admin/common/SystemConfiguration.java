@@ -686,6 +686,12 @@ public final class SystemConfiguration
         SystemConfiguration.ENCRYPTOR.setConfig(SystemConfiguration.getPBEConfig());
     }
 
+    public static void clearCache() {
+        InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.UUIDCACHE).clear();
+        InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.IDCACHE).clear();
+        InfinispanCache.get().<UUID, SystemConfiguration>getCache(SystemConfiguration.NAMECACHE).clear();
+    }
+
     /**
      * @param _sysConfig SystemConfiguration to be cached
      */
