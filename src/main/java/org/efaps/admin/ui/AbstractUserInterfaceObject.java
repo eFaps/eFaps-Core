@@ -36,6 +36,7 @@ import org.efaps.admin.event.Parameter;
 import org.efaps.admin.event.Parameter.ParameterValues;
 import org.efaps.admin.event.Return;
 import org.efaps.admin.event.Return.ReturnValues;
+import org.efaps.admin.index.IndexDefinition;
 import org.efaps.admin.program.bundle.BundleMaker;
 import org.efaps.admin.ui.field.Field;
 import org.efaps.admin.user.AbstractUserObject;
@@ -540,5 +541,6 @@ public abstract class AbstractUserInterfaceObject
                         Module.LOG);
 
         BundleMaker.initialize();
+        IndexDefinition.initialize();
     }
 }

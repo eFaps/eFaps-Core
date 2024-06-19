@@ -124,18 +124,6 @@ public final class IndexDefinition
     public static void initialize()
         throws CacheReloadException
     {
-        initialize(true);
-    }
-
-    /**
-     * Initialize.
-     *
-     * @param _restart the restart
-     * @throws CacheReloadException the cache reload exception
-     */
-    private static void initialize(final boolean _restart)
-        throws CacheReloadException
-    {
         InfinispanCache.get().<UUID, Type>initCache(IndexDefinition.UUIDCACHE, IndexDefinition.LOG);
     }
 
@@ -150,7 +138,6 @@ public final class IndexDefinition
     public static IndexDefinition get(final UUID _uuid)
         throws EFapsException
     {
-        initialize(true);
         final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
         if (!cache.containsKey(_uuid)) {
             IndexDefinition.loadDefinition(_uuid);
@@ -192,7 +179,7 @@ public final class IndexDefinition
             fieldMulti.executeWithoutAccessCheck();
             while (fieldMulti.next()) {
                 final IndexField field = new IndexField(fieldMulti.<String>getAttribute(
-                                    CIAdminIndex.IndexField.Identifier),
+                                CIAdminIndex.IndexField.Identifier),
                                 fieldMulti.<String>getAttribute(CIAdminIndex.IndexField.Key),
                                 fieldMulti.<String>getAttribute(CIAdminIndex.IndexField.Select),
                                 fieldMulti.<FieldType>getAttribute(CIAdminIndex.IndexField.FieldType),
@@ -205,7 +192,8 @@ public final class IndexDefinition
         final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
         cache.put(_typeUUID, def);
 
-        // only if it is not a null index check if it must be joined with parent index definitions
+        // only if it is not a null index check if it must be joined with parent
+        // index definitions
         final List<IndexDefinition> defs = new ArrayList<>();
         Type current = type;
         while (current.getParentType() != null) {
@@ -296,6 +284,7 @@ public final class IndexDefinition
     public static final class IndexField
         implements Serializable
     {
+
         /** The Constant serialVersionUID. */
         private static final long serialVersionUID = 1L;
 
