@@ -120,8 +120,8 @@ public final class Selection
                     final String attrName = ((IAttributeSelectElement) ele).getName();
                     Attribute attr = currentType.getAttribute(attrName);
                     if (attr == null) {
-                        LOG.debug("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
                         if (currentType.isAbstract()) {
+                            LOG.debug("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
                             for (final var childType: currentType.getChildTypes()) {
                                 attr = childType.getAttribute(attrName);
                                 if (attr != null) {
@@ -129,6 +129,8 @@ public final class Selection
                                     break;
                                 }
                             }
+                        } else {
+                            LOG.error("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
                         }
                     }
                     final AttributeElement element = new AttributeElement().setAttribute(attr);
@@ -136,6 +138,9 @@ public final class Selection
                 } else if (ele instanceof ILinktoSelectElement) {
                     final String attrName = ((ILinktoSelectElement) ele).getName();
                     final Attribute attr = currentType.getAttribute(attrName);
+                    if (attr == null) {
+                        LOG.error("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
+                    }
                     final LinktoElement element = new LinktoElement().setAttribute(attr);
                     select.addElement(element);
                     currentType = attr.getLink();
