@@ -1671,7 +1671,7 @@ public class Type
                         }
                     }
                 }
-                Type.cacheType(ret);
+                //Type.cacheType(ret);
                 Attribute.add4Type(ret);
                 ret.readFromDB4Links();
                 ret.readFromDB4Properties();
