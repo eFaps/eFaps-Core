@@ -56,6 +56,8 @@ public class TypeAdapter
                 Long typeIconId,
                 Long typeFormId,
                 boolean typeFormChecked,
+                boolean classifiedByTypeChecked,
+                boolean accessSetChecked,
                 Long storeId,
                 Set<Long> attributeIds,
                 final Map<String, String> propertyMap,
@@ -72,8 +74,10 @@ public class TypeAdapter
             type.setMainTableId(ProtoUtils.toNullLong(mainTableId));
             type.setChildTypeIds(childTypeIds);
             type.setClassifiedByTypeIds(classifiedByTypeIds);
+            type.setClassifiedByTypeChecked(classifiedByTypeChecked);
             type.setTableIds(tableIds);
             type.setAccessSetIds(accessSetIds);
+            type.setAccessSetChecked(accessSetChecked);
             type.setStatusAttributeName(StringUtils.isNotBlank(statusAttributeName) ? statusAttributeName : null);
             type.setCompanyAttributeName(StringUtils.isNotBlank(companyAttributeName) ? companyAttributeName : null);
             type.setAssociationAttributeName(
@@ -221,4 +225,17 @@ public class TypeAdapter
     {
         return type.isTypeFormChecked();
     }
+
+    @ProtoField(number = 125, defaultValue = "false")
+    boolean isClassifiedByTypeChecked(Type type)
+    {
+        return type.isClassifiedByTypeChecked();
+    }
+
+    @ProtoField(number = 126, defaultValue = "false")
+    boolean isAccessSetChecked(Type type)
+    {
+        return type.isAccessSetChecked();
+    }
+
 }

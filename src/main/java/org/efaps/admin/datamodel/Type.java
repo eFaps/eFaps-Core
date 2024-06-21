@@ -228,6 +228,8 @@ public class Type
      */
     private Set<Long> classifiedByTypeIds = new HashSet<>();
 
+    private boolean classifiedByTypeChecked;
+
     /**
      * Caching
      *
@@ -272,18 +274,12 @@ public class Type
     /**
      * Have the accessSet been evaluated.
      */
-    private boolean checked4AccessSet = false;
+    private boolean accessSetChecked = false;
 
     /**
      * Have the children been evaluated.
      */
     private boolean checked4Children = false;
-
-    /**
-     * Internal boolean to store if for this type was already checked if it is
-     * classified by an classification.
-     */
-    private boolean checked4classifiedBy = false;
 
     /**
      * Stores all type of events which are allowed to fire on this type.
@@ -825,8 +821,7 @@ public class Type
     public Set<AccessSet> getAccessSets()
         throws EFapsException
     {
-        if (!checked4AccessSet) {
-            checked4AccessSet = true;
+        if (!accessSetChecked) {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminAccess.AccessSet2DataModelType);
             queryBldr.addWhereAttrEqValue(CIAdminAccess.AccessSet2DataModelType.DataModelTypeLink, getId());
             final MultiPrintQuery multi = queryBldr.getPrint();
@@ -837,6 +832,8 @@ public class Type
                 AccessSet.get(accessSet);
                 accessSetIds.add(accessSet);
             }
+            accessSetChecked = true;
+            updateCache();
         }
         final Set<AccessSet> ret = new HashSet<>();
         for (final Long id : accessSetIds) {
@@ -853,7 +850,16 @@ public class Type
     protected void setAccessSetIds(Set<Long> accessSetIds)
     {
         this.accessSetIds = accessSetIds;
-        this.checked4AccessSet = true;
+    }
+
+    protected boolean isAccessSetChecked()
+    {
+        return accessSetChecked;
+    }
+
+    protected void setAccessSetChecked(final boolean accessSetChecked)
+    {
+        this.accessSetChecked = accessSetChecked;
     }
 
     /**
@@ -932,7 +938,6 @@ public class Type
      */
     protected void addClassifiedByType(final Classification _classification)
     {
-        checked4classifiedBy = true;
         classifiedByTypeIds.add(_classification.getId());
     }
 
@@ -944,7 +949,6 @@ public class Type
     protected void setClassifiedByTypeIds(Set<Long> classifiedByTypeIds)
     {
         this.classifiedByTypeIds = classifiedByTypeIds;
-        checked4classifiedBy = true;
     }
 
     /**
@@ -957,7 +961,7 @@ public class Type
     public Set<Classification> getClassifiedByTypes()
         throws EFapsException
     {
-        if (!checked4classifiedBy) {
+        if (!classifiedByTypeChecked) {
             final QueryBuilder attrQueryBldr = new QueryBuilder(CIAdminDataModel.TypeClassifies);
             attrQueryBldr.addWhereAttrEqValue(CIAdminDataModel.TypeClassifies.To, getId());
             final AttributeQuery attrQuery = attrQueryBldr.getAttributeQuery(CIAdminDataModel.TypeClassifies.From);
@@ -966,9 +970,10 @@ public class Type
             final InstanceQuery query = queryBldr.getQuery();
             query.executeWithoutAccessCheck();
             while (query.next()) {
-                Type.get(query.getCurrentValue().getId());
+                classifiedByTypeIds.add(query.getCurrentValue().getId());
             }
-            checked4classifiedBy = true;
+            classifiedByTypeChecked = true;
+            updateCache();
         }
         final Set<Classification> ret = new HashSet<>();
         if (getParentType() != null) {
@@ -978,6 +983,16 @@ public class Type
             ret.add((Classification) Type.get(id));
         }
         return Collections.unmodifiableSet(ret);
+    }
+
+    protected boolean isClassifiedByTypeChecked()
+    {
+        return classifiedByTypeChecked;
+    }
+
+    protected void setClassifiedByTypeChecked(boolean classifiedByTypeChecked)
+    {
+        this.classifiedByTypeChecked = classifiedByTypeChecked;
     }
 
     /**
@@ -1418,9 +1433,9 @@ public class Type
                         .append("hasAssociation", hasAssociation())
                         .append("groupDependend", isGroupDependent())
                         .append("statusDependend", isCheckStatus())
-                        .append("checked4AccessSet", checked4AccessSet)
+                        .append("accessSetChecked", accessSetChecked)
                         .append("checked4Children", checked4Children)
-                        .append("checked4classifiedBy", checked4classifiedBy)
+                        .append("classifiedByTypeChecked", classifiedByTypeChecked)
                         .toString();
     }
 
@@ -1528,8 +1543,6 @@ public class Type
      */
     protected static void cacheType(final Type _type)
     {
-
-
         final var cache4UUID = InfinispanCache.get().<UUID, Type>getCache(Type.UUIDCACHE);
         cache4UUID.put(_type.getUUID(), _type);
 
@@ -1538,8 +1551,6 @@ public class Type
 
         final var idCache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
         idCache.put(_type.getId(), _type);
-
-
     }
 
     /**

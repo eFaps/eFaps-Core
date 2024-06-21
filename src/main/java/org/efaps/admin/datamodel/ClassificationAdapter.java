@@ -59,6 +59,8 @@ public class ClassificationAdapter
                           boolean eventChecked,
                           boolean typeMenuChecked,
                           boolean typeFormChecked,
+                          boolean classifiedByTypeChecked,
+                          boolean accessSetChecked,
                           Long parentId,
                           boolean multipleSelect,
                           Set<Long> childrenIds,

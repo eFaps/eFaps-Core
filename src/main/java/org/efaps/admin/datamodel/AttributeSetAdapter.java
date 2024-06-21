@@ -61,7 +61,9 @@ public class AttributeSetAdapter
                         List<EventDefinition> events,
                         boolean eventChecked,
                         boolean typeMenuChecked,
-                        boolean typeFormChecked)
+                        boolean typeFormChecked,
+                        boolean classifiedByTypeChecked,
+                        boolean accessSetChecked)
     {
         AttributeSet attributeSet = null;
         try {
