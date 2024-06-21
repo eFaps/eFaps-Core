@@ -306,7 +306,8 @@ public abstract class AbstractUserInterfaceObject
         if (!NULLS.containsKey(_componentType)) {
             try {
                 final Constructor<?> uiObjConst = _componentType.getConstructor(Long.class, String.class, String.class);
-                final AbstractUserInterfaceObject uiObj = (AbstractUserInterfaceObject) uiObjConst.newInstance(0L, null, null);
+                final AbstractUserInterfaceObject uiObj = (AbstractUserInterfaceObject) uiObjConst.newInstance(0L, null,
+                                "NULL-Value");
                 NULLS.put(_componentType, uiObj);
             } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException
                             | IllegalArgumentException | InvocationTargetException e) {
@@ -335,7 +336,7 @@ public abstract class AbstractUserInterfaceObject
         if (!cache.containsKey(_uuid)
                         && !AbstractUserInterfaceObject
                                         .readObjectFromDB(_componentType, _type, CIAdmin.Abstract.UUID, _uuid)) {
-            cache.put(_uuid, (V) getNull(_componentType), 100, TimeUnit.SECONDS);
+            cache.put(_uuid, (V) getNull(_componentType), 1, TimeUnit.HOURS);
         }
         final V ret = cache.get(_uuid);
         return ret.equals(getNull(_componentType)) ? null : ret;
@@ -358,7 +359,7 @@ public abstract class AbstractUserInterfaceObject
         final var cache = InfinispanCache.get().<Long, V>getCache(AbstractUserInterfaceObject.getIDCacheName(_componentType));
         if (!cache.containsKey(_id) && !
                         AbstractUserInterfaceObject.readObjectFromDB(_componentType, _type, CIAdmin.Abstract.ID, _id)) {
-            cache.put(_id, (V) getNull(_componentType), 100, TimeUnit.SECONDS);
+            cache.put(_id, (V) getNull(_componentType), 1, TimeUnit.HOURS);
         }
         final V ret = cache.get(_id);
         return ret.equals(getNull(_componentType)) ? null : ret;
@@ -383,7 +384,7 @@ public abstract class AbstractUserInterfaceObject
         if (!cache.containsKey(_name)
                         && !AbstractUserInterfaceObject.readObjectFromDB(_componentType, _type, CIAdmin.Abstract.Name,
                                         _name)) {
-            cache.put(_name, (V) getNull(_componentType), 100, TimeUnit.SECONDS);
+            cache.put(_name, (V) getNull(_componentType), 1, TimeUnit.HOURS);
         }
         final V ret = cache.get(_name);
         return ret.equals(getNull(_componentType)) ? null : ret;
