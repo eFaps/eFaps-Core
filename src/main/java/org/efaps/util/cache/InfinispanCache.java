@@ -81,6 +81,7 @@ public final class InfinispanCache
     {
         final var config = ConfigProvider.getConfig();
         final boolean clustered = config.getOptionalValue("core.cache.cluster.active", Boolean.class).orElse(false);
+        LOG.info("Cache clustering active: {}", clustered);
 
         if (clustered) {
             prefix = config.getOptionalValue("core.cache.cluster.prefix", String.class).orElse("");
