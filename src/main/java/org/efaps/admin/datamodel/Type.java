@@ -980,7 +980,10 @@ public class Type
             ret.addAll(getParentType().getClassifiedByTypes());
         }
         for (final Long id : classifiedByTypeIds) {
-            ret.add((Classification) Type.get(id));
+            final var classType = Type.get(id);
+            if (classType instanceof Classification) {
+                ret.add((Classification) classType);
+            }
         }
         return Collections.unmodifiableSet(ret);
     }
