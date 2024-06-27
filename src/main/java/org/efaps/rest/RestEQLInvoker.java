@@ -17,6 +17,7 @@ package org.efaps.rest;
 
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.efaps.db.Insert;
 import org.efaps.eql.EQLInvoker;
@@ -73,41 +74,48 @@ public class RestEQLInvoker
     @Path("print")
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @SuppressWarnings("checkstyle:illegalcatch")
-    public Response print(@QueryParam("origin") final String _origin,
-                          @QueryParam("stmt") final String _stmt)
+    public Response print(@QueryParam("origin") final String origin,
+                          @QueryParam("stmt") final String stmt)
     {
         Response ret = null;
-        // only permit print on this url
-        try {
-            final EQLInvoker invoker = InvokerUtil.getInvoker();
-            final IEQLStmt stmt = invoker.invoke(_stmt);
-            if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof IPrintStmt) {
-                registerEQLStmt(_origin, _stmt);
-                final DataList datalist = JSONData.getDataList((IPrintStmt) stmt);
-                ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(getJSONReply(datalist)).build();
-            } else if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof ICIPrintStmt) {
-                registerEQLStmt(_origin, _stmt);
-                final AbstractCI<?> ci = JSONCI.getCI((ICIPrintStmt) stmt);
-                ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(getJSONReply(ci)).build();
-            } else {
-                final StringBuilder error = new StringBuilder();
-                for (final String syntaxError : invoker.getSyntaxErrors()) {
-                    LOG.warn(syntaxError);
-                    error.append(syntaxError).append("\n");
+        if (StringUtils.isEmpty(origin) || StringUtils.isEmpty(stmt)) {
+            final ErrorReply reply = new ErrorReply()
+                            .setError("Missing query parameter")
+                            .setMessage("query parameters origin and stmt are required");
+            ret = Response.status(Response.Status.PRECONDITION_FAILED).type(MediaType.APPLICATION_JSON)
+                            .entity(getJSONReply(reply)).build();
+        } else {
+            // only permit print on this url
+            try {
+                final EQLInvoker invoker = InvokerUtil.getInvoker();
+                final IEQLStmt eqlStmt = invoker.invoke(stmt);
+                if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof IPrintStmt) {
+                    registerEQLStmt(origin, stmt);
+                    final DataList datalist = JSONData.getDataList((IPrintStmt) eqlStmt);
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(getJSONReply(datalist)).build();
+                } else if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof ICIPrintStmt) {
+                    registerEQLStmt(origin, stmt);
+                    final AbstractCI<?> ci = JSONCI.getCI((ICIPrintStmt) eqlStmt);
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(getJSONReply(ci)).build();
+                } else {
+                    final StringBuilder error = new StringBuilder();
+                    for (final String syntaxError : invoker.getSyntaxErrors()) {
+                        LOG.warn(syntaxError);
+                        error.append(syntaxError).append("\n");
+                    }
+                    final ErrorReply reply = new ErrorReply()
+                                    .setError("EQL Syntax Error")
+                                    .setMessage(error.toString());
+                    ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
                 }
+            } catch (final Exception e) {
+                LOG.error("Error processing data.", e);
                 final ErrorReply reply = new ErrorReply()
-                                .setError("EQL Syntax Error")
-                                .setMessage(error.toString());
+                                .setError(e.getClass().getName())
+                                .setMessage(e.getMessage())
+                                .setStacktrace(ExceptionUtils.getStackTrace(e));
                 ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
             }
-        } catch (final Exception e) {
-            LOG.error("Error processing data.", e);
-            final ErrorReply reply = new ErrorReply()
-                            .setError(e.getClass().getName())
-                            .setMessage(e.getMessage())
-                            .setStacktrace(ExceptionUtils.getStackTrace(e));
-            ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
         }
         return ret;
     }
@@ -122,38 +130,45 @@ public class RestEQLInvoker
     @Path("update")
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @SuppressWarnings("checkstyle:illegalcatch")
-    public Response update(@QueryParam("origin") final String _origin,
-                           @QueryParam("stmt") final String _stmt)
+    public Response update(@QueryParam("origin") final String origin,
+                           @QueryParam("stmt") final String stmt)
     {
         Response ret = null;
-        // only permit updates on this url
-        try {
-            final EQLInvoker invoker = InvokerUtil.getInvoker();
-            final IEQLStmt stmt = invoker.invoke(_stmt);
-            if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof IUpdateStmt) {
-                registerEQLStmt(_origin, _stmt);
-                final int modified = ((IUpdateStmt) stmt).execute();
-                ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
-                                getJSONReply(new UpdateEQLReply().setModified(modified))).build();
-            } else {
-                final StringBuilder error = new StringBuilder();
-                for (final String syntaxError : invoker.getSyntaxErrors()) {
-                    LOG.warn(syntaxError);
-                    error.append(syntaxError).append("\n");
+        if (StringUtils.isEmpty(origin) || StringUtils.isEmpty(stmt)) {
+            final ErrorReply reply = new ErrorReply()
+                            .setError("Missing query parameter")
+                            .setMessage("query parameters origin and stmt are required");
+            ret = Response.status(Response.Status.PRECONDITION_FAILED).type(MediaType.APPLICATION_JSON)
+                            .entity(getJSONReply(reply)).build();
+        } else {
+            // only permit updates on this url
+            try {
+                final EQLInvoker invoker = InvokerUtil.getInvoker();
+                final IEQLStmt eqlStmt = invoker.invoke(stmt);
+                if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof IUpdateStmt) {
+                    registerEQLStmt(origin, stmt);
+                    final int modified = ((IUpdateStmt) eqlStmt).execute();
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
+                                    getJSONReply(new UpdateEQLReply().setModified(modified))).build();
+                } else {
+                    final StringBuilder error = new StringBuilder();
+                    for (final String syntaxError : invoker.getSyntaxErrors()) {
+                        LOG.warn(syntaxError);
+                        error.append(syntaxError).append("\n");
+                    }
+                    final ErrorReply reply = new ErrorReply()
+                                    .setError("EQL Syntax Error")
+                                    .setMessage(error.toString());
+                    ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
                 }
+            } catch (final Exception e) {
+                LOG.error("Error processing data.", e);
                 final ErrorReply reply = new ErrorReply()
-                                .setError("EQL Syntax Error")
-                                .setMessage(error.toString());
+                                .setError(e.getClass().getName())
+                                .setMessage(e.getMessage())
+                                .setStacktrace(ExceptionUtils.getStackTrace(e));
                 ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
             }
-        } catch (final Exception e) {
-            LOG.error("Error processing data.", e);
-            final ErrorReply reply = new ErrorReply()
-                            .setError(e.getClass().getName())
-                            .setMessage(e.getMessage())
-                            .setStacktrace(ExceptionUtils.getStackTrace(e));
-            ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
         }
         return ret;
     }
@@ -168,39 +183,47 @@ public class RestEQLInvoker
     @Path("insert")
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @SuppressWarnings("checkstyle:illegalcatch")
-    public Response insert(@QueryParam("origin") final String _origin,
-                           @QueryParam("stmt") final String _stmt)
+    public Response insert(@QueryParam("origin") final String origin,
+                           @QueryParam("stmt") final String stmt)
     {
         Response ret = null;
-        // only permit insert on this url
-        try {
-            final EQLInvoker invoker = InvokerUtil.getInvoker();
-            final IEQLStmt stmt = invoker.invoke(_stmt);
-            if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof IInsertStmt) {
-                registerEQLStmt(_origin, _stmt);
-                final int modified = ((IInsertStmt) stmt).execute();
-                final String instance = ((IInsertStmt) stmt).getInstance();
-                ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
-                                getJSONReply(new InsertEQLReply().setInstance(instance).setModified(modified))).build();
-            } else {
-                final StringBuilder error = new StringBuilder();
-                for (final String syntaxError : invoker.getSyntaxErrors()) {
-                    LOG.warn(syntaxError);
-                    error.append(syntaxError).append("\n");
+        if (StringUtils.isEmpty(origin) || StringUtils.isEmpty(stmt)) {
+            final ErrorReply reply = new ErrorReply()
+                            .setError("Missing query parameter")
+                            .setMessage("query parameters origin and stmt are required");
+            ret = Response.status(Response.Status.PRECONDITION_FAILED).type(MediaType.APPLICATION_JSON)
+                            .entity(getJSONReply(reply)).build();
+        } else {
+            // only permit insert on this url
+            try {
+                final EQLInvoker invoker = InvokerUtil.getInvoker();
+                final IEQLStmt eqlStmt = invoker.invoke(stmt);
+                if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof IInsertStmt) {
+                    registerEQLStmt(origin, stmt);
+                    final int modified = ((IInsertStmt) eqlStmt).execute();
+                    final String instance = ((IInsertStmt) eqlStmt).getInstance();
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
+                                    getJSONReply(new InsertEQLReply().setInstance(instance).setModified(modified)))
+                                    .build();
+                } else {
+                    final StringBuilder error = new StringBuilder();
+                    for (final String syntaxError : invoker.getSyntaxErrors()) {
+                        LOG.warn(syntaxError);
+                        error.append(syntaxError).append("\n");
+                    }
+                    final ErrorReply reply = new ErrorReply()
+                                    .setError("EQL Syntax Error")
+                                    .setMessage(error.toString());
+                    ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
                 }
+            } catch (final Exception e) {
+                LOG.error("Error processing data.", e);
                 final ErrorReply reply = new ErrorReply()
-                                .setError("EQL Syntax Error")
-                                .setMessage(error.toString());
+                                .setError(e.getClass().getName())
+                                .setMessage(e.getMessage())
+                                .setStacktrace(ExceptionUtils.getStackTrace(e));
                 ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
             }
-        } catch (final Exception e) {
-            LOG.error("Error processing data.", e);
-            final ErrorReply reply = new ErrorReply()
-                            .setError(e.getClass().getName())
-                            .setMessage(e.getMessage())
-                            .setStacktrace(ExceptionUtils.getStackTrace(e));
-            ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
         }
         return ret;
     }
@@ -215,38 +238,45 @@ public class RestEQLInvoker
     @Path("delete")
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @SuppressWarnings("checkstyle:illegalcatch")
-    public Response delete(@QueryParam("origin") final String _origin,
-                           @QueryParam("stmt") final String _stmt)
+    public Response delete(@QueryParam("origin") final String origin,
+                           @QueryParam("stmt") final String stmt)
     {
         Response ret = null;
-        // only permit delete on this url
-        try {
-            final EQLInvoker invoker = InvokerUtil.getInvoker();
-            final IEQLStmt stmt = invoker.invoke(_stmt);
-            if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof IDeleteStmt) {
-                registerEQLStmt(_origin, _stmt);
-                final int modified = ((IDeleteStmt) stmt).execute();
-                ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
-                                getJSONReply(new DeleteEQLReply().setModified(modified))).build();
-            } else {
-                final StringBuilder error = new StringBuilder();
-                for (final String syntaxError : invoker.getSyntaxErrors()) {
-                    LOG.warn(syntaxError);
-                    error.append(syntaxError).append("\n");
+        if (StringUtils.isEmpty(origin) || StringUtils.isEmpty(stmt)) {
+            final ErrorReply reply = new ErrorReply()
+                            .setError("Missing query parameter")
+                            .setMessage("query parameters origin and stmt are required");
+            ret = Response.status(Response.Status.PRECONDITION_FAILED).type(MediaType.APPLICATION_JSON)
+                            .entity(getJSONReply(reply)).build();
+        } else {
+            // only permit delete on this url
+            try {
+                final EQLInvoker invoker = InvokerUtil.getInvoker();
+                final IEQLStmt eqlStmt = invoker.invoke(stmt);
+                if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof IDeleteStmt) {
+                    registerEQLStmt(origin, stmt);
+                    final int modified = ((IDeleteStmt) eqlStmt).execute();
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON).entity(
+                                    getJSONReply(new DeleteEQLReply().setModified(modified))).build();
+                } else {
+                    final StringBuilder error = new StringBuilder();
+                    for (final String syntaxError : invoker.getSyntaxErrors()) {
+                        LOG.warn(syntaxError);
+                        error.append(syntaxError).append("\n");
+                    }
+                    final ErrorReply reply = new ErrorReply()
+                                    .setError("EQL Syntax Error")
+                                    .setMessage(error.toString());
+                    ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
                 }
+            } catch (final Exception e) {
+                LOG.error("Error processing data.", e);
                 final ErrorReply reply = new ErrorReply()
-                                .setError("EQL Syntax Error")
-                                .setMessage(error.toString());
+                                .setError(e.getClass().getName())
+                                .setMessage(e.getMessage())
+                                .setStacktrace(ExceptionUtils.getStackTrace(e));
                 ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
             }
-        } catch (final Exception e) {
-            LOG.error("Error processing data.", e);
-            final ErrorReply reply = new ErrorReply()
-                            .setError(e.getClass().getName())
-                            .setMessage(e.getMessage())
-                            .setStacktrace(ExceptionUtils.getStackTrace(e));
-            ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
         }
         return ret;
     }
@@ -261,37 +291,44 @@ public class RestEQLInvoker
     @Path("execute")
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @SuppressWarnings("checkstyle:illegalcatch")
-    public Response execute(@QueryParam("origin") final String _origin,
-                            @QueryParam("stmt") final String _stmt)
+    public Response execute(@QueryParam("origin") final String origin,
+                            @QueryParam("stmt") final String stmt)
     {
         Response ret = null;
-        // only permit execute on this url
-        try {
-            final EQLInvoker invoker = InvokerUtil.getInvoker();
-            final IEQLStmt stmt = invoker.invoke(_stmt);
-            if (invoker.getSyntaxErrors().isEmpty() && stmt instanceof IExecStmt) {
-                registerEQLStmt(_origin, _stmt);
-                ret = Response.ok().type(MediaType.APPLICATION_JSON)
-                                .entity(getJSONReply(new ExecuteEQLReply())).build();
-            } else {
-                final StringBuilder error = new StringBuilder();
-                for (final String syntaxError : invoker.getSyntaxErrors()) {
-                    LOG.warn(syntaxError);
-                    error.append(syntaxError).append("\n");
+        if (StringUtils.isEmpty(origin) || StringUtils.isEmpty(stmt)) {
+            final ErrorReply reply = new ErrorReply()
+                            .setError("Missing query parameter")
+                            .setMessage("query parameters origin and stmt are required");
+            ret = Response.status(Response.Status.PRECONDITION_FAILED).type(MediaType.APPLICATION_JSON)
+                            .entity(getJSONReply(reply)).build();
+        } else {
+            // only permit execute on this url
+            try {
+                final EQLInvoker invoker = InvokerUtil.getInvoker();
+                final IEQLStmt eqlStmt = invoker.invoke(stmt);
+                if (invoker.getSyntaxErrors().isEmpty() && eqlStmt instanceof IExecStmt) {
+                    registerEQLStmt(origin, stmt);
+                    ret = Response.ok().type(MediaType.APPLICATION_JSON)
+                                    .entity(getJSONReply(new ExecuteEQLReply())).build();
+                } else {
+                    final StringBuilder error = new StringBuilder();
+                    for (final String syntaxError : invoker.getSyntaxErrors()) {
+                        LOG.warn(syntaxError);
+                        error.append(syntaxError).append("\n");
+                    }
+                    final ErrorReply reply = new ErrorReply()
+                                    .setError("EQL Syntax Error")
+                                    .setMessage(error.toString());
+                    ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
                 }
+            } catch (final Exception e) {
+                LOG.error("Error processing data.", e);
                 final ErrorReply reply = new ErrorReply()
-                                .setError("EQL Syntax Error")
-                                .setMessage(error.toString());
+                                .setError(e.getClass().getName())
+                                .setMessage(e.getMessage())
+                                .setStacktrace(ExceptionUtils.getStackTrace(e));
                 ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
             }
-        } catch (final Exception e) {
-            LOG.error("Error processing data.", e);
-            final ErrorReply reply = new ErrorReply()
-                            .setError(e.getClass().getName())
-                            .setMessage(e.getMessage())
-                            .setStacktrace(ExceptionUtils.getStackTrace(e));
-            ret = Response.serverError().type(MediaType.APPLICATION_JSON).entity(getJSONReply(reply)).build();
         }
         return ret;
     }
