@@ -614,6 +614,20 @@
         <local-cache name="${prefix:}org.efaps.ui.servlet.StaticContentServlet.Cache" />
 
         <local-cache name="${prefix:}org.efaps.ui.servlet.ImageServlet.Cache" />
+
+        <local-cache name="${prefix:}org.efaps.esjp.ui.rest.TableController.Cache">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.esjp.ui.rest.TableController.Cache-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
     </cache-container>
 </infinispan>
 

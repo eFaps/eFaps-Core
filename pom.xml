@@ -551,14 +551,6 @@
             <artifactId>infinispan-cachestore-remote</artifactId>
             <version>15.0.4.Final</version>
         </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-jboss-marshalling</artifactId>
-            <version>15.0.4.Final</version>
-        </dependency>
-
-
-
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>
             <groupId>org.jboss.logging</groupId>
