@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -205,9 +206,8 @@ public class ESJPCompiler
             if (ESJPCompiler.LOG.isInfoEnabled()) {
                 final List<SourceObject> ls = new ArrayList<>(this.name2Source.values());
                 Collections.sort(ls, Comparator.comparing(SourceObject::getJavaName));
-                for (final SourceObject obj : ls) {
-                    ESJPCompiler.LOG.info("    Compiling ESJP '{}'", obj.getJavaName());
-                }
+                ESJPCompiler.LOG.info("    Compiling ESJPs '{}'",
+                                ls.stream().map(SourceObject::getJavaName).collect(Collectors.joining("\n    ")));
             }
 
             final FileManager fm = new FileManager(compiler.getStandardFileManager(null, null, null));
