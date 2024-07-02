@@ -544,8 +544,32 @@
             <encoding media-type="application/x-protostream" />
         </local-cache>
 
-        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.Name" />
-        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.ID" />
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.Attribute.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.datamodel.Attribute.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.datamodel.Attribute.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.UUID" />
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Dimension.ID" />
