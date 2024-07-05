@@ -52,8 +52,9 @@ public class AttributeAdapter
                      boolean eventChecked)
     {
         try {
-            final var attr = new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
-                            dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId),
+            final var attr = new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId,
+                            ProtoUtils.toNullString(defaultValue), ProtoUtils.toNullString(dimensionUUID),
+                            size, scale, required, ProtoUtils.toNullLong(linkId),
                             ProtoUtils.toNullLong(parentSetId));
             attr.setClassName(ProtoUtils.toNullString(className));
             setPropertiesMap(attr, propertyMap);
