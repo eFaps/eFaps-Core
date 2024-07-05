@@ -18,8 +18,10 @@ package org.efaps.admin.user;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoName;
 
 @ProtoAdapter(Association.class)
+@ProtoName("UiAssociation")
 public class AssociationAdapter
 {
     @ProtoFactory
