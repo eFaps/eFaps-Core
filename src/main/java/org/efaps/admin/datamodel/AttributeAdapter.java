@@ -41,6 +41,7 @@ public class AttributeAdapter
                      final long attributeTypeId,
                      final String defaultValue,
                      final String dimensionUUID,
+                     final String className,
                      int size,
                      int scale,
                      boolean required,
@@ -54,6 +55,7 @@ public class AttributeAdapter
             final var attr = new Attribute(id, parentId, name, sqlColNames, sqlTableId, attributeTypeId, defaultValue,
                             dimensionUUID, size, scale, required, ProtoUtils.toNullLong(linkId),
                             ProtoUtils.toNullLong(parentSetId));
+            attr.setClassName(ProtoUtils.toNullString(className));
             setPropertiesMap(attr, propertyMap);
             setEvents(attr, events, eventChecked);
             return attr;
@@ -128,6 +130,12 @@ public class AttributeAdapter
     Long getParentSetId(Attribute attribute)
     {
         return attribute.getParentSetId();
+    }
+
+    @ProtoField(number = 114)
+    String getClassName(Attribute attribute)
+    {
+        return attribute.getClassName();
     }
 
 }

@@ -83,7 +83,7 @@ public class ClassificationAdapter
             classification.setClassifiedByTypeIds(classifiedByTypeIds);
             classification.setTableIds(tableIds);
             classification.setAccessSetIds(accessSetIds);
-            classification.setStatusAttributeName(ProtoUtils.toNullString(relTypeAttributeName));
+            classification.setStatusAttributeName(ProtoUtils.toNullString(statusAttributeName));
             classification.setCompanyAttributeName(ProtoUtils.toNullString(companyAttributeName));
             classification.setAssociationAttributeName(ProtoUtils.toNullString(associationAttributeName));
             classification.setGroupAttributeName(ProtoUtils.toNullString(groupAttributeName));

@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.CacheReloadException;
@@ -78,12 +77,11 @@ public class TypeAdapter
             type.setTableIds(tableIds);
             type.setAccessSetIds(accessSetIds);
             type.setAccessSetChecked(accessSetChecked);
-            type.setStatusAttributeName(StringUtils.isNotBlank(statusAttributeName) ? statusAttributeName : null);
-            type.setCompanyAttributeName(StringUtils.isNotBlank(companyAttributeName) ? companyAttributeName : null);
-            type.setAssociationAttributeName(
-                            StringUtils.isNotBlank(associationAttributeName) ? associationAttributeName : null);
-            type.setGroupAttributeName(StringUtils.isNotBlank(groupAttributeName) ? groupAttributeName : null);
-            type.setTypeAttributeName(StringUtils.isNotBlank(typeAttributeName) ? typeAttributeName : null);
+            type.setStatusAttributeName(ProtoUtils.toNullString( statusAttributeName));
+            type.setCompanyAttributeName(ProtoUtils.toNullString(companyAttributeName));
+            type.setAssociationAttributeName(ProtoUtils.toNullString(associationAttributeName));
+            type.setGroupAttributeName(ProtoUtils.toNullString(groupAttributeName));
+            type.setTypeAttributeName(ProtoUtils.toNullString(typeAttributeName));
             type.setTypeMenuId(ProtoUtils.toNullLong(typeMenuId));
             type.setTypeMenuChecked(typeMenuChecked);
             type.setTypeIconId(typeIconId);

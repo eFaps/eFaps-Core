@@ -795,9 +795,9 @@ public class Attribute
      *
      * @param _className value for instance variable {@link #className}
      */
-    protected void setClassName(final String _className)
+    protected void setClassName(final String className)
     {
-        className = _className;
+        this.className = className;
     }
 
     @Override
