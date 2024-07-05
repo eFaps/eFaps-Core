@@ -27,6 +27,7 @@ import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author The eFaps Team
  *
  */
+@ProtoName("UiAssociation")
 public class Association
 {
 

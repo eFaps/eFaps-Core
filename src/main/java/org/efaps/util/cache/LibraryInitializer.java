@@ -16,6 +16,7 @@
 package org.efaps.util.cache;
 
 import org.efaps.admin.access.AccessTypeAdapter;
+import org.efaps.admin.common.AssociationKey;
 import org.efaps.admin.common.SystemConfigurationAdapter;
 import org.efaps.admin.datamodel.AttributeAdapter;
 import org.efaps.admin.datamodel.AttributeSetAdapter;
@@ -31,7 +32,6 @@ import org.efaps.admin.ui.MenuAdapter;
 import org.efaps.admin.ui.ModuleAdapter;
 import org.efaps.admin.ui.SearchAdapter;
 import org.efaps.admin.ui.TableAdapter;
-import org.efaps.admin.user.AssociationAdapter;
 import org.efaps.admin.user.CompanyAdapter;
 import org.efaps.admin.user.JAASSystemAdapter;
 import org.efaps.admin.user.PersonAdapter;
@@ -46,7 +46,9 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 CommonContainerTypes.class
 }, includeClasses = {
                 AccessTypeAdapter.class,
-                AssociationAdapter.class,
+                org.efaps.admin.user.AssociationAdapter.class,
+                org.efaps.admin.common.AssociationAdapter.class,
+                AssociationKey.class,
                 AttributeAdapter.class,
                 AttributeSetAdapter.class,
                 AttributeTypeAdapter.class,

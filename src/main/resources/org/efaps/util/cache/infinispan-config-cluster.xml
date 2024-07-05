@@ -121,10 +121,58 @@
             </indexing>
         </local-cache>
         <local-cache name="${prefix:}org.efaps.admin.access.user.AccessCache.StatusCache" />
-        <local-cache name="${prefix:}org.efaps.admin.common.Association.UUID" />
-        <local-cache name="${prefix:}org.efaps.admin.common.Association.ID" />
-        <local-cache name="${prefix:}org.efaps.admin.common.Association.Name" />
-        <local-cache name="${prefix:}org.efaps.admin.common.Association.Key" />
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.UUID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.common.Association.UUID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.ID">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.common.Association.ID-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.Name">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.common.Association.Name-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+        <local-cache name="${prefix:}org.efaps.admin.common.Association.Key">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.common.Association.Key-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
         <local-cache name="${prefix:}org.efaps.util.cache.InfinispanCache.InternalCounter" />
 
         <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" />

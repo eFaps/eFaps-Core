@@ -19,6 +19,7 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.infinispan.protostream.annotations.ProtoField;
 
 public class AssociationKey
     implements Serializable
@@ -31,26 +32,26 @@ public class AssociationKey
 
     private long typeId;
 
+    @ProtoField(number = 1)
     public long getCompanyId()
     {
         return companyId;
     }
 
-    public AssociationKey setCompanyId(final long companyId)
+    void setCompanyId(final long companyId)
     {
         this.companyId = companyId;
-        return this;
     }
 
+    @ProtoField(number = 2)
     public long getTypeId()
     {
         return typeId;
     }
 
-    public AssociationKey setTypeId(final long typeId)
+    void setTypeId(final long typeId)
     {
         this.typeId = typeId;
-        return this;
     }
 
     /**
@@ -71,8 +72,7 @@ public class AssociationKey
     public boolean equals(final Object _obj)
     {
         boolean ret = false;
-        if (_obj instanceof AssociationKey) {
-            final AssociationKey key = (AssociationKey) _obj;
+        if (_obj instanceof final AssociationKey key) {
             ret = key.getCompanyId() == companyId && key.getTypeId() == typeId;
         } else {
             super.equals(_obj);
@@ -89,8 +89,9 @@ public class AssociationKey
     public static AssociationKey get(final long _companyId,
                                      final long _typeId)
     {
-        return new AssociationKey()
-                        .setCompanyId(_companyId)
-                        .setTypeId(_typeId);
+        final var ret = new AssociationKey();
+        ret.setCompanyId(_companyId);
+        ret.setTypeId(_typeId);
+        return ret;
     }
 }

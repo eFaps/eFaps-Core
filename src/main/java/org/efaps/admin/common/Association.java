@@ -81,10 +81,10 @@ public class Association
                     .leftJoin("T_CMASSOCDEF", 1, "ASSOCID", 0, "ID")
                     .leftJoin("T_CMASSOCMAP", 2, "ASSOCID", 0, "ID")
                     .addPart(SQLPart.WHERE)
-                        .addColumnPart(1, "COMPANYID").addPart(SQLPart.EQUAL).addValuePart("?")
-                        .addPart(SQLPart.AND)
-                        .addColumnPart(2, "TYPEID").addPart(SQLPart.EQUAL).addValuePart("?")
-                        .toString();
+                    .addColumnPart(1, "COMPANYID").addPart(SQLPart.EQUAL).addValuePart("?")
+                    .addPart(SQLPart.AND)
+                    .addColumnPart(2, "TYPEID").addPart(SQLPart.EQUAL).addValuePart("?")
+                    .toString();
 
     /**
      * The instance variable stores the id of this Association.
@@ -103,13 +103,13 @@ public class Association
 
     private final Set<Long> companyIds = new HashSet<>();
 
-    private Association(final long _id,
-                        final String _name,
-                        final String _uuid)
+    Association(final long id,
+                final String name,
+                final String uuid)
     {
-        id = _id;
-        name = _name;
-        uuid = UUID.fromString(_uuid);
+        this.id = id;
+        this.name = name;
+        this.uuid = UUID.fromString(uuid);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class Association
         return id;
     }
 
-    private void addCompanyId(final Long _companyId)
+    void addCompanyId(final Long _companyId)
     {
         companyIds.add(_companyId);
     }
@@ -138,15 +138,20 @@ public class Association
     public Set<Company> getCompanies()
     {
         return companyIds.stream()
-            .map(id -> {
-                try {
-                    return Company.get(id);
-                } catch (final CacheReloadException e) {
-                   LOG.error("Well", e);
-                }
-                return null;
-            })
-            .collect(Collectors.toSet());
+                        .map(id -> {
+                            try {
+                                return Company.get(id);
+                            } catch (final CacheReloadException e) {
+                                LOG.error("Well", e);
+                            }
+                            return null;
+                        })
+                        .collect(Collectors.toSet());
+    }
+
+    Set<Long> getCompanyIds()
+    {
+        return companyIds;
     }
 
     /**
@@ -171,11 +176,12 @@ public class Association
     }
 
     @SuppressWarnings("unchecked")
-    private static void loadAssociation(final long _id)
+    private static void loadAssociation(final long id)
         throws EFapsException
     {
+        LOG.info("Loading Association from db for {}", id);
         final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.AssociationAbstract);
-        queryBldr.addWhereAttrEqValue(CIAdminCommon.AssociationAbstract.ID, _id);
+        queryBldr.addWhereAttrEqValue(CIAdminCommon.AssociationAbstract.ID, id);
         final MultiPrintQuery multi = queryBldr.getPrint();
         final SelectBuilder selCompanyIds = SelectBuilder.get()
                         .linkfrom(CIAdminCommon.AssociationDefinition.AssociationLink)
@@ -187,9 +193,9 @@ public class Association
             final String name = multi.getAttribute(CIAdminCommon.AssociationAbstract.Name);
             final String uuid = multi.getAttribute(CIAdminCommon.AssociationAbstract.UUID);
             final Object companies = multi.getSelect(selCompanyIds);
-            final Association association = new Association(_id, name, uuid);
+            final Association association = new Association(id, name, uuid);
             if (multi.isList4Select(selCompanyIds.toString())) {
-                ((List<Long>) companies).forEach(id -> association.addCompanyId(id));
+                ((List<Long>) companies).forEach(companyId -> association.addCompanyId(companyId));
             } else {
                 association.addCompanyId((Long) companies);
             }
