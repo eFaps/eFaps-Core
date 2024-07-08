@@ -36,6 +36,8 @@ import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheObjectInterface;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,6 +134,7 @@ public final class Status
      */
     private final UUID statusGroupUUID;
 
+
     /**
      * @param _statusGroup StatusGroup this Status belongs to
      * @param _id Id of this Status
@@ -147,6 +150,17 @@ public final class Status
         id = _id;
         key = _key;
         desc = _desc;
+    }
+
+    Status(final String statusGroupUuid,
+           final long id,
+           final String key,
+           final String desc)
+    {
+        statusGroupUUID = UUID.fromString(statusGroupUuid);
+        this.id = id;
+        this.key = key;
+        this.desc = desc;
     }
 
     /**
@@ -234,6 +248,11 @@ public final class Status
             ret = null;
         }
         return ret;
+    }
+
+    UUID getStatusGroupUUID()
+    {
+        return statusGroupUUID;
     }
 
     /**
@@ -416,6 +435,7 @@ public final class Status
                                                 final Object _criteria)
         throws CacheReloadException
     {
+        LOG.info("Loading StatusGroup from db by: {}", _criteria);
         boolean ret = false;
         Connection con = null;
         try {
@@ -490,6 +510,8 @@ public final class Status
                                            final Object _criteria)
         throws CacheReloadException
     {
+        LOG.info("Loading Status from db by: {}", _criteria);
+
         final boolean ret = false;
         Connection con = null;
         try {
@@ -602,10 +624,21 @@ public final class Status
             name = _type.getName();
         }
 
+        @ProtoFactory
+        StatusGroup(String uuid,
+                    long id,
+                    String name)
+        {
+            this.uuid = UUID.fromString(uuid);
+            this.id = id;
+            this.name = name;
+        }
+
         /**
          * {@inheritDoc}
          */
         @Override
+        @ProtoField(number = 1, defaultValue = "0")
         public long getId()
         {
             return id;
@@ -615,6 +648,7 @@ public final class Status
          * {@inheritDoc}
          */
         @Override
+        @ProtoField(number = 2)
         public String getName()
         {
             return name;
@@ -627,6 +661,11 @@ public final class Status
         public UUID getUUID()
         {
             return uuid;
+        }
+
+        @ProtoField(number = 3)
+        String getUuid() {
+            return this.uuid.toString();
         }
     }
 }

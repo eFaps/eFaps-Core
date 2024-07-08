@@ -23,6 +23,8 @@ import org.efaps.admin.datamodel.AttributeSetAdapter;
 import org.efaps.admin.datamodel.AttributeTypeAdapter;
 import org.efaps.admin.datamodel.ClassificationAdapter;
 import org.efaps.admin.datamodel.SQLTableAdapter;
+import org.efaps.admin.datamodel.Status.StatusGroup;
+import org.efaps.admin.datamodel.StatusAdapter;
 import org.efaps.admin.datamodel.TypeAdapter;
 import org.efaps.admin.event.EventDefinitionAdapter;
 import org.efaps.admin.ui.CommandAdapter;
@@ -64,6 +66,8 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 PersonAdapter.class,
                 RoleAdapter.class,
                 SearchAdapter.class,
+                StatusGroup.class,
+                StatusAdapter.class,
                 StoreAdapter.class,
                 SQLTableAdapter.class,
                 SystemConfigurationAdapter.class,
