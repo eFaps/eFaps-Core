@@ -738,6 +738,19 @@
             </persistence>
             <encoding media-type="application/x-protostream" />
         </local-cache>
+        <local-cache name="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache">
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
     </cache-container>
 </infinispan>
 
