@@ -620,7 +620,6 @@
         </local-cache>
 
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4UUID">
-            <!--
             <persistence passivation="false">
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
@@ -631,10 +630,9 @@
                 >
                 </remote-store>
             </persistence>
-            <encoding media-type="application/x-protostream" /> -->
+            <encoding media-type="application/x-protostream" />
         </local-cache>
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.Group4Name">
-            <!--
             <persistence passivation="false">
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
@@ -645,10 +643,9 @@
                 >
                 </remote-store>
             </persistence>
-            <encoding media-type="application/x-protostream" /> -->
+            <encoding media-type="application/x-protostream" />
         </local-cache>
         <local-cache name="${prefix:}org.efaps.admin.datamodel.Status.ID">
-           <!--
             <persistence passivation="false">
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
@@ -659,7 +656,7 @@
                 >
                 </remote-store>
             </persistence>
-            <encoding media-type="application/x-protostream" /> -->
+            <encoding media-type="application/x-protostream" />
         </local-cache>
 
 
