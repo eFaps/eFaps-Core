@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -480,6 +481,7 @@ public final class Status
                 final Status status = new Status(statusGroup, id, key, desc);
                 statusGroup.put(status.getKey(), status);
                 Status.cacheStatus(status);
+
                 Status.cacheStatusGroup(statusGroup);
                 ret = true;
             }
@@ -591,7 +593,6 @@ public final class Status
      * Class for a group of stati.
      */
     public static class StatusGroup
-        extends HashMap<String, Status>
         implements CacheObjectInterface, Serializable
     {
         /**
@@ -614,6 +615,8 @@ public final class Status
          */
         private final String name;
 
+        private Map<String, Status> statuses = new HashMap<>();
+
         /**
          * @param _type type to set
          */
@@ -624,14 +627,27 @@ public final class Status
             name = _type.getName();
         }
 
+        public Status get(final String key)
+        {
+            return statuses.get(key);
+        }
+
+        public void put(final String key,
+                        final Status status)
+        {
+            statuses.put(key, status);
+        }
+
         @ProtoFactory
         StatusGroup(String uuid,
                     long id,
-                    String name)
+                    String name,
+                    Map<String, Status> statuses)
         {
             this.uuid = UUID.fromString(uuid);
             this.id = id;
             this.name = name;
+            this.statuses = statuses;
         }
 
         /**
@@ -666,6 +682,12 @@ public final class Status
         @ProtoField(number = 3)
         String getUuid() {
             return this.uuid.toString();
+        }
+
+        @ProtoField(number = 4)
+        Map<String, Status> getStatuses()
+        {
+            return statuses;
         }
     }
 }
