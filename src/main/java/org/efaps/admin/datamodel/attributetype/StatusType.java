@@ -30,6 +30,7 @@ import org.efaps.util.EFapsException;
 public class StatusType
     extends AbstractLinkType
 {
+
     /**
      * Needed for serialization.
      */
@@ -40,14 +41,15 @@ public class StatusType
      */
     @Override
     public void validate4Update(final Attribute _attribute,
-                               final Instance _instance,
-                               final Object[] _value)
+                                final Instance _instance,
+                                final Object[] _value)
         throws EFapsException
     {
         super.validate4Update(_attribute, _instance, _value);
         validate(_attribute, _instance, _value);
 
-        // for an update we can register the change here, but not for insert due to not having a general instance yet
+        // for an update we can register the change here, but not for insert due
+        // to not having a general instance yet
         final Long statusId = eval(_value);
         for (final IStatusChangeListener listener : Listener.get()
                         .<IStatusChangeListener>invoke(IStatusChangeListener.class)) {
@@ -73,9 +75,9 @@ public class StatusType
      * and Update to validate if the value is permitted. Will throw the
      * exception if not valid.<br/>
      *
-     * @param _attribute    the Attribute that will be updated with the _value
-     * @param _instance     Instance that will be updated
-     * @param _value        value that will be used for the update
+     * @param _attribute the Attribute that will be updated with the _value
+     * @param _instance Instance that will be updated
+     * @param _value value that will be used for the update
      * @throws EFapsException if not valid
      */
     private void validate(final Attribute _attribute,
@@ -89,15 +91,14 @@ public class StatusType
             throw new EFapsException(StatusType.class, "ValueIsNull", _attribute, _instance, _value);
         } else {
             final Status status = Status.get(value);
-            // the statusType must be evaluated by the instance type due to the reason that the attribute
+            // the statusType must be evaluated by the instance type due to the
+            // reason that the attribute
             // belongs to an abstract type
             final Type statusType = _instance.getType().getStatusAttribute().getLink();
             if (statusType == null) {
                 throw new EFapsException(StatusType.class, "AttributeNoStatus", _attribute, _instance, _value);
-            } else {
-                if (!status.getStatusGroup().equals(Status.get(statusType.getUUID()))) {
-                    throw new EFapsException(StatusType.class, "ValueIsNotValid", _attribute, _instance, _value);
-                }
+            } else if (!status.getStatusGroup().getUUID().equals(statusType.getUUID())) {
+                throw new EFapsException(StatusType.class, "ValueIsNotValid", _attribute, _instance, _value);
             }
         }
     }
