@@ -489,7 +489,7 @@ public abstract class AbstractCommand
     public Attribute getTargetConnectAttribute()
         throws CacheReloadException
     {
-        return Attribute.get(targetConnectAttributeId);
+        return targetConnectAttributeId == 0 ? null :Attribute.get(targetConnectAttributeId);
     }
 
     /**
