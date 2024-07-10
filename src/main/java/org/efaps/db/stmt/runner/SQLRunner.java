@@ -173,11 +173,11 @@ public class SQLRunner
         prepareUpdate(type);
     }
 
-    private void prepareUpdate(final Type _type,
+    private void prepareUpdate(final Type type,
                                final Instance... _instances)
         throws EFapsException
     {
-        final Iterator<?> iter = _type.getAttributes().entrySet().iterator();
+        final Iterator<?> iter = type.getAttributes().entrySet().iterator();
         while (iter.hasNext()) {
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) iter.next();
             final Attribute attr = (Attribute) entry.getValue();
@@ -189,7 +189,7 @@ public class SQLRunner
                         final SQLInsert sqlInsert = getSQLInsert(sqlTable);
                         attr.prepareDBInsert(sqlInsert);
                     } else {
-                        final SQLUpdate sqlUpdate = getSQLUpdate(_type, sqlTable);
+                        final SQLUpdate sqlUpdate = getSQLUpdate(type, sqlTable);
                         attr.prepareDBUpdate(sqlUpdate);
                     }
                 } catch (final SQLException e) {
@@ -200,11 +200,14 @@ public class SQLRunner
 
         final IUpdateElementsStmt<?> eqlStmt = ((AbstractUpdate) runnable).getEqlStmt();
         for (final IUpdateElement element : eqlStmt.getUpdateElements()) {
-            final Attribute attr = _type.getAttribute(element.getAttribute());
+            final Attribute attr = type.getAttribute(element.getAttribute());
+            if (attr == null) {
+                LOG.error("Could not get Attribute for element attr {} and type {}", element.getAttribute(), type);
+            }
             final SQLTable sqlTable = attr.getTable();
             try {
                 if (_instances.length == 0) {
-                    attr.getAttributeType().getDbAttrType().validate4Insert(attr, Instance.get(_type, 0),
+                    attr.getAttributeType().getDbAttrType().validate4Insert(attr, Instance.get(type, 0),
                                     new Object[] { element.getValue() });
                     final SQLInsert sqlInsert = getSQLInsert(sqlTable);
                     attr.prepareDBInsert(sqlInsert, Converter.convertEql(element.getValue()));
@@ -213,7 +216,7 @@ public class SQLRunner
                         attr.getAttributeType().getDbAttrType().validate4Update(attr, instance,
                                         new Object[] { Converter.convertEql(element.getValue()) });
                     }
-                    final SQLUpdate sqlUpdate = getSQLUpdate(_type, sqlTable);
+                    final SQLUpdate sqlUpdate = getSQLUpdate(type, sqlTable);
                     attr.prepareDBUpdate(sqlUpdate, Converter.convertEql(element.getValue()));
                 }
             } catch (final SQLException e) {
