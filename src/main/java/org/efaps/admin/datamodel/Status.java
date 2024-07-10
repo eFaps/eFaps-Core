@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 public final class Status
     implements CacheObjectInterface, Serializable
 {
+
     /**
      * Needed for serialization.
      */
@@ -134,7 +136,6 @@ public final class Status
      * UUID the StatusGroup this Status belongs to.
      */
     private final UUID statusGroupUUID;
-
 
     /**
      * @param _statusGroup StatusGroup this Status belongs to
@@ -427,7 +428,7 @@ public final class Status
     }
 
     /**
-     * @param _sql      SQL Statement to be executed
+     * @param _sql SQL Statement to be executed
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
@@ -503,7 +504,7 @@ public final class Status
     }
 
     /**
-     * @param _sql      SQL Statement to be executed
+     * @param _sql SQL Statement to be executed
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error
@@ -580,7 +581,7 @@ public final class Status
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     @Override
@@ -595,6 +596,7 @@ public final class Status
     public static class StatusGroup
         implements CacheObjectInterface, Serializable
     {
+
         /**
          * Needed for serialization.
          */
@@ -680,7 +682,8 @@ public final class Status
         }
 
         @ProtoField(number = 3)
-        String getUuid() {
+        String getUuid()
+        {
             return this.uuid.toString();
         }
 
@@ -688,6 +691,16 @@ public final class Status
         Map<String, Status> getStatuses()
         {
             return statuses;
+        }
+
+        public boolean containsKey(final String key)
+        {
+            return statuses.containsKey(key);
+        }
+
+        public Collection<Status> values()
+        {
+            return statuses.values();
         }
     }
 }
