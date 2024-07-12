@@ -22,6 +22,7 @@ import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 
 @ProtoAdapter(Search.class)
 public class SearchAdapter
@@ -32,6 +33,7 @@ public class SearchAdapter
     Search create(final long id,
                   final String uuid,
                   final String name,
+                  Map<String, String> commands,
                   Map<String, String> propertyMap,
                   Long targetFormId,
                   Long targetMenuId,
@@ -43,6 +45,7 @@ public class SearchAdapter
                   boolean eventChecked)
     {
         final var search = new Search(id, uuid, name);
+        search.setCommandsInternal(ProtoUtils.fromMap(commands));
         search.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
         search.setTargetMenuId(ProtoUtils.toNullLong(targetMenuId));
         search.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
@@ -51,6 +54,12 @@ public class SearchAdapter
         search.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         setPropertiesMap(search, propertyMap);
         return search;
+    }
+
+    @ProtoField(number = 101)
+    Map<String, String> getCommands(Search search)
+    {
+        return ProtoUtils.toMap(search.getCommandsInternal());
     }
 
 }
