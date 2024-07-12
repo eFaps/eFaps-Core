@@ -251,6 +251,19 @@ public class VFSStoreResource
         return 0;
     }
 
+    @Override
+    public boolean exists()
+        throws EFapsException
+    {
+        boolean ret = false;
+        try {
+            ret = this.manager.resolveFile(this.storeFileName + VFSStoreResource.EXTENSION_NORMAL).isReadable();
+        } catch (final FileSystemException e) {
+            LOG.error("could not evaluate file", e);
+        }
+        return ret;
+    }
+
     /**
      * The method writes the context (from the input stream) to a temporary file
      * (same file URL, but with extension {@link #EXTENSION_TEMP}).

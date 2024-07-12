@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.efaps.db;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 public class Checkout
     extends AbstractAction
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -54,7 +56,7 @@ public class Checkout
     /**
      * Constructor with object id as string.
      *
-     * @param _oid        oid of object on which the checkout is made
+     * @param _oid oid of object on which the checkout is made
      */
     public Checkout(final String _oid)
     {
@@ -64,7 +66,7 @@ public class Checkout
     /**
      * Constructor with instance object.
      *
-     * @param _instance  instance on which the checkout is made
+     * @param _instance instance on which the checkout is made
      */
     public Checkout(final Instance _instance)
     {
@@ -73,8 +75,8 @@ public class Checkout
 
     /**
      * The method is only a dummy method and closes the checkout action. The
-     * method should be called, if in the future the checkout class needs a
-     * call to this method.
+     * method should be called, if in the future the checkout class needs a call
+     * to this method.
      */
     public void close()
     {
@@ -83,15 +85,15 @@ public class Checkout
     /**
      * Executes the checkout with an output stream.
      *
-     * @param _out      output stream where to write the file
-     * @throws EFapsException   if the current context user has now access to
-     *                          checkout the file out of the eFaps object
+     * @param _out output stream where to write the file
+     * @throws EFapsException if the current context user has now access to
+     *             checkout the file out of the eFaps object
      */
     public void execute(final OutputStream _out)
         throws EFapsException
     {
         final boolean hasAccess = super.getInstance().getType().hasAccess(super.getInstance(),
-                                                                          AccessTypeEnums.CHECKOUT.getAccessType());
+                        AccessTypeEnums.CHECKOUT.getAccessType());
         if (!hasAccess) {
             throw new EFapsException(this.getClass(), "execute.NoAccess");
         }
@@ -104,8 +106,8 @@ public class Checkout
      * <ol>
      * <li>executes the pre checkout trigger (if exists)</li>
      * <li>executes the checkout trigger (if exists)</li>
-     * <li>executes if no checkout trigger exists or the checkout trigger is
-     *     not executed the update ({@see #executeWithoutTrigger})</li>
+     * <li>executes if no checkout trigger exists or the checkout trigger is not
+     * executed the update ({@see #executeWithoutTrigger})</li>
      * <li>executes the post checkout trigger (if exists)</li>
      * </ol>
      *
@@ -126,7 +128,7 @@ public class Checkout
      * Executes the checkout for output streams without checking the access
      * rights and without triggers.
      *
-     * @param _out  output stream where to write the file
+     * @param _out output stream where to write the file
      * @throws EFapsException if checkout action fails
      */
     public void executeWithoutTrigger(final OutputStream _out)
@@ -135,9 +137,11 @@ public class Checkout
         Resource storeRsrc = null;
         try {
             storeRsrc = Context.getThreadContext().getStoreResource(getInstance(), Resource.StoreEvent.READ);
-            storeRsrc.read(_out);
-            this.fileLength = storeRsrc.getFileLength();
-            this.fileName = storeRsrc.getFileName();
+            if (storeRsrc.exists()) {
+                storeRsrc.read(_out);
+                this.fileLength = storeRsrc.getFileLength();
+                this.fileName = storeRsrc.getFileName();
+            }
         } catch (final EFapsException e) {
             Checkout.LOG.error("could not checkout " + super.getInstance(), e);
             throw e;
@@ -150,14 +154,14 @@ public class Checkout
      *
      * @return input stream of the checked in file
      * @throws EFapsException if the current context user has now access to
-     *                        checkout the file out of the eFaps object
+     *             checkout the file out of the eFaps object
      * @see #executeWithoutAccessCheck()
      */
     public InputStream execute()
         throws EFapsException
     {
         final boolean hasAccess = super.getInstance().getType().hasAccess(super.getInstance(),
-                                                                          AccessTypeEnums.CHECKOUT.getAccessType());
+                        AccessTypeEnums.CHECKOUT.getAccessType());
         if (!hasAccess) {
             throw new EFapsException(this.getClass(), "execute.NoAccess");
         }
@@ -167,13 +171,13 @@ public class Checkout
     /**
      * Executes the checkout without an access check (but with triggers) and
      * returns an input streams of the checked in file. The returned input
-     * stream must be closed, because the returned inputs stream also commit
-     * the store resource. Otherwise the transaction is rolled back!
+     * stream must be closed, because the returned inputs stream also commit the
+     * store resource. Otherwise the transaction is rolled back!
      * <ol>
      * <li>executes the pre checkout trigger (if exists)</li>
      * <li>executes the checkout trigger (if exists)</li>
-     * <li>executes if no checkout trigger exists or the checkout trigger is
-     *     not executed the update ({@see #executeWithoutTrigger})</li>
+     * <li>executes if no checkout trigger exists or the checkout trigger is not
+     * executed the update ({@see #executeWithoutTrigger})</li>
      * <li>executes the post checkout trigger (if exists)</li>
      * </ol>
      *
@@ -195,8 +199,8 @@ public class Checkout
     /**
      * Executes the checkout without an access check and without triggers and
      * returns an input streams of the checked in file. The returned input
-     * stream must be closed, because the returned inputs stream also commit
-     * the store resource. Otherwise the transaction is rolled back!
+     * stream must be closed, because the returned inputs stream also commit the
+     * store resource. Otherwise the transaction is rolled back!
      *
      * @throws EFapsException if checkout action fails
      * @return input stream containing the file
@@ -208,9 +212,11 @@ public class Checkout
         InputStream in = null;
         try {
             storeRsrc = Context.getThreadContext().getStoreResource(getInstance(), Resource.StoreEvent.READ);
-            in = storeRsrc.read();
-            this.fileLength = storeRsrc.getFileLength();
-            this.fileName = storeRsrc.getFileName();
+            if (storeRsrc.exists()) {
+                in = storeRsrc.read();
+                this.fileLength = storeRsrc.getFileLength();
+                this.fileName = storeRsrc.getFileName();
+            }
         } catch (final EFapsException e) {
             Checkout.LOG.error("could not checkout " + super.getInstance(), e);
             throw e;
@@ -238,5 +244,18 @@ public class Checkout
     public long getFileLength()
     {
         return this.fileLength;
+    }
+
+    public boolean exists()
+        throws EFapsException
+    {
+        boolean ret = false;
+        try {
+            ret = Context.getThreadContext().getStoreResource(getInstance(), Resource.StoreEvent.READ).exists();
+        } catch (final EFapsException e) {
+            Checkout.LOG.error("could not checkout " + super.getInstance(), e);
+            throw e;
+        }
+        return ret;
     }
 }
