@@ -379,6 +379,7 @@ public class Type
     private Long typeFormId;
 
     private boolean typeFormChecked = false;
+
     /**
      * This is the constructor for class Type. Every instance of class Type must
      * have a name (parameter <i>_name</i>).
@@ -1052,10 +1053,9 @@ public class Type
             for (final var attributeId : attributeIds) {
                 try {
                     final var attr = Attribute.get(attributeId);
-                    ret.put(attr.getName(), attr);
+                    ret.put(attr.getName(), attr.copy(getId()));
                 } catch (final CacheReloadException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error("Problems on loading attrbutes", e);
                 }
             }
             attributesInternal = ret;
@@ -1315,7 +1315,6 @@ public class Type
         this.typeFormChecked = typeFormChecked;
     }
 
-
     protected String getCompanyAttributeName()
     {
         return companyAttributeName;
@@ -1412,7 +1411,8 @@ public class Type
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheType(this);
     }
@@ -1674,7 +1674,7 @@ public class Type
                         }
                     }
                 }
-                //Type.cacheType(ret);
+                // Type.cacheType(ret);
                 Attribute.add4Type(ret);
                 ret.readFromDB4Links();
                 ret.readFromDB4Properties();

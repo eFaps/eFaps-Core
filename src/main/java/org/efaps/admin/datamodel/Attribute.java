@@ -403,9 +403,9 @@ public class Attribute
      * @param _parentId if of the parent type
      * @return clone of current attribute instance
      */
-    protected Attribute copy(final long _parentId)
+    protected Attribute copy(final long parentId)
     {
-        final Attribute ret = new Attribute(getId(), _parentId, getName(), sqlTableId, attributeTypeId,
+        final Attribute ret = new Attribute(getId(), parentId, getName(), sqlTableId, attributeTypeId,
                         defaultValue, dimensionUUID, required, size, scale);
         ret.getSqlColNames().addAll(getSqlColNames());
         ret.setLinkId(linkId);
