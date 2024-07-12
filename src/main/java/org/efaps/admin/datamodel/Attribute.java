@@ -407,10 +407,12 @@ public class Attribute
     {
         final Attribute ret = new Attribute(getId(), parentId, getName(), sqlTableId, attributeTypeId,
                         defaultValue, dimensionUUID, required, size, scale);
-        ret.getSqlColNames().addAll(getSqlColNames());
+        ret.getSqlColNames().addAll(sqlColNames);
         ret.setLinkId(linkId);
-        ret.setClassName(getClassName());
+        ret.setClassName(className);
         ret.getProperties().putAll(getProperties());
+        ret.setEventChecked(isEventChecked());
+        ret.getEvents().putAll(getEvents());
         return ret;
     }
 
