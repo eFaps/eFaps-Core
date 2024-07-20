@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import org.efaps.admin.EFapsSystemConfiguration;
@@ -103,10 +104,10 @@ public final class DateTimeUtil
     {
         ZoneId ret;
         if (EFapsSystemConfiguration.get() == null) {
-            ret = ZoneId.systemDefault();
+            ret = ZoneId.of("UTC");
         } else {
             final String zoneId = EFapsSystemConfiguration.get().getAttributeValue(KernelSettings.DBTIMEZONE);
-            ret = zoneId == null ? ZoneId.of("Z") : ZoneId.of(zoneId);
+            ret = zoneId == null ? ZoneId.of("UTC") : ZoneId.of(zoneId);
         }
         return ret;
     }
@@ -168,12 +169,10 @@ public final class DateTimeUtil
             ret = ((DateTime) _value).withChronology(chron);
         } else if (_value instanceof String) {
             ret = ISODateTimeFormat.dateTime().parseDateTime((String) _value).withChronology(chron);
-        } else if (_value instanceof java.time.LocalDate) {
-            final java.time.LocalDate localDateTime = (java.time.LocalDate) _value;
+        } else if (_value instanceof final java.time.LocalDate localDateTime) {
             ret = new DateTime(localDateTime.getYear(), localDateTime.getMonthValue(),
                             localDateTime.getDayOfMonth(), 0, 0).withChronology(chron);
-        } else if (_value instanceof java.time.LocalDateTime) {
-            final java.time.LocalDateTime localDateTime = (java.time.LocalDateTime) _value;
+        } else if (_value instanceof final java.time.LocalDateTime localDateTime) {
             ret = new DateTime(localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth(),
                             localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
                             localDateTime.getSecond()).withChronology(chron);
@@ -198,8 +197,7 @@ public final class DateTimeUtil
         } else if (_value instanceof LocalDate) {
             final LocalDateTime localDateTime = LocalDateTime.of((LocalDate) _value, LocalTime.MIN);
             ret = OffsetDateTime.of(localDateTime, getDBZoneId().getRules().getOffset(localDateTime));
-        } else if (_value instanceof LocalDateTime) {
-            final LocalDateTime localDateTime = (LocalDateTime) _value;
+        } else if (_value instanceof final LocalDateTime localDateTime) {
             ret = OffsetDateTime.of(localDateTime, getDBZoneId().getRules().getOffset(localDateTime));
         } else if (_value instanceof OffsetDateTime) {
             ret = (OffsetDateTime) _value;
@@ -219,22 +217,18 @@ public final class DateTimeUtil
         } else if (_value instanceof Date) {
             final Instant instant = ((Date) _value).toInstant();
             ret = instant.atZone(DateTimeUtil.getDBZoneId()).toLocalDate();
-        } else if (_value instanceof DateTime) {
-            final DateTime dateTime = (DateTime) _value;
+        } else if (_value instanceof final DateTime dateTime) {
             ret = LocalDate.of(dateTime.getYear(), dateTime.getMonthOfYear(), dateTime.getDayOfMonth());
-        } else if (_value instanceof String) {
-            final String str = (String) _value;
+        } else if (_value instanceof final String str) {
             // an empty or not long enough value -> null
             if (str.length() < 10) {
                 ret = null;
             } else {
                 ret = LocalDate.parse(str.substring(0, 10));
             }
-        } else if (_value instanceof LocalDateTime) {
-            final LocalDateTime localDateTime = (LocalDateTime) _value;
+        } else if (_value instanceof final LocalDateTime localDateTime) {
             ret = LocalDate.of(localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth());
-        } else if (_value instanceof OffsetDateTime) {
-            final var dateTime = (OffsetDateTime) _value;
+        } else if (_value instanceof final OffsetDateTime dateTime) {
             ret = LocalDate.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth());
         } else if (_value instanceof LocalDate) {
             ret = (LocalDate) _value;
@@ -245,29 +239,64 @@ public final class DateTimeUtil
         return ret;
     }
 
-    public static LocalTime toTime(final Object _value)
+    public static LocalTime toContextTime(final Object value)
         throws EFapsException
     {
         LocalTime ret;
-        if (_value == null) {
+        if (value == null) {
             ret = null;
-        } else if (_value instanceof Date) {
-            final Instant instant = ((Date) _value).toInstant();
-            ret = instant.atZone(DateTimeUtil.getDBZoneId()).toLocalTime();
-        } else if (_value instanceof DateTime) {
-            final DateTime dateTime = (DateTime) _value;
-            ret = LocalTime.of(dateTime.getHourOfDay(), dateTime.getMinuteOfHour(), dateTime.getSecondOfMinute());
-        } else if (_value instanceof String) {
-            ret = LocalTime.parse((String) _value);
-        } else if (_value instanceof LocalDateTime) {
-            final LocalDateTime localDateTime = (LocalDateTime) _value;
-            ret = LocalTime.of(localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond());
-        } else if (_value instanceof LocalTime) {
-            ret = (LocalTime) _value;
+        } else if (value instanceof Timestamp) {
+            // value from database -> do not change the timezone
+            final LocalTime dbLocal = ((Timestamp) value).toLocalDateTime().toLocalTime();
+            ret = dbLocal.plusHours(getOffset()).withNano(0);
         } else {
-            LOG.warn("Cannot convert value {} to OffsetDateTime", _value);
+            LOG.error("Cannot convert value {} to LocalTime fro context", value);
             ret = null;
         }
         return ret;
+    }
+
+    public static LocalTime toDBTime(final Object value)
+        throws EFapsException
+    {
+        LocalTime ret;
+        if (value == null) {
+            ret = null;
+        } else if (value instanceof final String strValue) {
+            DateTimeFormatter frmt;
+            if (strValue.matches("\\d\\d:\\d\\d:\\d\\d")) {
+                frmt = DateTimeFormatter.ISO_LOCAL_TIME;
+            } else if (strValue.matches("\\d:\\d\\d:\\d\\d")) {
+                frmt = DateTimeFormatter.ofPattern("H:mm:ss");
+            } else if (strValue.matches("\\d\\d:\\d\\d")) {
+                frmt = DateTimeFormatter.ofPattern("HH:mm");
+            } else if (strValue.matches("\\d:\\d\\d")) {
+                frmt = DateTimeFormatter.ofPattern("H:mm");
+            } else {
+                frmt = null;
+            }
+            if (frmt == null) {
+                LOG.error("Cannot parse string value {} to LocalTime for DB", value);
+                ret = null;
+            } else {
+                ret = LocalTime.parse((String) value, frmt).minusHours(getOffset());
+            }
+        } else if (value instanceof final LocalDateTime localDateTime) {
+            ret = LocalTime.of(localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond())
+                            .minusHours(getOffset());
+        } else if (value instanceof LocalTime) {
+            ret = ((LocalTime) value).minusHours(getOffset());
+        } else {
+            LOG.error("Cannot convert value {} to LocalTime for DB", value);
+            ret = null;
+        }
+        return ret;
+    }
+
+    public static long getOffset()
+        throws EFapsException
+    {
+        return ChronoUnit.HOURS.between(LocalTime.now(DateTimeUtil.getDBZoneId()),
+                        LocalTime.now(Context.getThreadContext().getZoneId()));
     }
 }

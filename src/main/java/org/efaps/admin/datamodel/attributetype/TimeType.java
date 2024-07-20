@@ -16,17 +16,13 @@
 package org.efaps.admin.datamodel.attributetype;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
-import org.joda.time.DateTime;
-import org.joda.time.LocalTime;
-import org.joda.time.format.ISODateTimeFormat;
-
 
 /**
  * Attribute Type for Date. It uses DateTime by cutting of the Time information.
@@ -37,6 +33,7 @@ import org.joda.time.format.ISODateTimeFormat;
 public class TimeType
     extends DateTimeType
 {
+
     /**
      * Needed for serialization.
      */
@@ -49,40 +46,36 @@ public class TimeType
     {
         final List<Object> ret = new ArrayList<>();
         for (final Object object : _objectList) {
-            ret.add(DateTimeUtil.toTime(object));
+            ret.add(DateTimeUtil.toContextTime(object));
         }
         return _objectList.size() > 0 ? ret.size() > 1 ? ret : ret.get(0) : null;
     }
-
 
     /**
      * The value that can be set is a Date, a DateTime or a String
      * yyyy-MM-dd'T'HH:mm:ss.SSSZZ. It will be normalized to ISO Calender with
      * TimeZone from SystemAttribute Admin_Common_DataBaseTimeZone. In case that
-     * the SystemAttribute is missing UTC will be used.
-     * For storing the value in the database the time is set to 00:00;
+     * the SystemAttribute is missing UTC will be used. For storing the value in
+     * the database the time is set to 00:00;
      *
      * @param _value value to evaluate
      * @return evaluated value
      * @throws EFapsException on error
      */
     @Override
-    protected Timestamp eval(final Object[] _value)
+    protected Timestamp eval(final Object[] value)
         throws EFapsException
     {
         final Timestamp ret;
-        if (_value == null || _value.length == 0 || _value[0] == null) {
+        if (value == null || value.length == 0 || value[0] == null) {
             ret = null;
-        } else  {
-            LocalTime time = new LocalTime();
-            if (_value[0] instanceof Date) {
-                time = new DateTime(_value[0]).toLocalTime();
-            } else if (_value[0] instanceof DateTime) {
-                time = ((DateTime) _value[0]).toLocalTime();
-            } else if (_value[0] instanceof String) {
-                time = ISODateTimeFormat.localTimeParser().parseLocalTime((String) _value[0]);
-            }
-            ret = new Timestamp(time.toDateTimeToday().getMillis());
+        } else {
+            final var time = DateTimeUtil.toDBTime(value[0]);
+            final var dateTime = LocalDateTime.now(DateTimeUtil.getDBZoneId())
+                            .withHour(time.getHour())
+                            .withMinute(time.getMinute())
+                            .withSecond(time.getSecond());
+            ret = Timestamp.valueOf(dateTime);
         }
         return ret;
     }

@@ -51,7 +51,7 @@ public class DateTimeUtilTest
     {
         final List<Object[]> ret = new ArrayList<>();
         final Instant instant = Instant.ofEpochMilli(1234567896L);
-        ret.add(new Object[] { Date.from(instant), OffsetDateTime.ofInstant(instant, ZoneId.systemDefault()) });
+        ret.add(new Object[] { Date.from(instant), OffsetDateTime.ofInstant(instant, ZoneId.of("UTC")) });
         ret.add(new Object[] { "2019-08-12T10:15:30Z", OffsetDateTime.of(2019, 8, 12, 10, 15, 30, 0,
                         ZoneId.of("Z").getRules().getOffset(Instant.now())) });
         ret.add(new Object[] { "2019-08-12T10:15:30-05", OffsetDateTime.of(2019, 8, 12, 10, 15, 30, 0,
@@ -63,9 +63,9 @@ public class DateTimeUtilTest
         ret.add(new Object[] { "2019-08-12T10:15:30.12358-05", OffsetDateTime.of(2019, 8, 12, 10, 15, 30, 123580000,
                         ZoneOffset.ofHours(-5)) });
         ret.add(new Object[] { LocalDate.of(2019, 8, 23), OffsetDateTime.of(2019, 8, 23, 0, 0, 0, 0,
-                        ZoneId.systemDefault().getRules().getOffset(LocalDateTime.of(2019, 8, 23, 0, 0))) });
+                        ZoneId.of("UTC").getRules().getOffset(LocalDateTime.of(2019, 8, 23, 0, 0))) });
         ret.add(new Object[] { LocalDateTime.of(2019, 8, 23, 16, 30, 15), OffsetDateTime.of(2019, 8, 23, 16, 30, 15, 0,
-                        ZoneId.systemDefault().getRules().getOffset(LocalDateTime.of(2019, 8, 23, 0, 0))) });
+                        ZoneId.of("UTC").getRules().getOffset(LocalDateTime.of(2019, 8, 23, 0, 0))) });
 
         return ret.iterator();
     }
