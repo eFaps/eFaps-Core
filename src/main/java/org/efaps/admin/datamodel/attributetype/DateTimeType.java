@@ -59,7 +59,7 @@ public class DateTimeType
     {
         final List<Object> ret = new ArrayList<>();
         for (final Object object : _objectList) {
-            ret.add(DateTimeUtil.toDateTime(object));
+            ret.add(DateTimeUtil.toContextDateTime(object));
         }
         return _objectList.size() > 0 ? ret.size() > 1 ? ret : ret.get(0) : null;
     }
@@ -98,7 +98,7 @@ public class DateTimeType
         if (_value == null || _value.length == 0 || _value[0] == null) {
             ret = null;
         } else  {
-            final OffsetDateTime dateTime = DateTimeUtil.toDateTime(_value[0]);
+            final OffsetDateTime dateTime = DateTimeUtil.toDBDateTime(_value[0]);
             ret = dateTime == null ?  null : Timestamp.from(dateTime.toInstant());
         }
         return ret;

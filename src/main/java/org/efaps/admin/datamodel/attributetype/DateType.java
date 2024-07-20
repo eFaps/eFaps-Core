@@ -46,7 +46,7 @@ public class DateType
     {
         final List<Object> ret = new ArrayList<>();
         for (final Object object : _objectList) {
-            ret.add(DateTimeUtil.toDate(object));
+            ret.add(DateTimeUtil.toContextDate(object));
         }
         return _objectList.size() > 0 ? ret.size() > 1 ? ret : ret.get(0) : null;
     }
@@ -70,7 +70,7 @@ public class DateType
         if (_value == null || _value.length == 0 || _value[0] == null) {
             ret = null;
         } else  {
-            final LocalDate date = DateTimeUtil.toDate(_value[0]);
+            final LocalDate date = DateTimeUtil.toDBDate(_value[0]);
             ret = date == null ?  null : Timestamp.valueOf(date.atStartOfDay());
         }
         return ret;
