@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -242,27 +243,26 @@ public final class DateTimeUtil
     public static LocalDate toDBDate(final Object value)
         throws EFapsException
     {
-        final var ret = toDate(value, Context.getThreadContext().getZoneId());
+        final var ret = toDateInternal(value);
         return ret;
     }
 
     public static LocalDate toContextDate(final Object value)
         throws EFapsException
     {
-        final var ret = toDate(value, Context.getThreadContext().getZoneId());
+        final var ret = toDateInternal(value);
         return ret;
     }
 
-    static LocalDate toDate(final Object value,
-                            final ZoneId valueZoneId)
+    static LocalDate toDateInternal(final Object value)
         throws EFapsException
     {
         LocalDate ret;
         if (value == null) {
             ret = null;
         } else if (value instanceof Date) {
-            final Instant instant = ((Date) value).toInstant();
-            ret = instant.atZone(valueZoneId).toLocalDate();
+            final var dateStr = new SimpleDateFormat("yyyy-MM-dd").format(value);
+            ret = LocalDate.parse(dateStr);
         } else if (value instanceof final DateTime dateTime) {
             ret = LocalDate.of(dateTime.getYear(), dateTime.getMonthOfYear(), dateTime.getDayOfMonth());
         } else if (value instanceof final String str) {
@@ -317,9 +317,13 @@ public final class DateTimeUtil
                 frmt = DateTimeFormatter.ofPattern("H:mm:ss");
             } else if (strValue.matches("\\d\\d:\\d\\d")) {
                 frmt = DateTimeFormatter.ofPattern("HH:mm");
+            }else if (strValue.matches("\\d\\d:\\d")) {
+                frmt = DateTimeFormatter.ofPattern("HH:m");
             } else if (strValue.matches("\\d:\\d\\d")) {
                 frmt = DateTimeFormatter.ofPattern("H:mm");
-            } else {
+            } else if (strValue.matches("\\d:\\d")) {
+                frmt = DateTimeFormatter.ofPattern("H:m");
+            }  else {
                 frmt = null;
             }
             if (frmt == null) {

@@ -21,6 +21,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -67,6 +68,26 @@ public class DateTimeUtilTest
         ret.add(new Object[] { LocalDateTime.of(2019, 8, 23, 16, 30, 15), OffsetDateTime.of(2019, 8, 23, 16, 30, 15, 0,
                         ZoneId.of("UTC").getRules().getOffset(LocalDateTime.of(2019, 8, 23, 0, 0))) });
 
+        return ret.iterator();
+    }
+
+    @Test(description = "Test time parsing", dataProvider = "TimeProvider")
+    public void testTimeParsing(final String timeStr, final LocalTime expectedTime) throws EFapsException {
+
+        final var time = DateTimeUtil.toDBTime(timeStr);
+        assertEquals(time, expectedTime);
+    }
+
+    @DataProvider(name = "TimeProvider")
+    public static Iterator<Object[]> timeProvider(final ITestContext _context) {
+        final List<Object[]> ret = new ArrayList<>();
+        ret.add(new Object[] { "01:02", LocalTime.of(1, 2) });
+        ret.add(new Object[] { "1:02", LocalTime.of(1, 2) });
+        ret.add(new Object[] { "1:2", LocalTime.of(1, 2) });
+        ret.add(new Object[] { "10:12", LocalTime.of(10, 12) });
+        ret.add(new Object[] { "20:4", LocalTime.of(20, 04) });
+        ret.add(new Object[] { "20:04", LocalTime.of(20, 4) });
+        ret.add(new Object[] { "20:0", LocalTime.of(20, 0) });
         return ret.iterator();
     }
 }
