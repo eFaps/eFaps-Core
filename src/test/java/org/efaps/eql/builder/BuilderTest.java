@@ -208,4 +208,27 @@ public class BuilderTest
             + " select attribute[TestAttribute] as \"CIALIAS_TestAttribute\","
             + " class[" + CI.CompanyType.uuid + "].attribute[StringAttribute] as \"CIALIAS_StringAttribute\"");
     }
+
+    @Test
+    public void testElementAfterAttributeSet() {
+        final String stmt = EQL.builder()
+                        .print()
+                        .query(CI.AllAttrType)
+                        .select()
+                        .attribute(CI.AllAttrType.DateAttribute)
+                        .attributeSet(CI.AllAttrType.LinkAttribute).attribute(CI.CompanyType.StringAttribute)
+                        .attributeSet(CI.AllAttrType.LinkAttribute).attribute(CI.CompanyType.StringAttribute).as("Alias1")
+                        .attributeSet(CI.AllAttrType.LinkAttribute)
+                            .linkto("AnAttribute").attribute(CI.SimpleType.TestAttr)
+                        .attributeSet(CI.AllAttrType.LinkAttribute)
+                            .linkto("AnAttribute").attribute(CI.SimpleType.TestAttr).as("Alias2")
+                        .stmt()
+                        .asString();
+        assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
+                        + " select attribute[AllAttrDateAttribute] as \"CIALIAS_AllAttrDateAttribute\","
+                        + " attributeset[AllAttrLinkAttribute].attribute[StringAttribute] as \"CIALIAS_StringAttribute\","
+                        + " attributeset[AllAttrLinkAttribute].attribute[StringAttribute] as \"Alias1\","
+                        + " attributeset[AllAttrLinkAttribute].linkto[AnAttribute].attribute[TestAttribute] as \"CIALIAS_TestAttribute\","
+                        + " attributeset[AllAttrLinkAttribute].linkto[AnAttribute].attribute[TestAttribute] as \"Alias2\"");
+    }
 }
