@@ -31,8 +31,12 @@ public final class AttributeType
 {
 
     /** The Constant SQL. */
-    private static final String SQL = "select ID,NAME,UUID,CLASSNAME,CLASSNAMEUI,ALWAYSUPDATE,CREATEUPDATE "
+    private static final String SQLID = "select ID,NAME,UUID,CLASSNAME,CLASSNAMEUI,ALWAYSUPDATE,CREATEUPDATE "
                     + "from V_DMATTRIBUTETYPE T0 where T0.ID = ?";
+
+    /** The Constant SQL. */
+    private static final String SQLNAME = "select ID,NAME,UUID,CLASSNAME,CLASSNAMEUI,ALWAYSUPDATE,CREATEUPDATE "
+                    + "from V_DMATTRIBUTETYPE T0 where T0.NAME = ?";
 
     /** The class name. */
     private final String className;
@@ -66,22 +70,28 @@ public final class AttributeType
         return RowLists.rowList7(Long.class, String.class, String.class, String.class, String.class, Integer.class,
                         Integer.class).append(getId(), getName(), getUuid().toString(), this.className,
                                         this.classNameUI,
-                                        this.alwaysUpdate ? 1 : null, this.createUpdate ? 1 : null).asResult();
+                                        this.alwaysUpdate ? 1 : null, this.createUpdate ? 1 : null)
+                        .asResult();
     }
 
     @Override
     public String[] getSqls()
     {
-        return new String[] { SQL };
+        return new String[] { SQLID, SQLNAME };
     }
 
     @Override
-    public boolean applies(final String _sql, final List<Parameter> _parameters)
+    public boolean applies(final String _sql,
+                           final List<Parameter> _parameters)
     {
         boolean ret = false;
         if (_parameters.size() == 1) {
             final Parameter parameter = _parameters.get(0);
-            ret = getId().equals(parameter.right);
+            if (SQLNAME.equals(_sql)) {
+                ret = getName().equals(parameter.right);
+            } else {
+                ret = getId().equals(parameter.right);
+            }
         }
         return ret;
     }

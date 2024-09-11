@@ -17,12 +17,12 @@ package org.efaps.mock.datamodel;
 
 import java.util.UUID;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.efaps.ci.CIAdmin;
 import org.efaps.ci.CIAdminCommon;
 import org.efaps.ci.CIAdminDataModel;
 import org.efaps.ci.CIAdminEvent;
 import org.efaps.ci.CIAdminProgram;
+import org.efaps.test.AbstractTest;
 
 /**
  * The Interface IDataModel.
@@ -137,13 +137,24 @@ public interface IDataModel
                     .build();
 
     Type Admin_Abstract = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(CIAdmin.Abstract.uuid)
                     .withName("Admin_Abstract")
                     .build();
 
+    Type SetType = Type.builder()
+                    .withName("Admin_DataModel_AttributeSet")
+                    .withUuid(UUID.fromString("a23b6c9f-5220-438f-93d0-f4651c3ba455"))
+                    .build();
+
+    Type SetAttributeType = Type.builder()
+                    .withName("Admin_DataModel_AttributeSetAttribute")
+                    .withUuid(UUID.fromString("f601ffc5-819c-41a0-8663-3e1b0fb35a9b"))
+                    .build();
+
+
     SQLTable Admin_DataModel_SQLTable = SQLTable.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(UUID.fromString("5ffb40ef-3518-46c8-a78f-da3ffbfea4c0"))
                     .withName("Admin_DataModel_SQLTable")
                     .withSqlTableName("T_DMTABLE")
@@ -172,47 +183,47 @@ public interface IDataModel
                     .build();
 
     Type Admin_DataModel_Abstract = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(CIAdminDataModel.Abstract.uuid)
                     .withName("Admin_DataModel_Abstract")
                     .withParentTypeId(Admin_Abstract.getId())
                     .build();
 
     Type Admin_DataModel_AttributeSet = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(CIAdminDataModel.AttributeSet.uuid)
                     .withName("Admin_DataModel_AttributeSet")
                     .build();
 
     Type Admin_DataModel_Attribute = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(CIAdminDataModel.Attribute.uuid)
                     .withName("Admin_DataModel_Attribute")
                     .build();
 
     Type Admin_Program_Abstract = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Program_Abstract")
                     .withUuid(CIAdminProgram.Abstract.uuid)
                     .withParentTypeId(Admin_Abstract.getId())
                     .build();
 
     Type Admin_Program_Java = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Program_Java")
                     .withUuid(CIAdminProgram.Java.uuid)
                     .withParentTypeId(Admin_Program_Abstract.getId())
                     .build();
 
     Type Admin_Event_Definition = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Event_Definition")
                     .withUuid(CIAdminEvent.Definition.uuid)
                     .withParentTypeId(Admin_DataModel_Abstract.getId())
                     .build();
 
     SQLTable Admin_Event_DefinitionSQLTable = SQLTable.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(UUID.fromString("5ffb40ef-3518-46c8-a78f-da3ffbfea4c0"))
                     .withName("Admin_Event_DefinitionSQLTable")
                     .withSqlTableName("T_EVENTDEF")
@@ -248,62 +259,62 @@ public interface IDataModel
                     .build();
 
     Type Admin_DataModel_TypeAccessCheckEvent = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_TypeAccessCheckEvent")
                     .withUuid(UUID.fromString("03f0ab61-aaf6-4566-a6a9-d86b343acd66"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_DeletePre = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_DeletePre")
                     .withUuid(UUID.fromString("7d64b1b6-c7d6-40a8-8abc-0a6a04d1b7b7"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_DeletePost = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_DeletePost")
                     .withUuid(UUID.fromString("590af1fc-b058-49fd-a0bc-f56950577af8"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_DeleteOverride = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_DeleteOverride")
                     .withUuid(UUID.fromString("3be4ca23-671c-4700-bf21-a3bec7bf4830"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_InsertPre = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_InsertPre")
                     .withUuid(UUID.fromString("f2118146-3d89-4cbb-8665-af10f3a1158b"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_InsertPost = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_InsertPost")
                     .withUuid(UUID.fromString("b8cd5c3b-5dc2-454c-a493-f19cefc15e1a"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_DataModel_Type_Trigger_InsertOverride = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_DataModel_Type_Trigger_InsertOverride")
                     .withUuid(UUID.fromString("93115e42-a77e-45da-91fa-4ceb811a39d8"))
                     .withParentTypeId(Admin_Event_Definition.getId())
                     .build();
 
     Type Admin_Common_Property = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Common_Property")
                     .withUuid(CIAdminCommon.Property.uuid)
                     .build();
 
     SQLTable Admin_Common_PropertySQLTable = SQLTable.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withUuid(UUID.fromString("5cf99cd6-06d6-4322-a344-55d206666c9c"))
                     .withName("Admin_Common_PropertySQLTable")
                     .withSqlTableName("T_CMPROPERTY")
@@ -332,13 +343,13 @@ public interface IDataModel
                     .build();
 
     Type Admin_Common_SystemConfigurationAttribute = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Common_SystemConfigurationAttribute")
                     .withUuid(CIAdminCommon.SystemConfigurationAttribute.uuid)
                     .build();
 
     Type Admin_Common_SystemConfigurationLink = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("Admin_Common_SystemConfigurationLink")
                     .withUuid(CIAdminCommon.SystemConfigurationLink.uuid)
                     .build();

@@ -16,6 +16,7 @@
 package org.efaps.mock.datamodel;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.efaps.test.EFapsQueryHandler;
 import org.efaps.test.IMockResult;
@@ -30,6 +31,7 @@ import acolyte.jdbc.StatementHandler.Parameter;
 public final class Attribute
     extends AbstractType
 {
+
     /** The Constant SQL. */
     private static final String SQL = "select ID,NAME,TYPEID,DMTABLE,DMATTRIBUTETYPE,DMTYPELINK,PARENTSET,SQLCOLUMN,"
                     + "DEFAULTVAL,DIMENSION,CLASSNAME from V_ADMINATTRIBUTE T0 where T0.DMTYPE = ?";
@@ -53,6 +55,11 @@ public final class Attribute
     private final Long linkTypeId;
 
     private final String sqlColumnName;
+
+    private final UUID dimensionUUID;
+
+    private final Long parentSetId;
+
     /**
      * Instantiates a new attribute.
      *
@@ -67,15 +74,18 @@ public final class Attribute
         this.typeId = _builder.typeId;
         this.linkTypeId = _builder.linkTypeId;
         this.sqlColumnName = _builder.sqlColumnName;
+        this.dimensionUUID = _builder.dimensionUUID;
+        this.parentSetId = _builder.parentSetId;
     }
 
     @Override
     public QueryResult getResult()
     {
         return RowLists.rowList11(Long.class, String.class, Long.class, Long.class, Long.class, Long.class, Long.class,
-                        String.class, String.class, Long.class, String.class)
+                        String.class, String.class, String.class, String.class)
                         .append(getId(), getName(), this.typeId, this.sqlTableId, this.attributeTypeId, this.linkTypeId,
-                                        null, getSQLColumnName(), null, null, null)
+                                        parentSetId, getSQLColumnName(), null,
+                                        dimensionUUID == null ? null : dimensionUUID.toString(), null)
                         .asResult();
     }
 
@@ -86,7 +96,8 @@ public final class Attribute
     }
 
     @Override
-    public boolean applies(final String _sql, final List<Parameter> _parameters)
+    public boolean applies(final String _sql,
+                           final List<Parameter> _parameters)
     {
         boolean ret = false;
         if (_parameters.size() == 1) {
@@ -149,6 +160,10 @@ public final class Attribute
         private Long linkTypeId;
 
         private String sqlColumnName;
+
+        private UUID dimensionUUID;
+
+        private Long parentSetId;
 
         /**
          * With data model type id.
@@ -216,6 +231,24 @@ public final class Attribute
             return this;
         }
 
+        public AttributeBuilder withDimentionsUUID(final UUID dimensionUUID)
+        {
+            this.dimensionUUID = dimensionUUID;
+            return this;
+        }
+
+        public AttributeBuilder withUUID(final UUID uuid)
+        {
+            this.dimensionUUID = uuid;
+            return this;
+        }
+
+        public AttributeBuilder withParentSetId(final Long parentSetId)
+        {
+            this.parentSetId = parentSetId;
+            return this;
+        }
+
         /**
          * Builds the.
          *
@@ -262,7 +295,8 @@ public final class Attribute
         }
 
         @Override
-        public boolean applies(final String _sql, final List<Parameter> _parameters)
+        public boolean applies(final String _sql,
+                               final List<Parameter> _parameters)
         {
             boolean ret = false;
             if (_parameters.size() == 1) {

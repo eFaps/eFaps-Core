@@ -17,9 +17,9 @@ package org.efaps.mock.datamodel;
 
 import java.util.UUID;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.efaps.test.AbstractTest;
 import org.efaps.test.IMockResult;
 
 /**
@@ -95,7 +95,7 @@ public abstract class AbstractType
     {
 
         /** The id. */
-        protected long id = RandomUtils.nextLong();
+        protected long id = AbstractTest.nextLong();
 
         /** The name. */
         private String name;

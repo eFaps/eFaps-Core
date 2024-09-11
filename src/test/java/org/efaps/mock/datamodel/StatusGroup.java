@@ -20,7 +20,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.lang3.RandomUtils;
+import org.efaps.test.AbstractTest;
 import org.efaps.test.EFapsQueryHandler;
 import org.efaps.test.IMockResult;
 
@@ -35,9 +35,10 @@ public class StatusGroup
 
     private static final String SQLSTATUSID = "select ID,TYPEID,KEY,DESCR from T_DMSTATUS T0 where T0.ID = ?";
 
-    private static final String SQLGRPUUID = "select T0.ID,T0.TYPEID,KEY,DESCR "
-                    + "from T_DMSTATUS T0 "
-                    + "inner join T_CMABSTRACT T1 on T0.TYPEID=T1.ID where T1.UUID = ?";
+    private static final String SQLGRPUUID = """
+        select T0.ID,T0.TYPEID,KEY,DESCR \
+        from T_DMSTATUS T0 \
+        inner join T_CMABSTRACT T1 on T0.TYPEID=T1.ID where T1.UUID = ?""";
 
     private final BidiMap<Long, String> keys = new DualHashBidiMap<>();
     private final Type type;
@@ -46,7 +47,7 @@ public class StatusGroup
     protected StatusGroup(final StatusGroupBuilder _builder)
     {
         for (final String key : _builder.keys) {
-            this.keys.put(RandomUtils.nextLong(), key);
+            this.keys.put(AbstractTest.nextLong(), key);
         }
         this.type = _builder.type;
     }

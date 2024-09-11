@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.sql.DataSource;
 
@@ -156,5 +157,10 @@ public abstract class AbstractTest
             bind(TransactionManagerImple.class).to(TransactionManager.class);
             bindFactory(DatasourceProvider.class).to(DataSource.class);
         }
+    }
+
+    public static long nextLong()
+    {
+        return ThreadLocalRandom.current().nextLong(1000000);
     }
 }

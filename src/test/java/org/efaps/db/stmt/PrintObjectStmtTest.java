@@ -620,10 +620,11 @@ public class PrintObjectStmtTest
     public void testLinktoSelectClass()
         throws EFapsException
     {
-        final String sql = String.format("select T2.%s,T0.ID,T1.ID,T2.ID "
-                        + "from %s T0 "
-                        + "left join %s T1 on T0.%s=T1.ID "
-                        + "left join %s T2 on T1.%s=T2.%s where T0.ID = 4",
+        final String sql = String.format("""
+            select T2.%s,T0.ID,T1.ID,T2.ID \
+            from %s T0 \
+            left join %s T1 on T0.%s=T1.ID \
+            left join %s T2 on T1.%s=T2.%s where T0.ID = 4""",
                         Mocks.ClassTypeStringAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName(),
                         Mocks.SimpleTypeSQLTable.getSqlTableName(),
@@ -654,10 +655,11 @@ public class PrintObjectStmtTest
     public void testAttributeInChildTable()
         throws EFapsException
     {
-        final String sql = String.format("select T1.%s,T0.ID "
-                        + "from %s T0 "
-                        + "left join %s T1 on T0.ID=T1.ID "
-                        + "where T0.ID = 4",
+        final String sql = String.format("""
+            select T1.%s,T0.ID \
+            from %s T0 \
+            left join %s T1 on T0.ID=T1.ID \
+            where T0.ID = 4""",
                         Mocks.AllAttrInChildSQLAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName(),
                         Mocks.AllAttrTypeChildSQLTable.getSqlTableName());
@@ -683,10 +685,11 @@ public class PrintObjectStmtTest
     public void testAttributeInChildTable2()
         throws EFapsException
     {
-        final String sql = String.format("select T0.%s,T1.%s,T0.ID "
-                        + "from %s T0 "
-                        + "left join %s T1 on T0.ID=T1.ID "
-                        + "where T0.ID = 4",
+        final String sql = String.format("""
+            select T0.%s,T1.%s,T0.ID \
+            from %s T0 \
+            left join %s T1 on T0.ID=T1.ID \
+            where T0.ID = 4""",
                         Mocks.AllAttrDecimalAttribute.getSQLColumnName(),
                         Mocks.AllAttrInChildSQLAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName(),
@@ -716,11 +719,12 @@ public class PrintObjectStmtTest
     public void testLinktoAttributeInChildTable()
         throws EFapsException
     {
-        final String sql = String.format("select T2.%s,T0.ID,T1.ID "
-                        + "from %s T0 "
-                        + "left join %s T1 on T0.%s=T1.ID "
-                        + "left join %s T2 on T1.ID=T2.ID "
-                        + "where T0.ID = 4",
+        final String sql = String.format("""
+            select T2.%s,T0.ID,T1.ID \
+            from %s T0 \
+            left join %s T1 on T0.%s=T1.ID \
+            left join %s T2 on T1.ID=T2.ID \
+            where T0.ID = 4""",
                         Mocks.SimpleTypeInChildSQLAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName(),
                         Mocks.SimpleTypeSQLTable.getSqlTableName(),
@@ -749,11 +753,12 @@ public class PrintObjectStmtTest
     public void testAttributeLinktoAttributeInChildTable()
         throws EFapsException
     {
-        final String sql = String.format("select T2.%s,T0.ID,T2.ID "
-                        + "from %s T0 "
-                        + "left join %s T1 on T0.ID=T1.ID "
-                        + "left join %s T2 on T1.AllAttrLinkInChildSQLAttribute_COL=T2.ID "
-                        + "where T0.ID = 4",
+        final String sql = String.format("""
+            select T2.%s,T0.ID,T2.ID \
+            from %s T0 \
+            left join %s T1 on T0.ID=T1.ID \
+            left join %s T2 on T1.AllAttrLinkInChildSQLAttribute_COL=T2.ID \
+            where T0.ID = 4""",
                         Mocks.TestAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName(),
                         Mocks.AllAttrTypeChildSQLTable.getSqlTableName(),
@@ -1151,6 +1156,43 @@ public class PrintObjectStmtTest
                .execute()
                .evaluate();
         assertEquals(evaluator.get(1), Collections.singletonList(strValue));
+    }
+
+
+    @Test
+    public void testAttributSet()
+        throws EFapsException
+    {
+        final String sql = String.format("""
+            select T0.%s,T1.%s,T0.ID,T1.ID \
+            from %s T0 \
+            left join %s T1 on T0.ID_COL=T1.%s_COL \
+            where T0.ID = 4""",
+                        Mocks.TypeWithAttributSetOtherAttribute.getSQLColumnName(),
+                        Mocks.AttributeSetStringAttribute.getSQLColumnName(),
+                        Mocks.TypeWithAttributSetSQLTable.getSqlTableName(),
+                        Mocks.AttributSetSQLTable.getSqlTableName(),
+                        Mocks.AttributeSetType.getAttributeName());
+
+        MockResult.builder()
+                        .withSql(sql)
+                        .withResult(RowLists.rowList4(String.class, String.class, Long.class, Long.class)
+                                        .append("OtherValue", "SetAttributeValue", 4L, 3L)
+                                        .asResult())
+                        .build();
+
+        final var eql = String.format("print obj %s.4 select attribute[%s], attributeset[%s].attribute[%s]",
+                        Mocks.TypeWithAttributSetType.getId(),
+                        Mocks.TypeWithAttributSetOtherAttribute.getName(),
+                        Mocks.AttributeSetType.getAttributeName(),
+                        Mocks.AttributeSetStringAttribute.getName());
+        System.out.println(eql);
+        final IPrintObjectStatement stmt = (IPrintObjectStatement) EQL2.parse(eql);
+        final Evaluator evaluator = PrintStmt.get(stmt)
+                        .execute()
+                        .evaluate();
+        assertEquals(evaluator.get(1), "OtherValue");
+        assertEquals(evaluator.get(2), Collections.singletonList("SetAttributeValue"));
     }
 
 }

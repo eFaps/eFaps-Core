@@ -26,7 +26,7 @@ import acolyte.jdbc.StatementHandler.Parameter;
 /**
  * The Class Type.
  */
-public class Type
+public final class AttributeSet
     extends AbstractType
 {
 
@@ -45,41 +45,30 @@ public class Type
     /** The Constant SQLCHILDREN. */
     private static final String SQLCHILDREN = "select ID,PURPOSE from V_ADMINTYPE T0 where T0.PARENTDMTYPE = ?";
 
-
-    /** The purpose id. */
-    private final Integer purposeId;
-
     /** The purpose type id. */
     private final Long parentTypeId;
 
-    /** The children. */
-    private boolean children = false;
+    private final String attributeName;
 
     /**
      * Instantiates a new type.
      *
      * @param _builder the builder
      */
-    private Type(final TypeBuilder _builder)
+    private AttributeSet(final AttributeSetBuilder builder)
     {
-        super(_builder);
-        this.purposeId = _builder.purposeId;
-        this.parentTypeId = _builder.parentTypeId;
+        super(builder);
+        this.parentTypeId = builder.parentTypeId;
+        this.attributeName = builder.attributeName;
     }
 
     @Override
     public QueryResult getResult()
     {
         final QueryResult ret;
-        if (this.children) {
-            ret = RowLists.rowList2(Long.class, Integer.class)
-                            .append(getId(), this.purposeId)
-                            .asResult();
-        } else {
             ret =  RowLists.rowList6(Long.class, String.class, String.class, Integer.class, Long.class, Long.class)
-                        .append(getId(), getUuid().toString(), getName(), this.purposeId, this.parentTypeId, null)
+                        .append(getId(), getUuid().toString(), getName(), null, this.parentTypeId, null)
                         .asResult();
-        }
         return ret;
     }
 
@@ -95,14 +84,12 @@ public class Type
         boolean ret = false;
         if (_parameters.size() == 1) {
             final Parameter parameter = _parameters.get(0);
-            this.children = false;
             if (SQLID.equals(_sql)) {
                 ret = getId().equals(parameter.right);
             } else if (SQLUUID.equals(_sql)) {
                 ret = getUuid().toString().equals(parameter.right);
             } else if (SQLCHILDREN.equals(_sql)) {
                 ret = this.parentTypeId != null && this.parentTypeId.equals(parameter.right);
-                this.children = true;
             } else {
                 ret = getName().toString().equals(parameter.right);
             }
@@ -110,49 +97,37 @@ public class Type
         return ret;
     }
 
+    public String getAttributeName()
+    {
+        return attributeName;
+    }
+
     /**
      * Builder.
      *
      * @return the type builder
      */
-    public static TypeBuilder builder()
+    public static AttributeSetBuilder builder()
     {
-        return new TypeBuilder();
+        return new AttributeSetBuilder();
     }
 
     /**
      * The Class TypeBuilder.
      */
-    public static class TypeBuilder
-        extends AbstractBuilder<TypeBuilder>
+    public static class AttributeSetBuilder
+        extends AbstractBuilder<AttributeSetBuilder>
     {
         /** The purpose id. */
-        private Integer purposeId = 0;
 
         /** The purpose type id. */
         private Long parentTypeId;
 
-        /**
-         * With sql table id.
-         *
-         * @param _purposeId the purpose id
-         * @return the attribute builder
-         */
-        public TypeBuilder withPurposeId(final Integer _purposeId)
-        {
-            this.purposeId = _purposeId;
-            return this;
-        }
+        private String attributeName;
 
-        /**
-         * With sql table id.
-         *
-         * @param _parentTypeId the parent type id
-         * @return the attribute builder
-         */
-        public TypeBuilder withParentTypeId(final Long _parentTypeId)
+        public AttributeSetBuilder withAttributeName(final String attributeName)
         {
-            this.parentTypeId = _parentTypeId;
+            this.attributeName = attributeName;
             return this;
         }
 
@@ -161,9 +136,9 @@ public class Type
          *
          * @return the type
          */
-        public Type build()
+        public AttributeSet build()
         {
-            final Type ret = new Type(this);
+            final AttributeSet ret = new AttributeSet(this);
             EFapsQueryHandler.get().register(ret);
             return ret;
         }

@@ -15,9 +15,11 @@
  */
 package org.efaps.mock;
 
-import org.apache.commons.lang3.RandomUtils;
+import java.util.UUID;
+
 import org.efaps.admin.datamodel.Type.Purpose;
 import org.efaps.mock.datamodel.Attribute;
+import org.efaps.mock.datamodel.AttributeSet;
 import org.efaps.mock.datamodel.EventDefinition;
 import org.efaps.mock.datamodel.IDataModel;
 import org.efaps.mock.datamodel.Property;
@@ -26,6 +28,7 @@ import org.efaps.mock.datamodel.StatusGroup;
 import org.efaps.mock.datamodel.Type;
 import org.efaps.mock.esjp.AccessCheck;
 import org.efaps.mock.esjp.TriggerEvent;
+import org.efaps.test.AbstractTest;
 
 /**
  * The Interface ITypes.
@@ -33,9 +36,15 @@ import org.efaps.mock.esjp.TriggerEvent;
 public interface Mocks
 {
 
-    Type TypedType = Type.builder().withId(RandomUtils.nextLong()).withName("TypedType").build();
+    Type TypedType = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("TypedType")
+                    .build();
 
-    SQLTable TypedTypeSQLTable = SQLTable.builder().withName("TypedTypeSQLTable").withTypeColumn("TYPE").build();
+    SQLTable TypedTypeSQLTable = SQLTable.builder()
+                    .withName("TypedTypeSQLTable")
+                    .withTypeColumn("TYPE")
+                    .build();
 
     Attribute TypedTypeTestAttr = Attribute.builder()
                     .withName("TestAttr")
@@ -58,7 +67,7 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.LongType.getId())
                     .build();
 
-    Type TypedType2 = Type.builder().withId(RandomUtils.nextLong()).withName("TypedType2").build();
+    Type TypedType2 = Type.builder().withId(AbstractTest.nextLong()).withName("TypedType2").build();
 
     SQLTable TypedType2SQLTable = SQLTable.builder().withName("TypedType2SQLTable").withTypeColumn("TYPE").build();
 
@@ -77,7 +86,7 @@ public interface Mocks
                     .build();
 
     Type SimpleType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("SimpleType")
                     .build();
 
@@ -113,7 +122,7 @@ public interface Mocks
                     .build();
 
     Type AllAttrType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("AllAttrType")
                     .build();
 
@@ -237,7 +246,7 @@ public interface Mocks
                     .withLinkTypeId(SimpleType.getId())
                     .build();
 
-    Type AbstractType = Type.builder().withId(RandomUtils.nextLong())
+    Type AbstractType = Type.builder().withId(AbstractTest.nextLong())
                     .withName("AbstractType")
                     .withPurposeId(Purpose.ABSTRACT.getInt())
                     .build();
@@ -267,18 +276,18 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.LongType.getId())
                     .build();
 
-    Type ChildType1 = Type.builder().withId(RandomUtils.nextLong())
+    Type ChildType1 = Type.builder().withId(AbstractTest.nextLong())
                     .withName("ChildType1")
                     .withParentTypeId(AbstractType.getId())
                     .build();
 
-    Type ChildType2 = Type.builder().withId(RandomUtils.nextLong())
+    Type ChildType2 = Type.builder().withId(AbstractTest.nextLong())
                     .withName("ChildType2")
                     .withParentTypeId(AbstractType.getId())
                     .build();
 
     Type AccessType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("AccessType")
                     .build();
 
@@ -302,7 +311,7 @@ public interface Mocks
                     .build();
 
     Type AccessType2 = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("AccessType2")
                     .build();
 
@@ -342,7 +351,7 @@ public interface Mocks
                     .build();
 
     Type AccessType3 = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("AccessType3")
                     .build();
 
@@ -382,7 +391,7 @@ public interface Mocks
                     .build();
 
     Type RelationType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("RelationType")
                     .build();
 
@@ -415,7 +424,7 @@ public interface Mocks
                     .build();
 
     Type RelationAccessType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("RelationAccessType")
                     .build();
 
@@ -448,7 +457,7 @@ public interface Mocks
                     .build();
 
     Type ClassType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withPurposeId(2)
                     .withName("ClassType")
                     .build();
@@ -486,7 +495,7 @@ public interface Mocks
                     .build();
 
     Type CompanyType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("CompanyType")
                     .build();
 
@@ -510,13 +519,13 @@ public interface Mocks
                     .build();
 
     StatusGroup StatusGrp = StatusGroup.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("TestStatusGroup")
                     .withKeys("Open", "Closed", "Canceled")
                     .build();
 
     Type StatusType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("StatusType")
                     .build();
 
@@ -540,7 +549,7 @@ public interface Mocks
                     .build();
 
     Type AllEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("AllEventType")
                     .build();
 
@@ -569,7 +578,7 @@ public interface Mocks
                     .build();
 
     Type DeletePreEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("DeletePreEventType")
                     .build();
 
@@ -593,7 +602,7 @@ public interface Mocks
                     .build();
 
     Type DeletePostEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("DeletePostEventType")
                     .build();
 
@@ -617,7 +626,7 @@ public interface Mocks
                     .build();
 
     Type DeleteOverrideEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("DeleteOverrideEventType")
                     .build();
 
@@ -641,7 +650,7 @@ public interface Mocks
                     .build();
 
     Type InsertPreEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("InsertPreEventType")
                     .build();
 
@@ -665,7 +674,7 @@ public interface Mocks
                     .build();
 
     Type InsertPostEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("InsertPostEventType")
                     .build();
 
@@ -689,7 +698,7 @@ public interface Mocks
                     .build();
 
     Type InsertOverrideEventType = Type.builder()
-                    .withId(RandomUtils.nextLong())
+                    .withId(AbstractTest.nextLong())
                     .withName("InsertOverrideEventType")
                     .build();
 
@@ -711,4 +720,66 @@ public interface Mocks
                     .withESJP(TriggerEvent.class.getName())
                     .withMethod("insertOverride")
                     .build();
+
+    Type TypeWithAttributSetType = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("TypeWithAttributSetType")
+                    .build();
+
+    SQLTable TypeWithAttributSetSQLTable = SQLTable.builder()
+                    .withName("TypeWithAttributSetSQLTable")
+                    .withSqlTableName("T_TYPEWITHATTRSET")
+                    .build();
+
+    Attribute TypeWithAttributSetIDAttribute = Attribute.builder()
+                    .withName("ID")
+                    .withDataModelTypeId(TypeWithAttributSetType.getId())
+                    .withSqlTableId(TypeWithAttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute TypeWithAttributSetOtherAttribute = Attribute.builder()
+                    .withName("Other")
+                    .withDataModelTypeId(TypeWithAttributSetType.getId())
+                    .withSqlTableId(TypeWithAttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
+    AttributeSet AttributeSetType = AttributeSet.builder()
+                    .withName("TypeWithAttributSetType:AttrSetAttribute")
+                    .withAttributeName("AttrSetAttribute")
+                    .build();
+
+    SQLTable AttributSetSQLTable = SQLTable.builder()
+                    .withName("AttributSetSQLTable")
+                    .withSqlTableName("T_ATTRSET")
+                    .build();
+
+    Attribute TypeWithAttributSetSetAttribute = Attribute.builder()
+                    .withName("AttrSetAttribute")
+                    .withTypeId(IDataModel.SetType.getId())
+                    .withUUID(UUID.randomUUID())
+                    .withDataModelTypeId(TypeWithAttributSetType.getId())
+                    .withSqlTableId(AttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
+    Attribute AttributeSetReLAttribute = Attribute.builder()
+                    .withName(AttributeSetType.getAttributeName())
+                    .withTypeId(IDataModel.SetAttributeType.getId())
+                    .withDataModelTypeId(AttributeSetType.getId())
+                    .withSqlTableId(AttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LinkType.getId())
+                    .withLinkTypeId(TypeWithAttributSetType.getId())
+                    .build();
+
+    Attribute AttributeSetStringAttribute = Attribute.builder()
+                    .withName("AttributeSetStringAttribute")
+                    .withTypeId(IDataModel.SetAttributeType.getId())
+                    .withDataModelTypeId(TypeWithAttributSetType.getId())
+                    .withSqlTableId(AttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .withParentSetId(TypeWithAttributSetSetAttribute.getId())
+                    .build();
+
 }
