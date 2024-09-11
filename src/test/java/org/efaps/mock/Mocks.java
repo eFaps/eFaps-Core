@@ -782,4 +782,13 @@ public interface Mocks
                     .withParentSetId(TypeWithAttributSetSetAttribute.getId())
                     .build();
 
+    Attribute AttributeSetLinkAttribute = Attribute.builder()
+                    .withName("AttributeSetLinkAttribute")
+                    .withTypeId(IDataModel.SetAttributeType.getId())
+                    .withDataModelTypeId(TypeWithAttributSetType.getId())
+                    .withSqlTableId(AttributSetSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LinkType.getId())
+                    .withParentSetId(TypeWithAttributSetSetAttribute.getId())
+                    .withLinkTypeId(SimpleType.getId())
+                    .build();
 }
