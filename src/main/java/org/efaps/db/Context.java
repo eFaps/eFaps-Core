@@ -954,7 +954,7 @@ public final class Context
         if (_user != null) {
             final var person = UUIDUtil.isUUID(_user) ? Person.get(UUID.fromString(_user)) : Person.get(_user);
             if (person == null) {
-                LOG.error("No user found for given identiefier: {}", _user);
+                LOG.error("No user found for given identifier: {}", _user);
                 throw new EFapsException(Context.class, "Context.NOUSER", _user);
             }
             context.person = person;
