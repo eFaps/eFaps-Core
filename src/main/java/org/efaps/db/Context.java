@@ -934,7 +934,7 @@ public final class Context
             context.transactionManager.begin();
             context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SystemException | NotSupportedException e) {
-           LOG.error("Catched", e);
+            LOG.error("Catched", e);
         }
         switch (_inheritance) {
             case Inheritable:
@@ -952,7 +952,12 @@ public final class Context
         }
 
         if (_user != null) {
-            context.person = UUIDUtil.isUUID(_user) ? Person.get(UUID.fromString(_user)) : Person.get(_user);
+            final var person = UUIDUtil.isUUID(_user) ? Person.get(UUID.fromString(_user)) : Person.get(_user);
+            if (person == null) {
+                LOG.error("No user found for given identiefier: {}", _user);
+                throw new EFapsException(Context.class, "Context,NOUSER", _user);
+            }
+            context.person = person;
             MDC.put("person", String.format("'%s' (%s %s)", context.person.getName(),
                             context.person.getFirstName(), context.person.getLastName()));
             context.locale = context.person.getLocale();
@@ -978,7 +983,7 @@ public final class Context
             }
             final var company = context.getCompany();
             if (company != null) {
-                MDC.put("company",  String.format("'%s' (%s)", company.getUUID(), company.getName()));
+                MDC.put("company", String.format("'%s' (%s)", company.getUUID(), company.getName()));
             }
         }
         return context;
