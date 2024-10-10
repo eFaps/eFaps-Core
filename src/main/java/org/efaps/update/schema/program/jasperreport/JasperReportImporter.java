@@ -19,8 +19,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.efaps.ci.CIAdminProgram;
 import org.efaps.db.Instance;
 import org.efaps.db.InstanceQuery;
@@ -31,7 +29,6 @@ import org.efaps.update.util.InstallationException;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRDataset;
@@ -41,7 +38,6 @@ import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.query.JRQueryExecuter;
 import net.sf.jasperreports.engine.query.QueryExecuterFactory;
-import net.sf.jasperreports.engine.xml.JRXmlDigesterFactory;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 /**
@@ -52,6 +48,7 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
 public class JasperReportImporter
     extends AbstractSourceImporter
 {
+
     /** The Constant PROPKEY. */
     public static final String APPPROPKEY = "org.efaps.admin.program.jasper.EFapsApplication";
 
@@ -89,12 +86,8 @@ public class JasperReportImporter
             DefaultJasperReportsContext.getInstance().setProperty("net.sf.jasperreports.query.executer.factory.eFaps",
                             FakeQueryExecuterFactory.class.getName());
 
-            this.jasperDesign = new JRXmlLoader(DefaultJasperReportsContext.getInstance(), JRXmlDigesterFactory
-                            .createDigester(DefaultJasperReportsContext.getInstance())).loadXML(newCodeInputStream());
-        } catch (final ParserConfigurationException e) {
-            throw new InstallationException("source code for " + getUrl() + "could not be parsed", e);
-        } catch (final SAXException e) {
-            throw new InstallationException("source code for " + getUrl() + "could not parsed", e);
+            this.jasperDesign = new JRXmlLoader(DefaultJasperReportsContext.getInstance())
+                            .loadXML(newCodeInputStream());
         } catch (final JRException e) {
             // the error is very useful for the user so print it to the log
             LOG.error("The file {} cannot be read due to an JRException {}", getUrl(), e);
@@ -126,7 +119,7 @@ public class JasperReportImporter
                     ret = query.getCurrentValue();
                 }
             }
-        } catch (final EFapsException e)  {
+        } catch (final EFapsException e) {
             throw new InstallationException("Could not find '" + getCiType() + "' '" + getProgramName() + "'", e);
         }
         return ret == null ? super.searchInstance() : ret;
@@ -162,18 +155,9 @@ public class JasperReportImporter
     /**
      * Internal FakeExecuterFactory to be able to set them from esjp.
      */
-    @SuppressWarnings("checkstyle:abstractclassname")
     public static class FakeQueryExecuterFactory
         implements QueryExecuterFactory
     {
-
-        @Override
-        public JRQueryExecuter createQueryExecuter(final JRDataset _dataset,
-                                                   final Map<String, ? extends JRValueParameter> _parameters)
-            throws JRException
-        {
-            return null;
-        }
 
         @Override
         public Object[] getBuiltinParameters()
