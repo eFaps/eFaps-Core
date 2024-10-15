@@ -34,6 +34,7 @@ import org.efaps.admin.user.Company;
 import org.efaps.admin.user.Person;
 import org.efaps.admin.user.UserAttributesSet;
 import org.efaps.admin.user.UserAttributesSet.UserAttributesDefinition;
+import org.efaps.db.Context.FileParameter;
 import org.efaps.db.databases.AbstractDatabase;
 import org.efaps.db.store.Resource;
 import org.efaps.db.store.Store;
@@ -931,6 +932,9 @@ public final class Context
         factory.create("eFaps-Core").inject(context);
         try {
             context.transactionManager.setTransactionTimeout(context.transactionManagerTimeOut);
+            if (context.transactionManager.getStatus() == jakarta.transaction.Status.STATUS_ACTIVE) {
+                context.transactionManager.rollback();
+            }
             context.transactionManager.begin();
             context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SystemException | NotSupportedException e) {
