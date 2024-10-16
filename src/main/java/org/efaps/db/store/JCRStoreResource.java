@@ -237,7 +237,12 @@ public class JCRStoreResource
                 setIdentifer(fileNode.getIdentifier());
                 resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
             } else if (identifier.equals("NEW")) {
-                final var fileNode = getFolderNode().getNode(getInstance().getOid());
+                final Node fileNode;
+                if (getFolderNode().hasNode(getInstance().getOid())) {
+                    fileNode = getFolderNode().getNode(getInstance().getOid());
+                } else {
+                    fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
+                }
                 LOG.info("fileNode by relPath: {}", fileNode);
                 setIdentifer(fileNode.getIdentifier());
                 resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
