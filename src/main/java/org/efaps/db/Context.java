@@ -938,6 +938,7 @@ public final class Context
             context.transactionManager.begin();
             context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SystemException | NotSupportedException e) {
+            LOG.error("TransactionManager Status: {}", context.transactionManager.getStatus());
             LOG.error("Catched", e);
         }
         switch (_inheritance) {
