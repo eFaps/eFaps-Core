@@ -932,13 +932,14 @@ public final class Context
         factory.create("eFaps-Core").inject(context);
         try {
             context.transactionManager.setTransactionTimeout(context.transactionManagerTimeOut);
+            LOG.info("TransactionManager Status: {}", context.transactionManager.getStatus());
             if (context.transactionManager.getStatus() == jakarta.transaction.Status.STATUS_ACTIVE) {
                 context.transactionManager.rollback();
             }
             context.transactionManager.begin();
             context.setTransaction(context.transactionManager.getTransaction());
         } catch (final SystemException | NotSupportedException e) {
-            LOG.error("TransactionManager Status: {}", context.transactionManager.getStatus());
+
             LOG.error("Catched", e);
         }
         switch (_inheritance) {
