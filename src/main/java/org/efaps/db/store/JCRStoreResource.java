@@ -231,6 +231,7 @@ public class JCRStoreResource
 
             final Binary bin = getSession().getValueFactory().createBinary(in);
             final Node resNode;
+            LOG.info("Current identifier: {}", identifier);
             if (identifier == null) {
                 final Node fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
                 setIdentifer(fileNode.getIdentifier());
