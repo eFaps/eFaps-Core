@@ -933,7 +933,7 @@ public final class Context
         try {
             context.transactionManager.setTransactionTimeout(context.transactionManagerTimeOut);
             LOG.info("TransactionManager Status: {}", context.transactionManager.getStatus());
-            if (context.transactionManager.getStatus() == jakarta.transaction.Status.STATUS_ACTIVE) {
+            if (context.transactionManager.getStatus() == jakarta.transaction.Status.STATUS_MARKED_ROLLBACK) {
                 context.transactionManager.rollback();
             }
             context.transactionManager.begin();
