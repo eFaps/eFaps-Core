@@ -208,7 +208,8 @@ public final class DateTimeUtil
         throws EFapsException
     {
         final OffsetDateTime ret = toDateTime(value, getDBZoneId());
-        return ret == null ? null : ret.minusHours(getOffset());
+        final var offset = Context.getThreadContext().getZoneId().getRules().getOffset(LocalDateTime.now());
+        return ret == null ? null : ret.withOffsetSameInstant(offset);
     }
 
     static OffsetDateTime toDateTime(final Object value,
@@ -218,9 +219,11 @@ public final class DateTimeUtil
         OffsetDateTime ret;
         if (value == null) {
             ret = null;
+        } else if (value instanceof final Timestamp date) {
+            final var localDateTime = date.toLocalDateTime();
+            ret = OffsetDateTime.of(localDateTime, valueZoneId.getRules().getOffset(localDateTime));
         } else if (value instanceof final Date date) {
             ret = OffsetDateTime.ofInstant(Instant.ofEpochMilli(date.getTime()), valueZoneId);
-
         } else if (value instanceof DateTime) {
             ret = OffsetDateTime.parse(((DateTime) value).toString(), FORMATTER);
         } else if (value instanceof String) {

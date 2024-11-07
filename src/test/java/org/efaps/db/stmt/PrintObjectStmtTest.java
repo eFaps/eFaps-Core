@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 
@@ -252,11 +253,11 @@ public class PrintObjectStmtTest
                         Mocks.AllAttrDateTimeAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName());
 
-        final OffsetDateTime dateTime = OffsetDateTime.now();
+        final OffsetDateTime dateTime = OffsetDateTime.of(2024, 10, 18, 17, 34, 22, 1500, ZoneOffset.UTC);
         MockResult.builder()
                         .withSql(sql)
                         .withResult(RowLists.rowList2(Object.class, Long.class)
-                                        .append(Timestamp.from(dateTime.toInstant()), 4L)
+                                        .append(Timestamp.valueOf(dateTime.toLocalDateTime()), 4L)
                                         .asResult())
                         .build();
 
@@ -278,11 +279,11 @@ public class PrintObjectStmtTest
                         Mocks.AllAttrCreatedAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName());
 
-        final OffsetDateTime dateTime = OffsetDateTime.now();
+        final OffsetDateTime dateTime = OffsetDateTime.of(2024, 10, 18, 17, 34, 22, 1500, ZoneOffset.UTC);
         MockResult.builder()
                         .withSql(sql)
                         .withResult(RowLists.rowList2(Object.class, Long.class)
-                                        .append(Timestamp.from(dateTime.toInstant()), 4L)
+                                        .append(Timestamp.valueOf(dateTime.toLocalDateTime()), 4L)
                                         .asResult())
                         .build();
 
@@ -304,11 +305,11 @@ public class PrintObjectStmtTest
                         Mocks.AllAttrModifiedAttribute.getSQLColumnName(),
                         Mocks.AllAttrTypeSQLTable.getSqlTableName());
 
-        final OffsetDateTime dateTime = OffsetDateTime.now();
+        final OffsetDateTime dateTime = OffsetDateTime.of(2024, 10, 18, 17, 34, 22, 1500, ZoneOffset.UTC);
         MockResult.builder()
                         .withSql(sql)
                         .withResult(RowLists.rowList2(Object.class, Long.class)
-                                        .append(Timestamp.from(dateTime.toInstant()), 4L)
+                                        .append(Timestamp.valueOf(dateTime.toLocalDateTime()), 4L)
                                         .asResult())
                         .build();
 
