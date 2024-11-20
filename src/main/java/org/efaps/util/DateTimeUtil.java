@@ -207,9 +207,18 @@ public final class DateTimeUtil
     public static OffsetDateTime toContextDateTime(final Object value)
         throws EFapsException
     {
+        LOG.debug("Converting {} to ContextDateTime", value);
         final OffsetDateTime ret = toDateTime(value, getDBZoneId());
-        final var offset = Context.getThreadContext().getZoneId().getRules().getOffset(LocalDateTime.now());
-        return ret == null ? null : ret.withOffsetSameInstant(offset);
+        LOG.debug("Result: {} ", ret);
+
+        if (ret != null) {
+            final var offset = Context.getThreadContext().getZoneId().getRules().getOffset(LocalDateTime.now());
+            final var withOffset = ret.withOffsetSameInstant(offset);
+            LOG.debug("with Offset: {} ", withOffset);
+            return withOffset;
+        } else {
+            return null;
+        }
     }
 
     static OffsetDateTime toDateTime(final Object value,
