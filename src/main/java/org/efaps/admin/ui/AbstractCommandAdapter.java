@@ -15,11 +15,10 @@
  */
 package org.efaps.admin.ui;
 
-import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.infinispan.protostream.annotations.ProtoField;
 
 public class AbstractCommandAdapter
-    extends AbstractAdminObjectAdapter
+    extends AbstractUserInterfaceObjectAdapter
 {
 
     @ProtoField(number = 200)

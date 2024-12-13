@@ -17,6 +17,7 @@ package org.efaps.admin.ui;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
@@ -42,7 +43,8 @@ public class SearchAdapter
                   Long targetCommandId,
                   Long targetModuleId,
                   List<EventDefinition> events,
-                  boolean eventChecked)
+                  boolean eventChecked,
+                  Set<Long> access)
     {
         final var search = new Search(id, uuid, name);
         search.setCommandsInternal(ProtoUtils.fromMap(commands));
@@ -53,6 +55,7 @@ public class SearchAdapter
         search.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
         search.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         setPropertiesMap(search, propertyMap);
+        setAccess(search, access);
         return search;
     }
 

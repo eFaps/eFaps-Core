@@ -17,6 +17,7 @@ package org.efaps.admin.ui;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
@@ -40,7 +41,8 @@ public class CommandAdapter
                    Long targetCommandId,
                    Long targetModuleId,
                    List<EventDefinition> events,
-                   boolean eventChecked)
+                   boolean eventChecked,
+                   Set<Long> access)
     {
         final var command = new Command(id, uuid, name);
         command.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
@@ -51,6 +53,7 @@ public class CommandAdapter
         command.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
         setPropertiesMap(command, propertyMap);
         setEvents(command, events, eventChecked);
+        setAccess(command, access);
         return command;
     }
 

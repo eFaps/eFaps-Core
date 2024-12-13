@@ -181,7 +181,7 @@
                         <annotationProcessorPath>
                             <groupId>org.infinispan.protostream</groupId>
                             <artifactId>protostream-processor</artifactId>
-                            <version>5.0.5.Final</version>
+                            <version>5.0.12.Final</version>
                         </annotationProcessorPath>
                     </annotationProcessorPaths>
                 </configuration>
@@ -529,7 +529,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
-            <version>15.0.4.Final</version>
+            <version>15.0.10.Final</version>
             <exclusions>
                 <exclusion>
                     <artifactId>hibernate-jpa-2.0-api</artifactId>
@@ -544,17 +544,17 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <version>15.0.4.Final</version>
+            <version>15.0.10.Final</version>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote-query-client</artifactId>
-            <version>15.0.4.Final</version>
+            <version>15.0.10.Final</version>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-remote</artifactId>
-            <version>15.0.4.Final</version>
+            <version>15.0.10.Final</version>
         </dependency>
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>

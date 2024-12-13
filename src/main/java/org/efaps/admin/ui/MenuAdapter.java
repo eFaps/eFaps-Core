@@ -17,6 +17,7 @@ package org.efaps.admin.ui;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.util.cache.ProtoUtils;
@@ -43,19 +44,21 @@ public class MenuAdapter
                 Long targetCommandId,
                 Long targetModuleId,
                 List<EventDefinition> events,
-                boolean eventChecked)
+                boolean eventChecked,
+                Set<Long> access)
     {
         final var menu = new Menu(id, uuid, name);
         menu.setTypeMenu(typeMenu);
         menu.setCommandsInternal(ProtoUtils.fromMap(commands));
-        setPropertiesMap(menu, propertyMap);
-        setEvents(menu, events, eventChecked);
         menu.setTargetFormId(ProtoUtils.toNullLong(targetFormId));
         menu.setTargetMenuId(ProtoUtils.toNullLong(targetMenuId));
         menu.setTargetSearchId(ProtoUtils.toNullLong(targetSearchId));
         menu.setTargetTableId(ProtoUtils.toNullLong(targetTableId));
         menu.setTargetCommandId(ProtoUtils.toNullLong(targetCommandId));
         menu.setTargetModuleId(ProtoUtils.toNullLong(targetModuleId));
+        setPropertiesMap(menu, propertyMap);
+        setEvents(menu, events, eventChecked);
+        setAccess(menu, access);
         return menu;
     }
 

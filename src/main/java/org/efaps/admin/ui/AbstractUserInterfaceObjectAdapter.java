@@ -15,23 +15,23 @@
  */
 package org.efaps.admin.ui;
 
-import java.util.List;
+import java.util.Set;
 
+import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.infinispan.protostream.annotations.ProtoField;
 
-public class AbstractCollectionAdapter
-    extends AbstractUserInterfaceObjectAdapter
+public abstract class AbstractUserInterfaceObjectAdapter
+    extends AbstractAdminObjectAdapter
 {
-
-    @ProtoField(number = 100)
-    List<Long> getFieldIds(AbstractCollection abstractCollection)
+    @ProtoField(number = 300)
+    Set<Long> getAccess(AbstractUserInterfaceObject abstractUserInterfaceObject)
     {
-        return abstractCollection.getFieldIds();
+        return abstractUserInterfaceObject.getAccess();
     }
 
-    protected void setFields(AbstractCollection abstractCollection,
-                             List<Long> fieldIds)
+    public void setAccess(final AbstractUserInterfaceObject abstractUserInterfaceObject,
+                          final Set<Long> access)
     {
-        abstractCollection.setFieldIds(fieldIds);
+        abstractUserInterfaceObject.getAccess().addAll(access);
     }
 }

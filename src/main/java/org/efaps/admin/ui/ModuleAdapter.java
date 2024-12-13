@@ -17,15 +17,15 @@ package org.efaps.admin.ui;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.efaps.admin.AbstractAdminObjectAdapter;
 import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 
 @ProtoAdapter(Module.class)
 public class ModuleAdapter
-    extends AbstractAdminObjectAdapter
+    extends AbstractUserInterfaceObjectAdapter
 {
 
     @ProtoFactory
@@ -34,10 +34,12 @@ public class ModuleAdapter
                   final String name,
                   Map<String, String> propertyMap,
                   List<EventDefinition> events,
-                  boolean eventChecked)
+                  boolean eventChecked,
+                  Set<Long> access)
     {
         final var module = new Module(id, uuid, name);
         setPropertiesMap(module, propertyMap);
+        setAccess(module, access);
         return module;
     }
 

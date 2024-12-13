@@ -17,6 +17,7 @@ package org.efaps.admin.ui;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.efaps.admin.event.EventDefinition;
 import org.infinispan.protostream.annotations.ProtoAdapter;
@@ -34,11 +35,13 @@ public class FormAdapter
                 Map<String, String> propertyMap,
                 List<EventDefinition> events,
                 boolean eventChecked,
-                List<Long> fieldIds)
+                List<Long> fieldIds,
+                Set<Long> access)
     {
         final var form = new Form(id, uuid, name);
         setPropertiesMap(form, propertyMap);
         setFields(form, fieldIds);
+        setAccess(form, access);
         return form;
     }
 
