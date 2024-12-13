@@ -72,6 +72,8 @@ public final class InfinispanCache
 
     private String hotrodUrl = "";
 
+    private boolean forceReset = false;
+
     /**
      * Singelton is wanted.
      */
@@ -90,7 +92,11 @@ public final class InfinispanCache
 
         if (clustered) {
             prefix = config.getOptionalValue("core.cache.cluster.prefix", String.class).orElse("");
+            forceReset = config.getOptionalValue("core.cache.cluster.forceReset", Boolean.class).orElse(false);
             hotrodUrl = config.getOptionalValue("core.cache.cluster.hotrodUrl", String.class).orElse("");
+
+            LOG.info(" with prefix: '{}', forceReset: {}, hotrodUrl: {}", prefix, forceReset, hotrodUrl);
+
             System.getProperties().put("hotrodUrl", hotrodUrl);
             registerSchemas();
         }
@@ -162,6 +168,11 @@ public final class InfinispanCache
                     if (cacheConfig.persistence() != null && cacheConfig.persistence().usingStores()) {
                         final var storeConfig = cacheConfig.persistence().stores().get(0);
                         final var persitenceCacheName = storeConfig.attributes().<String>attribute("cache").get();
+
+                        if (forceReset) {
+                            LOG.info("Removing persistence cache: {}", persitenceCacheName);
+                            remoteCacheManager.administration().removeCache(persitenceCacheName);
+                        }
                         LOG.info("Registering persistence cache: {}", persitenceCacheName);
                         final var encodingWriter = new StringWriter();
                         cacheConfig.encoding().write(new XmlConfigurationWriter(encodingWriter, true, true));
