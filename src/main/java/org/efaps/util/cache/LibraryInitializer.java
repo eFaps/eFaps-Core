@@ -74,9 +74,9 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 TableAdapter.class,
                 TypeAdapter.class
 },
-                schemaFileName = "efaps.proto",
+                schemaFileName = "efaps.v2.proto",
                 schemaFilePath = "proto/",
-                schemaPackageName = "efaps",
+                schemaPackageName = "efaps.v2",
                 syntax = ProtoSyntax.PROTO3)
 public interface LibraryInitializer
     extends GeneratedSchema

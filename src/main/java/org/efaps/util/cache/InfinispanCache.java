@@ -212,11 +212,13 @@ public final class InfinispanCache
         final var initializer = remoteCacheManager.getConfiguration().getContextInitializers().get(0);
         final RemoteCache<String, String> protoMetadataCache = remoteCacheManager
                         .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-        protoMetadataCache.put(initializer.getProtoFileName(), initializer.getProtoFile());
-        final String errors = protoMetadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-        if (errors != null) {
-            throw new IllegalStateException("Some Protobuf schema files contain errors: " +
-                            errors + "\nSchema :\n" + initializer.getProtoFileName());
+        if (!protoMetadataCache.containsKey(initializer.getProtoFileName())) {
+            protoMetadataCache.put(initializer.getProtoFileName(), initializer.getProtoFile());
+            final String errors = protoMetadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
+            if (errors != null) {
+                throw new IllegalStateException("Some Protobuf schema files contain errors: " +
+                                errors + "\nSchema :\n" + initializer.getProtoFileName());
+            }
         }
         remoteCacheManager.close();
     }

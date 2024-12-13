@@ -177,6 +177,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <compilerArgs>
+                        <arg>-Aprotostream.debug=true</arg>
+                        <arg>-Aprotostream.fullyqualifiedannotations=true</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <annotationProcessorPath>
                             <groupId>org.infinispan.protostream</groupId>
