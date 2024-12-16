@@ -15,6 +15,7 @@
  */
 package org.efaps.db.stmt;
 
+import org.efaps.admin.event.EventType;
 import org.efaps.db.stmt.runner.StmtRunner;
 import org.efaps.db.stmt.update.AbstractUpdate;
 import org.efaps.db.stmt.update.ListUpdate;
@@ -61,7 +62,16 @@ public class UpdateStmt
         } else if (getEQLStmt() instanceof IUpdateQueryStatement) {
             update = new QueryUpdate((IUpdateQueryStatement) getEQLStmt());
         }
-        StmtRunner.get().execute(update);
+
+        if (has(StmtFlag.TRIGGEROFF)) {
+            StmtRunner.get().execute(update);
+        } else {
+            update.executeEvents(EventType.UPDATE_PRE);
+            if (!update.executeEvents(EventType.UPDATE_OVERRIDE)) {
+                StmtRunner.get().execute(update);
+            }
+            update.executeEvents(EventType.UPDATE_POST);
+        }
         return this;
     }
 

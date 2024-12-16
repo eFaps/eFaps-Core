@@ -690,9 +690,13 @@ public class SQLRunner
     {
         ConnectionResource con = null;
         try {
+
             con = Context.getThreadContext().getConnectionResource();
             for (final Entry<SQLTable, AbstractSQLInsertUpdate<?>> entry : updatemap.entrySet()) {
                 ((SQLUpdate) entry.getValue()).execute(con);
+            }
+            if (runnable instanceof final ObjectUpdate update) {
+                update.triggerListeners();
             }
         } catch (final SQLException e) {
             throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);

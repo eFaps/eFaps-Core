@@ -55,5 +55,6 @@ public class ObjectUpdate
         if (!getInstance().getType().hasAccess(getInstance(), AccessTypeEnums.MODIFY.getAccessType(), attributes)) {
             throw new EFapsException(getClass(), "execute.NoAccess", Context.getThreadContext().getPerson());
         }
+        evalStatusChange();
     }
 }

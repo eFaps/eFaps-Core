@@ -15,10 +15,17 @@
  */
 package org.efaps.db.stmt.runner;
 
+import org.efaps.admin.event.EventType;
 import org.efaps.db.stmt.IFlagged;
+import org.efaps.util.EFapsException;
 
 public interface IRunnable
     extends IFlagged
 {
 
+    default boolean executeEvents(final EventType eventType)
+        throws EFapsException
+    {
+        return false;
+    }
 }
