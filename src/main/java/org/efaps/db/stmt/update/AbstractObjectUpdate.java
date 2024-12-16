@@ -31,7 +31,6 @@ import org.efaps.admin.event.Parameter;
 import org.efaps.admin.event.Parameter.ParameterValues;
 import org.efaps.admin.program.esjp.Listener;
 import org.efaps.db.Instance;
-import org.efaps.eql2.IInsertStatement;
 import org.efaps.eql2.IUpdateElement;
 import org.efaps.eql2.IUpdateElementsStmt;
 import org.efaps.util.EFapsException;
@@ -87,7 +86,7 @@ public abstract class AbstractObjectUpdate
         throws CacheReloadException
     {
         if (getType().isCheckStatus()) {
-            for (final IUpdateElement updateElement : ((IInsertStatement) getEqlStmt()).getUpdateElements()) {
+            for (final IUpdateElement updateElement : getEqlStmt().getUpdateElements()) {
                 if (getType().getStatusAttribute().getName().equals(updateElement.getAttribute())) {
                     if (StringUtils.isNumeric(updateElement.getValue())) {
                         statusId = Long.valueOf(updateElement.getValue());
