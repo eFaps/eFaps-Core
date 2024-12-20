@@ -175,7 +175,7 @@
         </local-cache>
         <local-cache name="${prefix:}org.efaps.util.cache.InfinispanCache.InternalCounter" />
 
-        <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" />
+
         <local-cache name="${prefix:}org.efaps.admin.index.IndexDefinition.UUID" />
 
         <!-- the Sql Query cache -->
@@ -206,6 +206,21 @@
             </indexing>
         </local-cache>
             -->
+
+       <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" >
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.admin.index.Queue.Cache-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+            <encoding media-type="application/x-protostream" />
+        </local-cache>
+
         <local-cache name="${prefix:}org.efaps.admin.dbproperty.DBProperties">
             <persistence passivation="false">
                 <remote-store

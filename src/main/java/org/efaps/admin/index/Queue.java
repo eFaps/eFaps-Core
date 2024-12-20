@@ -19,8 +19,9 @@ import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.db.Instance;
 import org.efaps.util.EFapsException;
-import org.efaps.util.RandomUtil;
 import org.efaps.util.cache.InfinispanCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TODO comment!
@@ -35,6 +36,8 @@ public final class Queue
      */
     public static final String CACHENAME = Queue.class.getName() + ".Cache";
 
+    private static final Logger LOG = LoggerFactory.getLogger(Queue.class);
+
     /**
      * Instantiates a new queue.
      */
@@ -45,20 +48,24 @@ public final class Queue
     /**
      * Register update.
      *
-     * @param _instance the _instance
+     * @param instance the _instance
      * @throws EFapsException the e faps exception
      */
-    public static void registerUpdate(final Instance _instance)
-        throws EFapsException
+    public static void registerUpdate(final Instance instance)
     {
         // check if SystemConfiguration exists, necessary during install
-        if (EFapsSystemConfiguration.get() != null
-                        && EFapsSystemConfiguration.get().getAttributeValueAsBoolean(KernelSettings.INDEXACTIVATE)) {
-            if (_instance != null && _instance.getType() != null
-                            && IndexDefinition.get(_instance.getType().getUUID()) != null) {
-                final var cache = InfinispanCache.get().<String, String>getCache(CACHENAME);
-                cache.put(RandomUtil.random(12), _instance.getOid());
+        try {
+            if (EFapsSystemConfiguration.get() != null
+                            && EFapsSystemConfiguration.get()
+                                            .getAttributeValueAsBoolean(KernelSettings.INDEXACTIVATE)) {
+                if (instance != null && instance.getType() != null
+                                && IndexDefinition.get(instance.getType().getUUID()) != null) {
+                    final var cache = InfinispanCache.get().<String, String>getCache(CACHENAME);
+                    cache.put(instance.getOid(), instance.getOid());
+                }
             }
+        } catch (final EFapsException e) {
+            LOG.error("Catched", e);
         }
     }
 }
