@@ -16,7 +16,10 @@
 package org.efaps.admin.common;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.ci.CIAdminCommon;
@@ -36,6 +39,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Scheduler for quartz used to get the triggers and esjps for the jobs from the
@@ -46,6 +51,12 @@ import org.quartz.spi.SchedulerPlugin;
 public class QuartzSchedulerPlugin
     implements SchedulerPlugin
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
+
+    private final List<Pair<JobDetail, Trigger>> jobs = new ArrayList<>();
+
+    private Scheduler scheduler;
 
     /**
      * On initialization the triggers and related esjp are loaded from the eFaps
@@ -65,6 +76,7 @@ public class QuartzSchedulerPlugin
                            final ClassLoadHelper _loadHelper)
         throws SchedulerException
     {
+        this.scheduler = _scheduler;
         _scheduler.getListenerManager().addJobListener(new QuartzJobListener());
         try {
             final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.QuartzTriggerAbstract);
@@ -126,8 +138,8 @@ public class QuartzSchedulerPlugin
                                     .withSchedule(CronScheduleBuilder.monthlyOnDayAndHourAndMinute(para1, para2, para3))
                                     .build();
                 }
-                @SuppressWarnings("unchecked")
-                final Class<? extends Job> clazz = (Class<? extends Job>) Class.forName(esjp, false,
+                @SuppressWarnings("unchecked") final Class<? extends Job> clazz = (Class<? extends Job>) Class.forName(
+                                esjp, false,
                                 EFapsClassLoader.getInstance());
                 // class must be instantiated to force that related esjps are
                 // also loaded here
@@ -136,12 +148,12 @@ public class QuartzSchedulerPlugin
                 final JobDetail jobDetail = JobBuilder.newJob(clazz)
                                 .withIdentity(name + "_" + esjp, Quartz.QUARTZGROUP).build();
                 if (trigger != null) {
-                    _scheduler.scheduleJob(jobDetail, trigger);
+                    jobs.add(Pair.of(jobDetail, trigger));
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                         | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-                        | SecurityException | SchedulerException e) {
+                        | SecurityException e) {
             throw new SchedulerException(e);
         } catch (final EFapsException e) {
             throw new SchedulerException(e);
@@ -163,6 +175,15 @@ public class QuartzSchedulerPlugin
     @Override
     public void start()
     {
-        // nothing must be done here
+        for (final var job : jobs) {
+            try {
+                if (!scheduler.checkExists(job.getLeft().getKey())) {
+                    scheduler.scheduleJob(job.getLeft(), job.getRight());
+                }
+            } catch (final SchedulerException e) {
+                LOG.error("Catched error on adding jobs to scheduler", e);
+            }
+        }
+
     }
 }
