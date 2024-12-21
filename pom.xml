@@ -493,25 +493,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.2</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jta</artifactId>
-                    <groupId>javax.transaction</groupId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.zaxxer</groupId>
-                    <artifactId>HikariCP-java6</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>2.5.0</version>
         </dependency>
 
         <dependency>
