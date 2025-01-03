@@ -20,6 +20,10 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class used to set the configuration of an single instance of eFaps.
  * It can only be instantiated once. If it was not instantiated before the
@@ -55,7 +59,7 @@ public final class AppConfigHandler
         /**
          * Key of the enum instance.
          */
-        private String key;
+        private final String key;
 
         /**
          * @param _key key of the enum instance.
@@ -75,6 +79,8 @@ public final class AppConfigHandler
             return this.key;
         }
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(AppConfigHandler.class);
 
     /**
      * Singleton instance.
@@ -102,7 +108,7 @@ public final class AppConfigHandler
      */
     private AppConfigHandler(final Map<String, String> _values)
     {
-        this.accessCacheDeactivated =  "true".equalsIgnoreCase(_values.get(Parameter.ACCESSCACHE_DEACTIVATE.getKey()));
+        this.accessCacheDeactivated = "true".equalsIgnoreCase(_values.get(Parameter.ACCESSCACHE_DEACTIVATE.getKey()));
         if (_values.containsKey(Parameter.SYSTEMID.getKey())) {
             this.systemID = Integer.parseInt(_values.get(Parameter.SYSTEMID.getKey()));
         } else {
@@ -111,7 +117,16 @@ public final class AppConfigHandler
         if (_values.containsKey(Parameter.TEMPFOLDER.getKey())) {
             this.tmpURI = URI.create(_values.get(Parameter.TEMPFOLDER.getKey()));
         } else {
-            this.tmpURI = null;
+            LOG.info("Trying to read tmpFolder from config 'core.tmpFolder'");
+            final var config = ConfigProvider.getConfig();
+            final var tempFolder = config.getOptionalValue("core.tmpFolder", java.io.File.class);
+            if (tempFolder.isPresent()) {
+                LOG.info("found config for tempFolder: {}", tempFolder);
+                this.tmpURI = tempFolder.get().toURI();
+            } else {
+                LOG.info("no config found");
+                this.tmpURI = null;
+            }
         }
     }
 
