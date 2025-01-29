@@ -235,8 +235,9 @@ public final class DateTimeUtil
             ret = OffsetDateTime.ofInstant(Instant.ofEpochMilli(date.getTime()), valueZoneId);
         } else if (value instanceof DateTime) {
             ret = OffsetDateTime.parse(((DateTime) value).toString(), FORMATTER);
-        } else if (value instanceof String) {
-            ret = OffsetDateTime.parse((String) value, FORMATTER);
+        } else if (value instanceof final String valueStr) {
+            final var parsedDateTime = OffsetDateTime.parse(valueStr, FORMATTER);
+            ret = parsedDateTime.withOffsetSameInstant(valueZoneId.getRules().getOffset(LocalDateTime.now()));
         } else if (value instanceof LocalDate) {
             final LocalDateTime localDateTime = LocalDateTime.of((LocalDate) value, LocalTime.MIN);
             ret = OffsetDateTime.of(localDateTime,
