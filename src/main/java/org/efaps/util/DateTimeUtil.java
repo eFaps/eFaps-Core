@@ -196,9 +196,14 @@ public final class DateTimeUtil
         LOG.debug("Converting {} to DBDateTime", value);
         final var dateTime = toDateTime(value, Context.getThreadContext().getZoneId());
         LOG.debug("Result: {} ", dateTime);
-        final var ret = dateTime == null ? null : dateTime.plusHours(getOffset());
-        LOG.debug("with Offset: {} ", ret);
-        return ret;
+        if (dateTime != null) {
+            final var offset = getDBZoneId().getRules().getOffset(LocalDateTime.now());
+            final var withOffset = dateTime.withOffsetSameInstant(offset);
+            LOG.debug("with Offset: {} ", withOffset);
+            return withOffset;
+        } else {
+            return null;
+        }
     }
 
     /**
