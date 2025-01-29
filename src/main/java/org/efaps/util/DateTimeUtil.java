@@ -193,8 +193,12 @@ public final class DateTimeUtil
     public static OffsetDateTime toDBDateTime(final Object value)
         throws EFapsException
     {
-        final OffsetDateTime ret = toDateTime(value, Context.getThreadContext().getZoneId());
-        return ret == null ? null : ret.plusHours(getOffset());
+        LOG.debug("Converting {} to DBDateTime", value);
+        final var dateTime = toDateTime(value, Context.getThreadContext().getZoneId());
+        LOG.debug("Result: {} ", dateTime);
+        final var ret = dateTime == null ? null : dateTime.plusHours(getOffset());
+        LOG.debug("with Offset: {} ", ret);
+        return ret;
     }
 
     /**
@@ -236,8 +240,7 @@ public final class DateTimeUtil
         } else if (value instanceof DateTime) {
             ret = OffsetDateTime.parse(((DateTime) value).toString(), FORMATTER);
         } else if (value instanceof final String valueStr) {
-            final var parsedDateTime = OffsetDateTime.parse(valueStr, FORMATTER);
-            ret = parsedDateTime.withOffsetSameInstant(valueZoneId.getRules().getOffset(LocalDateTime.now()));
+            ret = OffsetDateTime.parse(valueStr, FORMATTER);
         } else if (value instanceof LocalDate) {
             final LocalDateTime localDateTime = LocalDateTime.of((LocalDate) value, LocalTime.MIN);
             ret = OffsetDateTime.of(localDateTime,
