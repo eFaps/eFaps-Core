@@ -180,4 +180,15 @@ public final class Quartz
             }
         }
     }
+
+    public static void reset()
+    {
+        if (Quartz.QUARTZ != null && Quartz.QUARTZ.scheduler != null) {
+            try {
+                Quartz.QUARTZ.scheduler.clear();
+            } catch (final SchedulerException e) {
+                Quartz.LOG.error("Problems on clear of QuartsSheduler", e);
+            }
+        }
+    }
 }
