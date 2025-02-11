@@ -139,7 +139,7 @@ public class Filter
                     final IWhereSelect select = element.getSelect();
                     final List<ILinktoSelectElement> linktoElements = new ArrayList<>();
                     if (select.getElements(0) instanceof IClassSelectElement) {
-                        sections.add(classSelect(sqlSelect, element));
+                        sections.add(classSelect(sqlSelect, term.getConnection(), element));
                     } else {
                         for (final ISelectElement ele : select.getElements()) {
                             if (ele instanceof IBaseSelectElement) {
@@ -170,6 +170,7 @@ public class Filter
     }
 
     protected Section classSelect(final SQLSelect mainSqlSelect,
+                                  final Connection connection,
                                   final IWhereElement element)
         throws EFapsException
     {
@@ -222,7 +223,7 @@ public class Filter
                         .comparison(Comparison.IN)
                         .values(Set.of(sqlSelect.toString()))
                         .escape(false)
-                        .connection(Connection.AND);
+                        .connection(connection);
     }
 
     protected Section attribute(final SQLSelect _sqlSelect,
