@@ -17,12 +17,12 @@ package org.efaps.db.stmt.selection.elements;
 
 import org.efaps.util.EFapsException;
 
-public class LastElement
-    extends AbstractElement<LastElement>
+public class SumElement
+    extends AbstractElement<SumElement>
 {
 
     @Override
-    public LastElement getThis()
+    public SumElement getThis()
     {
         return this;
     }

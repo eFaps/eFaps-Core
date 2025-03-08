@@ -16,6 +16,7 @@
 package org.efaps.db.stmt.selection;
 
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import org.efaps.db.stmt.selection.elements.FirstElement;
 import org.efaps.db.stmt.selection.elements.IAuxillary;
 import org.efaps.db.stmt.selection.elements.JoiningElement;
 import org.efaps.db.stmt.selection.elements.LastElement;
+import org.efaps.db.stmt.selection.elements.SumElement;
 import org.efaps.eql.JSONData;
 import org.efaps.eql.builder.Print;
 import org.efaps.eql2.StmtFlag;
@@ -357,19 +359,38 @@ public final class Evaluator
         return (T) ret;
     }
 
-    protected Object agregate(final Select _select,
-                              final List<Object> _objects)
+    protected Object agregate(final Select select,
+                              final List<Object> objects)
     {
         Object ret;
-        final AbstractElement<?> lastElement = _select.getElements().get(_select.getElements().size() - 1);
+        final AbstractElement<?> lastElement = select.getElements().get(select.getElements().size() - 1);
         if (lastElement instanceof FirstElement) {
-            ret = _objects.get(0);
+            ret = objects.get(0);
         } else if (lastElement instanceof LastElement) {
-            ret = _objects.get(_objects.size() - 1);
+            ret = objects.get(objects.size() - 1);
+        } else if (lastElement instanceof SumElement) {
+            final var nonNulls = objects.stream().filter(Objects::nonNull).collect(Collectors.toList());
+            if (nonNulls.size() == 0) {
+                ret = null;
+            } else if (nonNulls.size() == 1) {
+                ret = nonNulls.get(0);
+            } else {
+                final var reference = nonNulls.get(0);
+                if (reference instanceof Integer) {
+                    ret = nonNulls.stream().mapToInt(value -> (Integer) value).sum();
+                } else if (reference instanceof Long) {
+                    ret = nonNulls.stream().mapToLong(value -> (Long) value).sum();
+                } else if (reference instanceof BigDecimal) {
+                    ret = nonNulls.stream().map(value -> (BigDecimal) value).reduce(BigDecimal.ZERO, BigDecimal::add);
+                } else {
+                    LOG.warn("Could not aggreate values for reference: {} on object: {}", reference, objects);
+                    ret = null;
+                }
+            }
         } else if (lastElement instanceof JoiningElement) {
-            ret = StringUtils.join(_objects, ((JoiningElement) lastElement).getSeparator());
+            ret = StringUtils.join(objects, ((JoiningElement) lastElement).getSeparator());
         } else {
-            ret = _objects;
+            ret = objects;
         }
         return ret;
     }

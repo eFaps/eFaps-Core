@@ -53,6 +53,7 @@ import org.efaps.db.stmt.selection.elements.LinktoElement;
 import org.efaps.db.stmt.selection.elements.NameElement;
 import org.efaps.db.stmt.selection.elements.OIDElement;
 import org.efaps.db.stmt.selection.elements.StatusElement;
+import org.efaps.db.stmt.selection.elements.SumElement;
 import org.efaps.db.stmt.selection.elements.TypeElement;
 import org.efaps.db.stmt.selection.elements.UUIDElement;
 import org.efaps.db.stmt.selection.elements.UoMElement;
@@ -207,6 +208,9 @@ public final class Selection
                             break;
                         case LAST:
                             select.addElement(new LastElement());
+                            break;
+                        case SUM:
+                            select.addElement(new SumElement());
                             break;
                         case UOM:
                             select.addElement(new UoMElement());
