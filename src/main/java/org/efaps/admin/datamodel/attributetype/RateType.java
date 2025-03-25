@@ -68,10 +68,9 @@ public class RateType
         throws SQLException
     {
         final Rate ret;
-        if ((_values == null) || (_values[0] == null)) {
+        if (_values == null || _values[0] == null) {
             ret = null;
-        } else if (_values[0] instanceof Object[]) {
-            final Object[] valueTmp = (Object[]) _values[0];
+        } else if (_values[0] instanceof final Object[] valueTmp) {
             if (valueTmp.length < 2) {
                 ret = null;
             } else {
@@ -92,7 +91,7 @@ public class RateType
         throws SQLException
     {
         final BigDecimal ret;
-        if ((_value instanceof String) && (((String) _value).length() > 0)) {
+        if (_value instanceof String && ((String) _value).length() > 0) {
             try {
                 ret = DecimalType.parseLocalized((String) _value);
             } catch (final EFapsException e) {
@@ -101,7 +100,7 @@ public class RateType
         } else if (_value instanceof BigDecimal) {
             ret = (BigDecimal) _value;
         } else if (_value instanceof Number) {
-            ret = new BigDecimal(((Number) _value).toString());
+            ret = new BigDecimal(_value.toString());
         } else {
             ret = BigDecimal.ONE;
         }
@@ -121,9 +120,15 @@ public class RateType
             final Object[] temp = (Object[]) object;
             final Object numerator = readValue(temp[0]);
             final Object denominator = readValue(temp[1]);
-            ret.add(new Object[] { numerator, denominator });
+            if (temp.length == 4) {
+                final var currencyId = temp[2];
+                final var targetCurrencyId = temp[3];
+                ret.add(new Object[] { numerator, denominator, currencyId, targetCurrencyId });
+            } else {
+                ret.add(new Object[] { numerator, denominator });
+            }
         }
-        return _objectList.size() > 0 ? (ret.size() > 1 ? ret : ret.get(0)) : null;
+        return _objectList.size() > 0 ? ret.size() > 1 ? ret : ret.get(0) : null;
     }
 
     /**

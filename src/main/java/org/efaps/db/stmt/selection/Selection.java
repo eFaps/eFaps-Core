@@ -57,6 +57,7 @@ import org.efaps.db.stmt.selection.elements.SumElement;
 import org.efaps.db.stmt.selection.elements.TypeElement;
 import org.efaps.db.stmt.selection.elements.UUIDElement;
 import org.efaps.db.stmt.selection.elements.UoMElement;
+import org.efaps.db.stmt.selection.elements.ValueElement;
 import org.efaps.eql2.IAttributeSelectElement;
 import org.efaps.eql2.IAttributeSetSelectElement;
 import org.efaps.eql2.IBaseSelectElement;
@@ -196,6 +197,9 @@ public final class Selection
                             break;
                         case LABEL:
                             select.addElement(new LabelElement());
+                            break;
+                        case VALUE:
+                            select.addElement(new ValueElement());
                             break;
                         case NAME:
                             select.addElement(new NameElement());
