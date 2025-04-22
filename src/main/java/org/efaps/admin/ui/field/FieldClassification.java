@@ -112,26 +112,26 @@ public class FieldClassification
 
         final List<Classification> ret = new ArrayList<>();
         String[] classificationNames = null;
-        if (getClassificationName() != null) {
-            classificationNames = getClassificationName().split(";");
-        } else {
-            final var config = getProperty("ClassificationConfig");
-            final var attr = getProperty("ClassificationAttribute");
-            if (StringUtils.isEmpty(config) || StringUtils.isEmpty(attr)) {
-                LOG.warn("FieldClassification {} has neither ClassificationName "
-                                + "nor valid ClassificationConfig/ClassificationAttribute", getName());
+        final var config = getProperty("ClassificationConfig");
+        final var attr = getProperty("ClassificationAttribute");
+        if ((StringUtils.isEmpty(config) || StringUtils.isEmpty(attr))
+                        && StringUtils.isEmpty(getClassificationName())) {
+            LOG.warn("FieldClassification {} has neither ClassificationName "
+                            + "nor valid ClassificationConfig/ClassificationAttribute", getName());
+        }
+        if (StringUtils.isNotEmpty(config) && StringUtils.isNotEmpty(attr)) {
+            SystemConfiguration sysConf;
+            if (UUIDUtil.isUUID(config)) {
+                sysConf = SystemConfiguration.get(UUID.fromString(config));
             } else {
-                SystemConfiguration sysConf;
-                if (UUIDUtil.isUUID(config)) {
-                    sysConf = SystemConfiguration.get(UUID.fromString(config));
-                } else {
-                    sysConf = SystemConfiguration.get(config);
-                }
-                final var attrValue = sysConf.getAttributeValue(attr);
-                if (StringUtils.isNotEmpty(attrValue)) {
-                    classificationNames = attrValue.split("\\r?\\n");
-                }
+                sysConf = SystemConfiguration.get(config);
             }
+            final var attrValue = sysConf.getAttributeValue(attr);
+            if (StringUtils.isNotEmpty(attrValue)) {
+                classificationNames = attrValue.split("\\r?\\n");
+            }
+        } else if (getClassificationName() != null) {
+            classificationNames = getClassificationName().split(";");
         }
         if (classificationNames != null) {
             for (final var classificationName : classificationNames) {
