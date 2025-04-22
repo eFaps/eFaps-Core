@@ -15,10 +15,14 @@
  */
 package org.efaps.admin.ui.field;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.access.AccessType;
 import org.efaps.admin.access.AccessTypeEnums;
+import org.efaps.admin.common.SystemConfiguration;
 import org.efaps.admin.datamodel.Classification;
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.admin.event.EventType;
@@ -31,14 +35,10 @@ import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.jaas.AppAccessHandler;
 import org.efaps.util.EFapsException;
+import org.efaps.util.UUIDUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * TODO comment!
- *
- * @author The eFaps Team
- * @version $Id: FieldClassification.java 9468 2013-05-19 02:21:22Z
- *          jan@moxter.net $
- */
 public class FieldClassification
     extends Field
 {
@@ -48,41 +48,41 @@ public class FieldClassification
      */
     private static final long serialVersionUID = 1L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(FieldClassification.class);
+
     /**
      * This is the constructor of the field class.
      *
-     * @param _id id of the field instance
-     * @param _uuid UUID of the field instance
-     * @param _name name of the field instance
+     * @param id id of the field instance
+     * @param uuid UUID of the field instance
+     * @param name name of the field instance
      */
-    public FieldClassification(final long _id,
-                               final String _uuid,
-                               final String _name)
+    public FieldClassification(final long id,
+                               final String uuid,
+                               final String name)
     {
-        super(_id, _uuid, _name);
+        super(id, uuid, name);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasAccess(final TargetMode _targetMode,
-                             final Instance _instance,
-                             final AbstractCommand _callCmd,
-                             final Instance _callInstance)
+    public boolean hasAccess(final TargetMode targetMode,
+                             final Instance instance,
+                             final AbstractCommand callCmd,
+                             final Instance callInstance)
         throws EFapsException
     {
         boolean ret = false;
-        final String[] names = getClassificationName().split(";");
-        for (final String className : names) {
-            if (Classification.get(className) != null && Classification.get(className)
-                                            .isAssigendTo(Context.getThreadContext().getCompany())
+
+        for (final Classification clazz : evalClassifications()) {
+            if (clazz.isAssigendTo(Context.getThreadContext().getCompany())
                             && !AppAccessHandler.excludeMode()) {
-                final Classification clazz = Classification.get(className);
                 // check if any of the type ahs access
-                ret = checkAccessOnChild(clazz, _instance, _targetMode == TargetMode.CREATE
-                                || _targetMode == TargetMode.EDIT ? AccessTypeEnums.CREATE.getAccessType()
-                                : AccessTypeEnums.SHOW.getAccessType());
+                ret = checkAccessOnChild(clazz, instance, targetMode == TargetMode.CREATE
+                                || targetMode == TargetMode.EDIT ? AccessTypeEnums.CREATE.getAccessType()
+                                                : AccessTypeEnums.SHOW.getAccessType());
                 if (ret) {
                     break;
                 }
@@ -94,10 +94,10 @@ public class FieldClassification
 
             final Parameter parameter = new Parameter();
             parameter.put(ParameterValues.UIOBJECT, this);
-            parameter.put(ParameterValues.ACCESSMODE, _targetMode);
-            parameter.put(ParameterValues.INSTANCE, _instance);
-            parameter.put(ParameterValues.CALL_CMD, _callCmd);
-            parameter.put(ParameterValues.CALL_INSTANCE, _callInstance);
+            parameter.put(ParameterValues.ACCESSMODE, targetMode);
+            parameter.put(ParameterValues.INSTANCE, instance);
+            parameter.put(ParameterValues.CALL_CMD, callCmd);
+            parameter.put(ParameterValues.CALL_INSTANCE, callInstance);
             for (final EventDefinition event : events) {
                 final Return retIn = event.execute(parameter);
                 ret = retIn.get(ReturnValues.TRUE) != null;
@@ -106,25 +106,68 @@ public class FieldClassification
         return ret;
     }
 
+    protected List<Classification> evalClassifications()
+        throws EFapsException
+    {
+
+        final List<Classification> ret = new ArrayList<>();
+        String[] classificationNames = null;
+        if (getClassificationName() != null) {
+            classificationNames = getClassificationName().split(";");
+        } else {
+            final var config = getProperty("ClassificationConfig");
+            final var attr = getProperty("ClassificationAttribute");
+            if (StringUtils.isEmpty(config) || StringUtils.isEmpty(attr)) {
+                LOG.warn("FieldClassification {} has neither ClassificationName "
+                                + "nor valid ClassificationConfig/ClassificationAttribute", getName());
+            } else {
+                SystemConfiguration sysConf;
+                if (UUIDUtil.isUUID(config)) {
+                    sysConf = SystemConfiguration.get(UUID.fromString(config));
+                } else {
+                    sysConf = SystemConfiguration.get(config);
+                }
+                final var attrValue = sysConf.getAttributeValue(attr);
+                if (StringUtils.isNotEmpty(attrValue)) {
+                    classificationNames = attrValue.split("\\r?\\n");
+                }
+            }
+        }
+        if (classificationNames != null) {
+            for (final var classificationName : classificationNames) {
+                Classification clazz;
+                if (UUIDUtil.isUUID(classificationName)) {
+                    clazz = Classification.get(UUID.fromString(classificationName));
+                } else {
+                    clazz = Classification.get(classificationName);
+                }
+                if (clazz != null) {
+                    ret.add(clazz);
+                }
+            }
+        }
+        return ret;
+    }
+
     /**
-     * @param _parent parent to iterate down
-     * @param _instance instance to check
-     * @param _accessType   accesstype
+     * @param parent parent to iterate down
+     * @param instance instance to check
+     * @param accessType accesstype
      * @return true of access is granted
      * @throws EFapsException on error
      */
-    private boolean checkAccessOnChild(final Classification _parent,
-                                       final Instance _instance,
-                                       final AccessType _accessType)
+    private boolean checkAccessOnChild(final Classification parent,
+                                       final Instance instance,
+                                       final AccessType accessType)
         throws EFapsException
     {
         boolean ret = false;
-        if (!_parent.isAbstract()) {
-            ret = _parent.hasAccess(getInstance4Classification(_instance, _parent), _accessType);
+        if (!parent.isAbstract()) {
+            ret = parent.hasAccess(getInstance4Classification(instance, parent), accessType);
         }
         if (!ret) {
-            for (final Classification childClass : _parent.getChildClassifications()) {
-                ret = childClass.hasAccess(getInstance4Classification(_instance, childClass), _accessType);
+            for (final Classification childClass : parent.getChildClassifications()) {
+                ret = childClass.hasAccess(getInstance4Classification(instance, childClass), accessType);
                 if (ret) {
                     break;
                 }
@@ -134,16 +177,16 @@ public class FieldClassification
     }
 
     /**
-     * @param _instance Instance of the classifcation
-     * @param _clazz    classification to be searched
+     * @param instance Instance of the classifcation
+     * @param clazz classification to be searched
      * @return Instance of the classification
      */
-    private Instance getInstance4Classification(final Instance _instance,
-                                                final Classification _clazz)
+    private Instance getInstance4Classification(final Instance instance,
+                                                final Classification clazz)
     {
-        Instance inst = _instance;
-        if (!(_instance.getType() instanceof Classification)) {
-            inst = Instance.get(_clazz, 0);
+        Instance inst = instance;
+        if (!(instance.getType() instanceof Classification)) {
+            inst = Instance.get(clazz, 0);
         }
         return inst;
     }
