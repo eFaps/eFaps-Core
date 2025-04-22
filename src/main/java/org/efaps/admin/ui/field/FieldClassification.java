@@ -76,7 +76,7 @@ public class FieldClassification
     {
         boolean ret = false;
 
-        for (final Classification clazz : evalClassifications()) {
+        for (final Classification clazz : evalRootClassifications()) {
             if (clazz.isAssigendTo(Context.getThreadContext().getCompany())
                             && !AppAccessHandler.excludeMode()) {
                 // check if any of the type ahs access
@@ -106,7 +106,7 @@ public class FieldClassification
         return ret;
     }
 
-    protected List<Classification> evalClassifications()
+    public List<Classification> evalRootClassifications()
         throws EFapsException
     {
 
