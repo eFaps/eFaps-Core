@@ -200,6 +200,7 @@ public final class Indexer
                     for (final IndexField field : def.getFields()) {
                         final String name = DBProperties.getProperty(field.getKey());
                         Object value = multi.getSelect(field.getSelect());
+                        LOG.trace("  Field: {} as '{}' with: {}", field, name, value);
                         if (value != null) {
                             if (StringUtils.isNoneEmpty(field.getTransform())) {
                                 final Class<?> clazz = Class.forName(field.getTransform(),
