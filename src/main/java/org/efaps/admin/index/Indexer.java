@@ -256,9 +256,9 @@ public final class Indexer
                     }
                     doc.add(new StoredField(Key.MSGPHRASE.name(), multi.getMsgPhrase(def.getMsgPhrase())));
                     doc.add(new TextField(Key.ALL.name(), allBldr.toString(), Store.NO));
+                    LOG.debug("Add Document: {}", doc);
                     writer.updateDocument(new Term(Key.OID.name(), oid),
                                     Index.getFacetsConfig().build(taxonomyWriter, doc));
-                    LOG.debug("Add Document: {}", doc);
                 }
                 writer.close();
                 taxonomyWriter.close();
