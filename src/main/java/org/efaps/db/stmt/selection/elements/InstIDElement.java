@@ -15,12 +15,16 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.Collections;
+
 import org.efaps.admin.datamodel.Type;
 import org.efaps.db.Instance;
+import org.efaps.db.wrapper.SQLOrder;
 import org.efaps.util.EFapsException;
 
 public class InstIDElement
     extends AbstractInstanceElement<InstIDElement>
+    implements IOrderable
 {
 
     public InstIDElement(final Type type)
@@ -40,5 +44,14 @@ public class InstIDElement
     {
         final Object object = super.getObject(_row);
         return object == null ? null : ((Instance) object).getId();
+    }
+
+    @Override
+    public void append2SQLOrder(int sequence,
+                                SQLOrder order,
+                                boolean desc)
+        throws EFapsException
+    {
+        order.addElement(sequence, getTableIdx(order.getSqlSelect()).getIdx(), Collections.singletonList("ID"), desc);
     }
 }

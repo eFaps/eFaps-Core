@@ -16,7 +16,6 @@
 package org.efaps.db.stmt.selection.elements;
 
 import org.efaps.admin.datamodel.SQLTable;
-import org.efaps.db.wrapper.SQLOrder;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 
@@ -27,7 +26,6 @@ import org.efaps.util.EFapsException;
  */
 public class CountElement
     extends AbstractAttributeElement<CountElement>
-    implements IOrderable
 {
     @Override
     public CountElement getThis()
@@ -50,13 +48,5 @@ public class CountElement
         throws EFapsException
     {
       return row[0];
-    }
-
-    @Override
-    public void append2SQLOrder(int _sequence,
-                                SQLOrder _order,
-                                boolean _desc)
-        throws EFapsException
-    {
     }
 }

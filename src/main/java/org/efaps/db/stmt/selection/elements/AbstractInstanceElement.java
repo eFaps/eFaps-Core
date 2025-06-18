@@ -25,6 +25,7 @@ import org.efaps.util.EFapsException;
 public abstract class AbstractInstanceElement<T>
     extends AbstractDataElement<T>
 {
+
     /** The type id. */
     private final Long typeId;
 
@@ -34,9 +35,30 @@ public abstract class AbstractInstanceElement<T>
     /** The type col idxs. */
     private int typeColIdxs = -1;
 
-    protected AbstractInstanceElement(final Type _type) {
+    protected AbstractInstanceElement(final Type _type)
+    {
         setDBTable(_type.getMainTable());
         this.typeId = _type.getId();
+    }
+
+    protected TableIdx getTableIdx(final SQLSelect sqlSelect)
+        throws EFapsException
+    {
+        final SQLTable table = (SQLTable) getTable();
+        final TableIdx tableidx;
+        if (getPrevious() != null && getPrevious() instanceof IJoinTableIdx) {
+            tableidx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(sqlSelect);
+        } else {
+            tableidx = sqlSelect.getIndexer().getTableIdx(table.getSqlTable());
+        }
+        this.idColIdxs = sqlSelect.columnIndex(tableidx.getIdx(), table.getSqlColId());
+        if (table.getSqlColType() != null) {
+            this.typeColIdxs = sqlSelect.columnIndex(tableidx.getIdx(), table.getSqlColType());
+        }
+        if (tableidx.isCreated()) {
+            sqlSelect.from(tableidx.getTable(), tableidx.getIdx());
+        }
+        return tableidx;
     }
 
     @Override
@@ -44,21 +66,7 @@ public abstract class AbstractInstanceElement<T>
         throws EFapsException
     {
         if (getTable() instanceof SQLTable) {
-            final SQLTable table = (SQLTable) getTable();
-            final TableIdx tableidx;
-            if (getPrevious() != null && getPrevious() instanceof IJoinTableIdx) {
-                tableidx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(_sqlSelect);
-            } else {
-                tableidx = _sqlSelect.getIndexer().getTableIdx(table.getSqlTable());
-            }
-
-            this.idColIdxs = _sqlSelect.columnIndex(tableidx.getIdx(), table.getSqlColId());
-            if (table.getSqlColType() != null) {
-                this.typeColIdxs = _sqlSelect.columnIndex(tableidx.getIdx(), table.getSqlColType());
-            }
-            if (tableidx.isCreated()) {
-                _sqlSelect.from(tableidx.getTable(), tableidx.getIdx());
-            }
+            getTableIdx(_sqlSelect);
         }
     }
 
