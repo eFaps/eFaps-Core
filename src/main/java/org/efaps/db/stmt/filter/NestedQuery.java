@@ -33,6 +33,7 @@ import org.efaps.eql2.INestedQuery;
 import org.efaps.eql2.ISelect;
 import org.efaps.eql2.ISelectElement;
 import org.efaps.eql2.IWhereElement;
+import org.efaps.eql2.IWhereElementTerm;
 import org.efaps.eql2.IWhereTerm;
 import org.efaps.util.EFapsException;
 import org.efaps.util.TypeUtil;
@@ -111,6 +112,14 @@ public class NestedQuery
                 }
             }
         }
+
+        Comparison comparision;
+        if (term instanceof final IWhereElementTerm whereTerm) {
+            comparision = whereTerm.getElement().getComparison();
+        } else {
+            comparision = Comparison.IN;
+        }
+
         for (final Type type : parentTypes) {
             final Attribute attr = type.getAttribute(attrName);
             if (attr != null) {
@@ -120,7 +129,7 @@ public class NestedQuery
                 sections.add(new Criteria()
                                 .tableIndex(tableidx.getIdx())
                                 .colNames(attr.getSqlColNames())
-                                .comparison(Comparison.IN)
+                                .comparison(comparision)
                                 .values(Set.of(sqlSelect.toString()))
                                 .escape(false)
                                 .connection(term.getConnection())
