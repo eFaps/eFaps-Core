@@ -15,6 +15,7 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import org.efaps.admin.datamodel.Status;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -40,8 +41,10 @@ public class IDElement
     {
         Object object = _row == null ? null : _row[0];
         if (object != null) {
-            if (object instanceof Type) {
-                object = ((Type) object).getId();
+            if (object instanceof final Type type) {
+                object = type.getId();
+            } else if (object instanceof final Status status) {
+                object = status.getId();
             } else {
                 LOG.warn("IDElement was called with unexpected Object: {}", object);
             }
