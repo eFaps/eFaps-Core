@@ -245,7 +245,9 @@ public class JCRStoreResource
                 }
                 LOG.info("fileNode by relPath: {}", fileNode);
                 setIdentifer(fileNode.getIdentifier());
-                resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+                if (!fileNode.hasNode(Property.JCR_CONTENT)) {
+                    resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+                }
             } else {
                 try {
                     final Node fileNode = getSession().getNodeByIdentifier(identifier);
