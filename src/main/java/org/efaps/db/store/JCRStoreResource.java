@@ -28,6 +28,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
@@ -222,15 +223,14 @@ public class JCRStoreResource
      */
     @Override
     public long write(final InputStream in,
-                      final long _size,
-                      final String _fileName)
+                      final long sizeParameter,
+                      final String fileName)
         throws EFapsException
     {
-        long size = _size;
+        long size = sizeParameter;
         try {
-
             final Binary bin = getSession().getValueFactory().createBinary(in);
-            final Node resNode;
+            Node resNode = null;
             LOG.info("Current identifier: {}", identifier);
             if (identifier == null) {
                 final Node fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
@@ -247,33 +247,39 @@ public class JCRStoreResource
                 setIdentifer(fileNode.getIdentifier());
                 resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
             } else {
-                final Node fileNode = getSession().getNodeByIdentifier(identifier);
-                resNode = fileNode.getNode(Property.JCR_CONTENT);
+                try {
+                    final Node fileNode = getSession().getNodeByIdentifier(identifier);
+                    resNode = fileNode.getNode(Property.JCR_CONTENT);
+                } catch (final ItemNotFoundException e) {
+                    setIdentifer("NEW");
+                }
             }
-            resNode.setProperty(Property.JCR_DATA, bin);
-            resNode.setProperty(Property.JCR_ENCODING, "UTF-8");
-            resNode.setProperty(Property.JCR_LAST_MODIFIED, Calendar.getInstance());
-            resNode.setProperty(Property.JCR_LAST_MODIFIED_BY, Context.getThreadContext().getPerson().getName());
-            // if size is unkown!
-            if (size < 0) {
-                final byte[] buffer = new byte[1024];
-                int length = 1;
-                size = 0;
-                final OutputStream out = new ByteArrayOutputStream();
-                while (length > 0) {
-                    length = in.read(buffer);
-                    if (length > 0) {
-                        out.write(buffer, 0, length);
-                        size += length;
+            if (resNode != null) {
+                resNode.setProperty(Property.JCR_DATA, bin);
+                resNode.setProperty(Property.JCR_ENCODING, "UTF-8");
+                resNode.setProperty(Property.JCR_LAST_MODIFIED, Calendar.getInstance());
+                resNode.setProperty(Property.JCR_LAST_MODIFIED_BY, Context.getThreadContext().getPerson().getName());
+                // if size is unkown!
+                if (size < 0) {
+                    final byte[] buffer = new byte[1024];
+                    int length = 1;
+                    size = 0;
+                    final OutputStream out = new ByteArrayOutputStream();
+                    while (length > 0) {
+                        length = in.read(buffer);
+                        if (length > 0) {
+                            out.write(buffer, 0, length);
+                            size += length;
+                        }
                     }
                 }
+                setFileInfo(fileName, size);
             }
         } catch (final RepositoryException e) {
             throw new EFapsException(JCRStoreResource.class, "write.RepositoryException", e);
         } catch (final IOException e) {
             throw new EFapsException(JCRStoreResource.class, "write.IOException", e);
         }
-        setFileInfo(_fileName, size);
         return size;
     }
 
