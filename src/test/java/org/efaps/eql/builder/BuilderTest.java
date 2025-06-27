@@ -41,7 +41,7 @@ public class BuilderTest
             .asString();
         assertEquals(stmt, "print query type " + CI.SimpleType.uuid
                         + " where attribute[TestAttribute] == \"Hallo World\""
-                        + " select attribute[TestAttribute] as \"CIALIAS_TestAttribute\"");
+                        + " select attribute[TestAttribute] as \"CIALIAS_"+ CI.SimpleType.getType().getId() +"_TestAttribute\"");
     }
 
     @Test
@@ -58,7 +58,7 @@ public class BuilderTest
             .asString();
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrLongAttribute] == 56"
-                        + " select attribute[AllAttrStringAttribute] as \"CIALIAS_AllAttrStringAttribute\"");
+                        + " select attribute[AllAttrStringAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrStringAttribute\"");
     }
 
     @Test
@@ -76,7 +76,7 @@ public class BuilderTest
 
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrIntegerAttribute] == 1"
-                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_AllAttrIntegerAttribute\"");
+                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrIntegerAttribute\"");
     }
 
     @Test
@@ -97,7 +97,7 @@ public class BuilderTest
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrIntegerAttribute] == 1"
                         + " and attribute[AllAttrStringAttribute] == \"Hello world\""
-                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_AllAttrIntegerAttribute\"");
+                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrIntegerAttribute\"");
     }
 
     @Test
@@ -119,8 +119,8 @@ public class BuilderTest
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrIntegerAttribute] == 1"
                         + " and attribute[AllAttrStringAttribute] == \"Hello world\""
-                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_AllAttrIntegerAttribute\","
-                        + " attribute[AllAttrStringAttribute] as \"CIALIAS_AllAttrStringAttribute\"");
+                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrIntegerAttribute\","
+                        + " attribute[AllAttrStringAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrStringAttribute\"");
     }
 
     @Test
@@ -175,8 +175,8 @@ public class BuilderTest
 
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
                         + " where attribute[AllAttrIntegerAttribute] == 1"
-                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_AllAttrIntegerAttribute\""
-                        + " order by CIALIAS_AllAttrIntegerAttribute asc");
+                        + " select attribute[AllAttrIntegerAttribute] as \"CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrIntegerAttribute\""
+                        + " order by CIALIAS_"+ CI.AllAttrType.getType().getId() +"_AllAttrIntegerAttribute asc");
     }
 
     @Test
@@ -190,7 +190,7 @@ public class BuilderTest
             .stmt()
             .asString();
         assertEquals(stmt, "print query type " + CI.SimpleType.uuid
-            + " select class[" + CI.CompanyType.uuid + "].attribute[StringAttribute] as \"CIALIAS_StringAttribute\"");
+            + " select class[" + CI.CompanyType.uuid + "].attribute[StringAttribute] as \"CIALIAS_"+ CI.CompanyType.getType().getId() + "_StringAttribute\"");
     }
 
     @Test
@@ -205,8 +205,8 @@ public class BuilderTest
             .stmt()
             .asString();
         assertEquals(stmt, "print query type " + CI.SimpleType.uuid
-            + " select attribute[TestAttribute] as \"CIALIAS_TestAttribute\","
-            + " class[" + CI.CompanyType.uuid + "].attribute[StringAttribute] as \"CIALIAS_StringAttribute\"");
+            + " select attribute[TestAttribute] as \"CIALIAS_"+ CI.SimpleType.getType().getId() +"_TestAttribute\","
+            + " class[" + CI.CompanyType.uuid + "].attribute[StringAttribute] as \"CIALIAS_"+ CI.CompanyType.getType().getId() +"_StringAttribute\"");
     }
 
     @Test
@@ -225,10 +225,10 @@ public class BuilderTest
                         .stmt()
                         .asString();
         assertEquals(stmt, "print query type " + CI.AllAttrType.uuid
-                        + " select attribute[AllAttrDateAttribute] as \"CIALIAS_AllAttrDateAttribute\","
-                        + " attributeset[AllAttrLinkAttribute].attribute[StringAttribute] as \"CIALIAS_StringAttribute\","
+                        + " select attribute[AllAttrDateAttribute] as \"CIALIAS_" + CI.AllAttrType.getType().getId() + "_AllAttrDateAttribute\","
+                        + " attributeset[AllAttrLinkAttribute].attribute[StringAttribute] as \"CIALIAS_" + CI.CompanyType.getType().getId() + "_StringAttribute\","
                         + " attributeset[AllAttrLinkAttribute].attribute[StringAttribute] as \"Alias1\","
-                        + " attributeset[AllAttrLinkAttribute].linkto[AnAttribute].attribute[TestAttribute] as \"CIALIAS_TestAttribute\","
+                        + " attributeset[AllAttrLinkAttribute].linkto[AnAttribute].attribute[TestAttribute] as \"CIALIAS_" + CI.SimpleType.getType().getId() + "_TestAttribute\","
                         + " attributeset[AllAttrLinkAttribute].linkto[AnAttribute].attribute[TestAttribute] as \"Alias2\"");
     }
 }

@@ -195,7 +195,8 @@ public class Print
         return this;
     }
 
-    public Print phrase(final CharSequence _phrase) {
+    public Print phrase(final CharSequence _phrase)
+    {
         try {
             phraseCounter++;
             final ValueList list = new ValueParser(new StringReader(_phrase.toString())).ExpressionString();
@@ -203,7 +204,7 @@ public class Print
             String baseSelect = "";
             // check if this is used in a subselect e.g. a linkto
             final var selection = ((IPrintStatement<?>) getStmt()).getSelection();
-            if (selection.getSelectsLength()>0) {
+            if (selection.getSelectsLength() > 0) {
                 final ISelect select = selection.getSelects(selection.getSelectsLength() - 1);
                 if (ArrayUtils.isNotEmpty(select.getElements())) {
                     final ISelectElement lastElement = select.getElements(select.getElementsLength() - 1);
@@ -262,9 +263,9 @@ public class Print
         return clazz(String.valueOf(_ciType.uuid));
     }
 
-    public static String getCIAlias(final CIAttribute _ciAttr)
+    public static String getCIAlias(final CIAttribute ciAttr)
     {
-        return "CIALIAS_" + _ciAttr.name;
+        return "CIALIAS_" + ciAttr.ciType.getType().getId() + "_" + ciAttr.name;
     }
 
     public static String getMsgPhraseAlias(final Long _id)
