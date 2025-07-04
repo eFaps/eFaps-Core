@@ -231,7 +231,7 @@ public class JCRStoreResource
         try {
             final Binary bin = getSession().getValueFactory().createBinary(in);
             Node resNode = null;
-            LOG.info("Current identifier: {}", identifier);
+            LOG.debug("Current identifier: {}", identifier);
             if (identifier == null) {
                 final Node fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
                 setIdentifer(fileNode.getIdentifier());
@@ -243,7 +243,7 @@ public class JCRStoreResource
                 } else {
                     fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
                 }
-                LOG.info("fileNode by relPath: {}", fileNode);
+                LOG.debug("fileNode by relPath: {}", fileNode);
                 setIdentifer(fileNode.getIdentifier());
                 if (!fileNode.hasNode(Property.JCR_CONTENT)) {
                     resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
