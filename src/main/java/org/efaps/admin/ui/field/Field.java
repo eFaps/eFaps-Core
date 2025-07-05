@@ -27,11 +27,13 @@ import org.efaps.admin.ui.AbstractCollection;
 import org.efaps.admin.ui.AbstractCommand.Target;
 import org.efaps.admin.ui.AbstractUserInterfaceObject;
 import org.efaps.admin.ui.Form;
+import org.efaps.admin.ui.Module;
 import org.efaps.admin.ui.Table;
 import org.efaps.ci.CIAdminUserInterface;
 import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
+import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
@@ -237,6 +239,8 @@ public class Field
      * MessagePhrase String.
      */
     private String msgPhrase;
+
+    private UUID moduleUUID;
 
     /**
      * This is the constructor of the field class.
@@ -519,8 +523,7 @@ public class Field
         final MsgPhrase ret;
         if (this.msgPhrase == null) {
             ret = null;
-        } else if (this.msgPhrase
-                        .matches("[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")) {
+        } else if (UUIDUtil.isUUID(this.msgPhrase)) {
             ret = MsgPhrase.get(UUID.fromString(this.msgPhrase));
         } else {
             ret = MsgPhrase.get(this.msgPhrase);
@@ -702,6 +705,17 @@ public class Field
         return ret;
     }
 
+    public boolean hasModule()
+    {
+        return this.moduleUUID != null;
+    }
+
+    public Module getModule()
+        throws CacheReloadException
+    {
+        return Module.get(this.moduleUUID);
+    }
+
     /**
      * Getter method for instance variable {@link #classificationName}.
      *
@@ -800,16 +814,30 @@ public class Field
      * {@inheritDoc}
      */
     @Override
-    protected void setLinkProperty(final UUID _linkTypeUUID,
-                                   final long _toId,
-                                   final UUID _toTypeUUID,
-                                   final String _toName)
+    protected void setLinkProperty(final UUID linkTypeUUID,
+                                   final long toId,
+                                   final UUID toTypeUUID,
+                                   final String toName)
         throws EFapsException
     {
-        if (_linkTypeUUID.equals(CIAdminUserInterface.LinkIcon.uuid)) {
-            this.icon = _toName;
+        if (linkTypeUUID.equals(CIAdminUserInterface.LinkIcon.uuid)) {
+            this.icon = toName;
         }
-        super.setLinkProperty(_linkTypeUUID, _toId, _toTypeUUID, _toName);
+        if (linkTypeUUID.equals(CIAdminUserInterface.LinkTargetModule.uuid)) {
+            Module uiModule;
+            if (UUIDUtil.isUUID(toName)) {
+                uiModule = Module.get(UUID.fromString(toName));
+            } else {
+                uiModule = Module.get(toName);
+            }
+
+            if (uiModule == null) {
+                LOG.warn("Could not find UIModule {} for field with id: {}, name: {}", toName, getId(), getName());
+            } else {
+                this.moduleUUID = uiModule.getUUID();
+            }
+        }
+        super.setLinkProperty(linkTypeUUID, toId, toTypeUUID, toName);
     }
 
     /**

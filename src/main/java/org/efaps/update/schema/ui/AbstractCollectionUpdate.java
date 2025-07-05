@@ -60,6 +60,9 @@ public abstract class AbstractCollectionUpdate
     private static final Link LINK2TARGETTABLE = new Link("Admin_UI_LinkTargetTable", "From", "Admin_UI_Table", "To")
                     .setRegisterUpdatable(false);
 
+    private static final Link LINK2TARGETMODULE = new Link("Admin_UI_LinkTargetModule", "From", "Admin_UI_Module",
+                    "To");
+
     /** Link from field to command as picker. */
     private static final Link LINK2PICKER = new Link("Admin_UI_LinkField2Command", "FromLink",
                     "Admin_UI_Command", "ToLink") .setRegisterUpdatable(false);
@@ -160,6 +163,8 @@ public abstract class AbstractCollectionUpdate
             } else if ("picker".equals(value)) {
                 // assigns a picker as target for this field definition
                 addLink(AbstractCollectionUpdate.LINK2PICKER, new LinkInstance(_attributes.get("name")));
+            } else if ("ui-module".equals(value)) {
+                addLink(AbstractCollectionUpdate.LINK2TARGETMODULE, new LinkInstance(_text));
             } else if ("trigger".equals(value)) {
                 if (_tags.size() == 1) {
                     getEvents().add(new Event(_attributes.get("name"), EventType.valueOf(_attributes.get("event")),
@@ -281,6 +286,7 @@ public abstract class AbstractCollectionUpdate
                 removeLinksInDB(_updateable, instField, AbstractCollectionUpdate.LINKFIELD2ICON);
                 removeLinksInDB(_updateable, instField, AbstractCollectionUpdate.LINK2TARGETTABLE);
                 removeLinksInDB(_updateable, instField, AbstractCollectionUpdate.LINK2PICKER);
+                removeLinksInDB(_updateable, instField, AbstractCollectionUpdate.LINK2TARGETMODULE);
                 // remove events
                 final QueryBuilder eventQueryBldr = new QueryBuilder(CIAdminEvent.Definition);
                 eventQueryBldr.addWhereAttrEqValue(CIAdminEvent.Definition.Abstract, instField.getId());
@@ -339,6 +345,10 @@ public abstract class AbstractCollectionUpdate
                 // link to picker
                 setLinksInDB(_updateable, insert.getInstance(), AbstractCollectionUpdate.LINK2PICKER,
                                 field.getLinks(AbstractCollectionUpdate.LINK2PICKER));
+
+                // link to picker
+                setLinksInDB(_updateable, insert.getInstance(), AbstractCollectionUpdate.LINK2TARGETMODULE,
+                                field.getLinks(AbstractCollectionUpdate.LINK2TARGETMODULE));
 
                 // append events
                 for (final Event event : field.getEvents()) {
