@@ -169,7 +169,7 @@ public abstract class AbstractStoreResource
     {
         this.storeEvent = _event;
         super.open();
-        if (getStoreEvent().equals(StoreEvent.READ) || getStoreEvent().equals(StoreEvent.WRITE)) {
+        if (getStoreEvent().equals(StoreEvent.WRITE)) {
             insertDefaults();
         }
     }
@@ -244,7 +244,7 @@ public abstract class AbstractStoreResource
     {
         final ConnectionResource res = Context.getThreadContext().getConnectionResource();
         try {
-            final var del = new DeleteDefintion(AbstractStoreResource.TABLENAME_STORE, "ID", getInstance().getId());
+            final var del = new DeleteDefintion(AbstractStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
             delete.execute(res);
         } catch (final SQLException e) {

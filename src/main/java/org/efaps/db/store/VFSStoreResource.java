@@ -361,6 +361,7 @@ public class VFSStoreResource
         } catch (final FileSystemException e) {
             throw new EFapsException("Catched", e);
         }
+        super.clean();
     }
 
     /**

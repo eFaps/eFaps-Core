@@ -177,7 +177,7 @@ public class JDBCStoreResource
     {
         final ConnectionResource res = Context.getThreadContext().getConnectionResource();
         try {
-            final var del = new DeleteDefintion(JDBCStoreResource.TABLENAME_STORE, "ID", getInstance().getId());
+            final var del = new DeleteDefintion(JDBCStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
             delete.execute(res);
         } catch (final SQLException e) {
