@@ -341,6 +341,28 @@ public class VFSStoreResource
         // Deletion is done on commit
     }
 
+    @Override
+    public void clean()
+        throws EFapsException
+    {
+        try {
+            final FileObject curFile = this.manager.resolveFile(this.manager.getBaseFile(),
+                            this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
+            final FileObject bakFile = this.manager.resolveFile(this.manager.getBaseFile(),
+                            this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
+            if (bakFile.exists()) {
+                bakFile.delete();
+            }
+            if (curFile.exists()) {
+                curFile.moveTo(bakFile);
+            }
+            bakFile.close();
+            curFile.close();
+        } catch (final FileSystemException e) {
+            throw new EFapsException("Catched", e);
+        }
+    }
+
     /**
      * Returns for the file the input stream.
      *
@@ -468,21 +490,8 @@ public class VFSStoreResource
             }
         } else if (getStoreEvent() == VFSStoreResource.StoreEvent.DELETE) {
             try {
-                final FileObject curFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                                this.storeFileName + VFSStoreResource.EXTENSION_NORMAL);
-                final FileObject bakFile = this.manager.resolveFile(this.manager.getBaseFile(),
-                                this.storeFileName + VFSStoreResource.EXTENSION_BACKUP);
-                if (bakFile.exists()) {
-                    bakFile.delete();
-                }
-                if (curFile.exists()) {
-                    curFile.moveTo(bakFile);
-                }
-                bakFile.close();
-                curFile.close();
-            } catch (final FileSystemException e) {
-                VFSStoreResource.LOG.error("transaction commit fails for " + _xid
-                                + " (one phase = " + _onePhase + ")", e);
+                clean();
+            } catch (final EFapsException e) {
                 final XAException xa = new XAException(XAException.XA_RBCOMMFAIL);
                 xa.initCause(e);
                 throw xa;

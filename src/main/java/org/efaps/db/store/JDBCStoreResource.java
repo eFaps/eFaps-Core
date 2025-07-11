@@ -30,6 +30,8 @@ import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.databases.AbstractDatabase;
 import org.efaps.db.transaction.ConnectionResource;
+import org.efaps.db.wrapper.SQLDelete;
+import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
@@ -167,6 +169,20 @@ public class JDBCStoreResource
     public void delete()
     {
         // not needed here
+    }
+
+    @Override
+    public void clean()
+        throws EFapsException
+    {
+        final ConnectionResource res = Context.getThreadContext().getConnectionResource();
+        try {
+            final var del = new DeleteDefintion(JDBCStoreResource.TABLENAME_STORE, "ID", getInstance().getId());
+            final SQLDelete delete = Context.getDbType().newDelete(del);
+            delete.execute(res);
+        } catch (final SQLException e) {
+            throw new EFapsException( "clean", e);
+        }
     }
 
     /**

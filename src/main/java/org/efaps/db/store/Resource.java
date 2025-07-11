@@ -17,6 +17,7 @@ package org.efaps.db.store;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.OffsetDateTime;
 
 import javax.transaction.xa.XAResource;
 
@@ -100,11 +101,17 @@ public interface Resource
         throws EFapsException;
 
     /**
-     * Will delete the file.
+     * Will delete the file. Use on delete of the instance
      *
      * @throws EFapsException if an error occurs
      */
     void delete() throws EFapsException;
+
+    /**
+     * Will only remove the store information
+     * @throws EFapsException
+     */
+    void clean() throws EFapsException;
 
     /**
      * @return if the Resource was opened.
@@ -134,6 +141,9 @@ public interface Resource
      * @throws EFapsException on error
      */
     Long getFileLength() throws EFapsException;
+
+
+    OffsetDateTime getModified() throws EFapsException;
 
     /**
      * Method called to initialize this StoreResource.

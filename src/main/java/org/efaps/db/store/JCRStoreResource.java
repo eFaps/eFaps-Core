@@ -49,6 +49,8 @@ import javax.transaction.xa.Xid;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.transaction.ConnectionResource;
+import org.efaps.db.wrapper.SQLDelete;
+import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
@@ -401,6 +403,21 @@ public class JCRStoreResource
             }
         }
     }
+
+    @Override
+    public void clean()
+        throws EFapsException
+    {
+        final ConnectionResource res = Context.getThreadContext().getConnectionResource();
+        try {
+            final var del = new DeleteDefintion(JCRStoreResource.TABLENAME_STORE, "ID", getInstance().getId());
+            final SQLDelete delete = Context.getDbType().newDelete(del);
+            delete.execute(res);
+        } catch (final SQLException e) {
+            throw new EFapsException( "clean", e);
+        }
+    }
+
 
     /**
      * The method is called from the transaction manager if the complete
