@@ -332,13 +332,7 @@ public abstract class AbstractStoreResource
     protected Timestamp getTimestamp()
         throws EFapsException
     {
-        final Timestamp ret;
-        if (Context.getThreadContext().getZoneId() == null) {
-            ret = Timestamp.from(OffsetDateTime.now().toInstant());
-        } else {
-            ret = Timestamp.from(DateTimeUtil.toDBDateTime(OffsetDateTime.now()).toInstant());
-        }
-        return ret;
+        return Timestamp.from(DateTimeUtil.toDBDateTime(OffsetDateTime.now()).toInstant());
     }
 
     /**

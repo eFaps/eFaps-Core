@@ -34,7 +34,6 @@ import org.efaps.admin.user.Company;
 import org.efaps.admin.user.Person;
 import org.efaps.admin.user.UserAttributesSet;
 import org.efaps.admin.user.UserAttributesSet.UserAttributesDefinition;
-import org.efaps.db.Context.FileParameter;
 import org.efaps.db.databases.AbstractDatabase;
 import org.efaps.db.store.Resource;
 import org.efaps.db.store.Store;
@@ -740,7 +739,7 @@ public final class Context
      */
     public DateTimeZone getTimezone()
     {
-        return timezone;
+        return timezone == null ? DateTimeZone.UTC : timezone;
     }
 
     public ZoneId getZoneId()
