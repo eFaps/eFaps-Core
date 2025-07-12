@@ -193,7 +193,7 @@ public class JCRStoreResource
     protected void getAdditionalInfo(final ResultSet _rs)
         throws SQLException
     {
-        final String identiferTmp = _rs.getString(6);
+        final String identiferTmp = _rs.getString(7);
         if (identiferTmp != null && !identiferTmp.isEmpty()) {
             identifier = identiferTmp.trim();
         }
