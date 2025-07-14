@@ -670,7 +670,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
         // CHECKSTYLE:ON
         final StringBuilder cmd = new StringBuilder();
         cmd.append("alter table ").append(getTableQuote()).append(_tableName).append(getTableQuote()).append(' ')
-                        .append("add ").append(getColumnQuote()).append(_columnName).append(getColumnQuote())
+                        .append("add column ").append(getColumnQuote()).append(_columnName).append(getColumnQuote())
                         .append(' ')
                         .append(getWriteSQLTypeName(_columnType));
         if (_length > 0) {
