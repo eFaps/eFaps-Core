@@ -372,6 +372,15 @@ public final class DateTimeUtil
                         LocalTime.now(DateTimeUtil.getDBZoneId()));
     }
 
+    public static OffsetDateTime asContextDateTime(final LocalDate localdate)
+        throws EFapsException
+    {
+        final var systemZone = Context.getThreadContext().getZoneId();
+        final var zoneOffset = systemZone.getRules().getOffset(Instant.now());
+        return OffsetDateTime.of(localdate.getYear(), localdate.getMonthValue(), localdate.getDayOfMonth(), 0, 0, 0, 0,
+                        zoneOffset);
+    }
+
     @Deprecated
     public static OffsetDateTime toDateTime(final Object _value)
         throws EFapsException
