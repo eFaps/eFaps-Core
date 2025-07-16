@@ -15,11 +15,15 @@
  */
 package org.efaps.admin.program.esjp;
 
+import static org.reflections.scanners.Scanners.SubTypes;
+import static org.reflections.scanners.Scanners.TypesAnnotated;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -88,42 +92,16 @@ public class EsjpScanner
     }
 
     @SafeVarargs
-    public final Set<Class<?>> scan(final Class<? extends Annotation>... _annotations)
+    public final Set<Class<?>> scan(final Class<? extends Annotation>... annotations)
         throws EFapsException
     {
+        LOG.info("Scanning for annotations for: {}", Arrays.asList(annotations));
         final Set<Class<?>> ret = new HashSet<>();
         try {
-            final Reflections reflections;
-            if (REFLECTIONS == null) {
-                LOG.info("Scanning esjps for annotations.");
-                final ConfigurationBuilder configuration = new ConfigurationBuilder()
-                                .setUrls(new URL("file://"))
-                                .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated, Scanners.FieldsAnnotated,
-                                                Scanners.MethodsAnnotated)
-                                .setExpandSuperTypes(false);
-                configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
-                // in case of jboss the transaction filter is not executed
-                // before the method is called therefore a Context must be
-                // opened
-                boolean contextStarted = false;
-                if (!Context.isThreadActive()) {
-                    Context.begin(null, Context.Inheritance.Local);
-                    contextStarted = true;
-                }
-                reflections = new Reflections(configuration);
-                save(reflections);
-                if (contextStarted) {
-                    Context.rollback();
-                }
-            } else {
-                LOG.info("Loading refelections result from: {}", REFLECTIONS);
-                final ConfigurationBuilder configuration = new ConfigurationBuilder().setScanners(new Scanner[] {});
-                configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
-                reflections = new Reflections(configuration);
-                reflections.collect(REFLECTIONS, new XmlSerializer());
-            }
-            for (final Class<? extends Annotation> annotation : _annotations) {
-                ret.addAll(reflections.getTypesAnnotatedWith(annotation));
+            final Reflections reflections = evalReflections();
+            for (final Class<? extends Annotation> annotation : annotations) {
+                return reflections.get(
+                                SubTypes.of(TypesAnnotated.with(annotation)).asClass(EFapsClassLoader.getInstance()));
             }
         } catch (final MalformedURLException e) {
             LOG.error("Catched MalformedURLException", e);
@@ -131,6 +109,65 @@ public class EsjpScanner
             LOG.error("Catched IOException", e);
         }
         return ret;
+    }
+
+    @SafeVarargs
+    public final Set<Class<?>> scan4SubTypes(final Class<?>... parentTypes)
+        throws EFapsException
+    {
+        LOG.info("Scanning for subtypes of: {}", Arrays.asList(parentTypes));
+        final Set<Class<?>> ret = new HashSet<>();
+        try {
+            final Reflections reflections = evalReflections();
+            for (final Class<?> parentType : parentTypes) {
+                ret.addAll(reflections.get(Scanners.SubTypes.of(parentType).asClass(EFapsClassLoader.getInstance())));
+            }
+            if (ret.isEmpty()) {
+                LOG.warn("No subtypes found for: {}", Arrays.asList(parentTypes));
+            }
+        } catch (final MalformedURLException e) {
+            LOG.error("Catched MalformedURLException", e);
+        } catch (final IOException e) {
+            LOG.error("Catched IOException", e);
+         }
+        return ret;
+    }
+
+    private Reflections evalReflections()
+        throws EFapsException, IOException
+    {
+        final Reflections reflections;
+
+        if (REFLECTIONS == null) {
+            LOG.info("Scanning esjps for annotations.");
+            final ConfigurationBuilder configuration = new ConfigurationBuilder()
+                            .setUrls(new URL("file://"))
+                            .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated, Scanners.FieldsAnnotated,
+                                            Scanners.MethodsAnnotated)
+                            .setExpandSuperTypes(false);
+            configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
+            // in case of jboss the transaction filter is not executed
+            // before the method is called therefore a Context must be
+            // opened
+            boolean contextStarted = false;
+            if (!Context.isThreadActive()) {
+                Context.begin(null, Context.Inheritance.Local);
+                contextStarted = true;
+            }
+            reflections = new Reflections(configuration);
+            save(reflections);
+            if (contextStarted) {
+                Context.rollback();
+            }
+        } else {
+            LOG.info("Loading refelections result from: {}", REFLECTIONS);
+            final ConfigurationBuilder configuration = new ConfigurationBuilder().setScanners(new Scanner[] {});
+            configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
+            reflections = new Reflections(configuration);
+            reflections.collect(REFLECTIONS, new XmlSerializer());
+        }
+
+        return reflections;
     }
 
     private void save(final Reflections reflections)
