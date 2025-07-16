@@ -144,7 +144,7 @@ public class EsjpScanner
                             .setUrls(new URL("file://"))
                             .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated, Scanners.FieldsAnnotated,
                                             Scanners.MethodsAnnotated)
-                            .setExpandSuperTypes(false);
+                            .setExpandSuperTypes(true);
             configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
             // in case of jboss the transaction filter is not executed
             // before the method is called therefore a Context must be
@@ -208,7 +208,9 @@ public class EsjpScanner
                     final InstanceQuery query = queryBldr.getQuery();
                     query.executeWithoutAccessCheck();
                     while (query.next()) {
-                        files.add(new EsjpFile(query.getCurrentValue()));
+                        final var file = new EsjpFile(query.getCurrentValue());
+                        LOG.info("Adding esjp to be scanned: {}", file.getName());
+                        files.add(file);
                     }
                 }
             } catch (final EFapsException e) {
