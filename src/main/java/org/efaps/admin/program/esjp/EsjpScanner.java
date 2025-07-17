@@ -209,7 +209,9 @@ public class EsjpScanner
                     query.executeWithoutAccessCheck();
                     while (query.next()) {
                         final var file = new EsjpFile(query.getCurrentValue());
-                        LOG.info("Adding esjp to be scanned: {}", file.getName());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Adding esjp to be scanned: {}", file.getName());
+                        }
                         files.add(file);
                     }
                 }
