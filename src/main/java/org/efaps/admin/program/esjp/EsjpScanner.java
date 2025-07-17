@@ -144,8 +144,9 @@ public class EsjpScanner
                             .setUrls(new URL("file://"))
                             .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated, Scanners.FieldsAnnotated,
                                             Scanners.MethodsAnnotated)
-                            .setExpandSuperTypes(true);
-            configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
+                            .setExpandSuperTypes(false)
+                            .setParallel(false);
+                            //.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
             // in case of jboss the transaction filter is not executed
             // before the method is called therefore a Context must be
             // opened
@@ -162,7 +163,7 @@ public class EsjpScanner
         } else {
             LOG.info("Loading refelections result from: {}", REFLECTIONS);
             final ConfigurationBuilder configuration = new ConfigurationBuilder().setScanners(new Scanner[] {});
-            configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
+           // configuration.setClassLoaders(new ClassLoader[] { EFapsClassLoader.getInstance() });
             reflections = new Reflections(configuration);
             reflections.collect(REFLECTIONS, new XmlSerializer());
         }
