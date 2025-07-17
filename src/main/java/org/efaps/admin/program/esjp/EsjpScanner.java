@@ -139,7 +139,7 @@ public class EsjpScanner
         final Reflections reflections;
 
         if (REFLECTIONS == null) {
-            LOG.info("Scanning esjps for annotations.");
+            LOG.info("Scanning esjps for annotations and subtypes.");
             final ConfigurationBuilder configuration = new ConfigurationBuilder()
                             .setUrls(new URL("file://"))
                             .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated, Scanners.FieldsAnnotated,
