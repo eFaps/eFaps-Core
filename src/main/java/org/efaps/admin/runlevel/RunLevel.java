@@ -417,7 +417,7 @@ public final class RunLevel
                     m.invoke(cls);
                 }
             } catch (final ClassNotFoundException e) {
-                RunLevel.LOG.error("class '{}' not found", className);
+                RunLevel.LOG.warn("class '{}' not found", className);
             } catch (final NoSuchMethodException e) {
                 RunLevel.LOG.error("class '" + className + "' does not own method '" + methodName + "'", e);
                 throw new EFapsException(getClass(),
