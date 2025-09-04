@@ -1718,7 +1718,7 @@ public final class Person
                     final String name = rs.getString(3);
                     final boolean status = rs.getBoolean(4);
                     ret = new Person(id, uuid, name.trim(), status);
-                    Person.cachePerson(ret);
+                    //Person.cachePerson(ret);
                     Person.LOG.debug("read from DB Person:{} ", ret);
                 }
                 rs.close();
