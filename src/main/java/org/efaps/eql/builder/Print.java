@@ -22,6 +22,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.common.MsgPhrase;
 import org.efaps.beans.ValueList;
+import org.efaps.beans.ValueList.Token;
 import org.efaps.beans.valueparser.ParseException;
 import org.efaps.beans.valueparser.ValueParser;
 import org.efaps.ci.CIAttribute;
@@ -215,10 +216,12 @@ public class Print
                 }
             }
             int idx = 0;
-            for (final String expr : list.getExpressions()) {
-                select(baseSelect + expr);
-                as(getPhraseAlias(phraseCounter) + "_" + idx);
-                idx++;
+            for (final Token token : list.getTokens()) {
+                if (token.getType().equals(ValueList.TokenType.EXPRESSION)) {
+                    select(baseSelect + token.getValue());
+                    as(getPhraseAlias(phraseCounter) + "_" + idx);
+                    idx++;
+                }
             }
         } catch (final ParseException e) {
             LOG.error("Catched", e);
