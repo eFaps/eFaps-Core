@@ -42,7 +42,7 @@ public class FilterTest
         final Attribute attr = Attribute.get(Mocks.StatusAttribute.getId());
         final String openId = String.valueOf(Mocks.StatusGrp.getStatusId("Open"));
         final Filter filter = new Filter();
-        assertEquals(filter.convertStatusValue(attr, openId), openId);
+        assertEquals(filter.convertStatusValue(attr, openId).iterator().next(), openId);
     }
 
     @Test
@@ -52,7 +52,7 @@ public class FilterTest
         final Attribute attr = Attribute.get(Mocks.StatusAttribute.getId());
         final String openId = String.valueOf(Mocks.StatusGrp.getStatusId("Open"));
         final Filter filter = new Filter();
-        assertEquals(filter.convertStatusValue(attr, "Open"), openId);
+        assertEquals(filter.convertStatusValue(attr, "Open").iterator().next(), openId);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class FilterTest
         replay(mockLogger);
 
         final Filter filter = new Filter();
-        assertEquals(filter.convertStatusValue(attr, key), key);
+        assertEquals(filter.convertStatusValue(attr, key).iterator().next(), key);
     }
 
     @Test

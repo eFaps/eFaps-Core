@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -365,7 +366,7 @@ public class Filter
             final List<String> values;
             if (attrType instanceof StatusType) {
                 values = _element.getValuesList().stream()
-                                .map(val -> convertStatusValue(_attr, val))
+                                .flatMap(val -> convertStatusValue(_attr, val).stream())
                                 .collect(Collectors.toList());
                 noEscape = true;
             } else if (attrType instanceof LinkType) {
@@ -408,23 +409,32 @@ public class Filter
         return ret;
     }
 
-    protected String convertStatusValue(final Attribute _attr,
-                                        final String _val)
+    protected Set<String> convertStatusValue(final Attribute attr,
+                                             final String val)
     {
-        String ret;
-        if (StringUtils.isNumeric(_val)) {
-            ret = _val;
+        final Set<String> ret = new HashSet<>();
+        if (StringUtils.isNumeric(val)) {
+            ret.add(val);
         } else {
-            Status status = null;
             try {
-                status = Status.find(_attr.getLink().getUUID(), _val);
+                final var statusTypes = new HashSet<Type>();
+                statusTypes.add(attr.getLink());
+                statusTypes.addAll(attr.getLink().getChildTypes());
+                for (final var statusType : statusTypes) {
+                    if (!statusType.hasChildren()) {
+                        final var status = Status.find(statusType.getUUID(), val);
+                        if (status != null) {
+                            ret.add(String.valueOf(status.getId()));
+                        }
+                    }
+                }
             } catch (final CacheReloadException e) {
                 LOG.error("Catched error:", e);
             } finally {
-                if (status == null) {
-                    LOG.warn("No Status could be found for the given key {} on {}", _val, _attr);
+                if (ret.isEmpty()) {
+                    LOG.warn("No Status could be found for the given key '{}' on {}", val, attr);
+                    ret.add(val);
                 }
-                ret = status == null ? _val : String.valueOf(status.getId());
             }
         }
         return ret;
