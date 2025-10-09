@@ -77,18 +77,19 @@ public abstract class AbstractInstanceElement<T>
         Object ret = null;
         if (_row != null) {
             final Long idObject = getLongValue(_row[this.idColIdxs]);
-            final Type type;
-
+            Type type = null;
             if (idObject == null) {
                 ret = null;
             } else {
                 if (this.typeColIdxs > -1) {
                     final Long typeIdTemp = getLongValue(_row[this.typeColIdxs]);
-                    type = Type.get(typeIdTemp);
+                    if (typeIdTemp != null) {
+                        type = Type.get(typeIdTemp);
+                    }
                 } else {
                     type = Type.get(this.typeId);
                 }
-                ret = Instance.get(type, idObject);
+                ret = type == null ? null : Instance.get(type, idObject);
             }
         }
         return ret;
