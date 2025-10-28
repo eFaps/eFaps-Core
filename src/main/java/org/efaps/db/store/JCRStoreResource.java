@@ -242,7 +242,11 @@ public class JCRStoreResource
                     fileNode = getFolderNode().addNode(getInstance().getOid(), NodeType.NT_FILE);
                 }
                 setIdentifer(fileNode.getIdentifier());
-                resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+                if (fileNode.hasNode(Property.JCR_CONTENT)) {
+                    resNode = fileNode.getNode(Property.JCR_CONTENT);
+                } else {
+                    resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+                }
             } else if (identifier.equals("NEW")) {
                 final Node fileNode;
                 if (getFolderNode().hasNode(getInstance().getOid())) {
