@@ -187,9 +187,9 @@ public abstract class AbstractStoreResource
     public void read(final OutputStream _out)
         throws EFapsException
     {
-        StoreResourceInputStream in = null;
+        InputStream in = null;
         try {
-            in = (StoreResourceInputStream) read();
+            in = read();
             if (in != null) {
                 int length = 1;
                 while (length > 0) {
@@ -202,9 +202,9 @@ public abstract class AbstractStoreResource
         } catch (final IOException e) {
             throw new EFapsException(AbstractStoreResource.class, "read.IOException", e);
         } finally {
-            if (in != null) {
+            if (in != null && in instanceof final StoreResourceInputStream srin) {
                 try {
-                    in.closeWithoutCommit();
+                    srin.closeWithoutCommit();
                 } catch (final IOException e) {
                     AbstractStoreResource.LOG.warn("Catched IOException in class: " + this.getClass());
                 }
@@ -248,7 +248,7 @@ public abstract class AbstractStoreResource
             final SQLDelete delete = Context.getDbType().newDelete(del);
             delete.execute(res);
         } catch (final SQLException e) {
-            throw new EFapsException( "clean", e);
+            throw new EFapsException("clean", e);
         }
     }
 
