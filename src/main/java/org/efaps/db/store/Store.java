@@ -143,7 +143,7 @@ public final class Store
     /**
      * @return value for instance variable {@link #resourceProperties}
      */
-    protected Map<String, String> getResourceProperties()
+    public Map<String, String> getResourceProperties()
     {
         return this.resourceProperties;
     }

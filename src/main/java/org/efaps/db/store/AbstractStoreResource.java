@@ -368,8 +368,11 @@ public abstract class AbstractStoreResource
                 }
                 this.fileLength = rs.getLong(3);
                 modified = DateTimeUtil.toContextDateTime(rs.getTimestamp(4));
+                final var columnCount = rs.getMetaData().getColumnCount();
                 for (int i = 0; i < this.exist.length; i++) {
-                    this.exist[i] = rs.getLong(5 + i) > 0;
+                    if (5 + i <= columnCount) {
+                        this.exist[i] = rs.getLong(5 + i) > 0;
+                    }
                 }
                 getAdditionalInfo(rs);
             }
