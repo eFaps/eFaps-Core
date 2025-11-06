@@ -17,6 +17,7 @@ package org.efaps.db.store;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.transaction.xa.XAException;
@@ -43,12 +44,12 @@ public class S3StoreResource
 
     private static final Logger LOG = LoggerFactory.getLogger(S3StoreResource.class);
 
-    private static S3Client S3CLIENT;
+    private static Map<Long, S3Client> S3CLIENTS = new HashMap<>();
 
-    S3Client getS3Client()
+    private S3Client getS3Client()
     {
-        if (S3CLIENT == null) {
-            LOG.info("Initializing S3 Store with:");
+        if (!S3CLIENTS.containsKey(getStore().getId())) {
+            LOG.info("Initializing S3 StoreResource for with: {} - {}", getStore().getName(), getStore().getId());
             final var region = getProperties().get("S3region");
             final var endpoint = getProperties().get("S3endpoint");
             final var accessKey = getProperties().get("S3accessKey");
@@ -58,14 +59,15 @@ public class S3StoreResource
             LOG.info("  region: {}, endpoint: {}, bucketName: {}, accessKey: {}", region, endpoint, bucketName,
                             accessKey);
 
-            S3CLIENT = S3Client.builder()
+            final var client = S3Client.builder()
                             .region(Region.of(region))
                             .endpointOverride(URI.create(endpoint))
                             .credentialsProvider(StaticCredentialsProvider.create(
                                             AwsBasicCredentials.create(accessKey, secretKey)))
                             .build();
+            S3CLIENTS.put(getStore().getId(), client);
         }
-        return S3CLIENT;
+        return S3CLIENTS.get(getStore().getId());
     }
 
     private String getBucketName()
@@ -110,7 +112,6 @@ public class S3StoreResource
         return size;
     }
 
-
     @Override
     public boolean exists()
         throws EFapsException
@@ -126,7 +127,7 @@ public class S3StoreResource
                 final var response = getS3Client().headObject(headObjectRequest);
                 LOG.info("Checked for {}, response: {}", getInstance().getOid(), response);
                 ret = true;
-            } catch(final NoSuchKeyException e) {
+            } catch (final NoSuchKeyException e) {
                 LOG.debug("Catched", e);
             }
         }
@@ -178,7 +179,7 @@ public class S3StoreResource
     public void rollback(Xid arg0)
         throws XAException
     {
-     }
+    }
 
     @Override
     public boolean setTransactionTimeout(int arg0)
