@@ -24,6 +24,9 @@ import java.util.Objects;
 import org.efaps.admin.program.esjp.EFapsApplication;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.admin.program.esjp.EFapsUUID;
+import org.efaps.db.Context;
+import org.efaps.util.EFapsException;
+import org.jfree.util.Log;
 import org.jgroups.Global;
 import org.jgroups.util.ByteArray;
 import org.jgroups.util.SizeStreamable;
@@ -116,6 +119,13 @@ public class StreamableWrapper
         final byte[] tmp = new byte[len];
         in.readFully(tmp, 0, len);
         serialized = new ByteArray(tmp);
-        obj = Util.objectFromBuffer(serialized, EFapsClassLoader.getInstance());
+        try {
+            Context.begin();
+            final var classloader = EFapsClassLoader.getOfflineInstance(getClass().getClassLoader());
+            obj = Util.objectFromBuffer(serialized, classloader);
+            Context.rollback();
+        } catch (EFapsException | ClassNotFoundException | IOException e) {
+            Log.error("Catched", e);
+        }
     }
 }
