@@ -20,6 +20,7 @@ import org.efaps.admin.program.esjp.Listener;
 import org.efaps.util.EFapsException;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
+import org.jgroups.ObjectMessage;
 import org.jgroups.Receiver;
 import org.jgroups.View;
 import org.slf4j.Logger;
@@ -54,14 +55,32 @@ public class ClusterCommunication
                             for (final var listener : Listener.get()
                                             .<IClusterMsgListener>invoke(IClusterMsgListener.class)) {
                                 if (permitContinue) {
-                                    LOG.debug("calling: {}", listener);
+                                    LOG.debug("calling for msg: {}", listener);
                                     permitContinue = listener.onMessage(msg);
                                 } else {
-                                    LOG.debug("skipped: {}", listener);
+                                    LOG.debug("skipped for msg: {}", listener);
                                 }
                             }
                         } catch (final EFapsException e) {
                             LOG.error("Catched", e);
+                        }
+                        if (msg instanceof final ObjectMessage objMessage) {
+                            if (objMessage.getObject() instanceof final StreamableWrapper wrapper) {
+                                try {
+                                    boolean permitContinue = true;
+                                    for (final var listener : Listener.get()
+                                                    .<IClusterMsgListener>invoke(IClusterMsgListener.class)) {
+                                        if (permitContinue) {
+                                            LOG.debug("calling for payload: {}", listener);
+                                            permitContinue = listener.onPayload(wrapper.getObject());
+                                        } else {
+                                            LOG.debug("skipped  for payload: {}", listener);
+                                        }
+                                    }
+                                } catch (final EFapsException e) {
+                                    LOG.error("Catched", e);
+                                }
+                            }
                         }
                     }
 

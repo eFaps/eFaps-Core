@@ -15,12 +15,23 @@
  */
 package org.efaps.cluster;
 
+import java.io.Serializable;
+
 import org.efaps.admin.program.esjp.IEsjpListener;
 import org.jgroups.Message;
 
-public interface IClusterMsgListener extends IEsjpListener
+public interface IClusterMsgListener
+    extends IEsjpListener
 {
 
-    boolean onMessage(Message msg);
+    default boolean onMessage(final Message msg)
+    {
+        return true;
+    }
+
+    default boolean onPayload(final Serializable object)
+    {
+        return true;
+    }
 
 }

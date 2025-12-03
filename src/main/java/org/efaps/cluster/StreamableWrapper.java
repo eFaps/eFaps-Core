@@ -82,7 +82,7 @@ public class StreamableWrapper
     @Override
     public String toString()
     {
-        return String.format("obj: %s %s", obj, serialized != null ? "(" + serialized.getLength() + " bytes)" : "");
+        return String.format("wrapper for: %s %s", obj, serialized != null ? "(" + serialized.getLength() + " bytes)" : "");
     }
 
     @Override
