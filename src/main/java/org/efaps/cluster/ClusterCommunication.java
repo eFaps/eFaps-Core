@@ -71,6 +71,7 @@ public class ClusterCommunication
                         LOG.info("received JGroups view: {}", view);
                     }
                 });
+                channel.setDiscardOwnMessages(true);
 
                 final var clusterName = config.getValue("core.jGroups.clusterName", String.class);
                 channel.connect(clusterName);
