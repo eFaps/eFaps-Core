@@ -16,6 +16,8 @@
 package org.efaps.cluster;
 
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.efaps.admin.program.esjp.Listener;
+import org.efaps.util.EFapsException;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.Receiver;
@@ -47,6 +49,20 @@ public class ClusterCommunication
                     public void receive(final Message msg)
                     {
                         LOG.info("received JGroups message: {}", msg);
+                        try {
+                            boolean permitContinue = true;
+                            for (final var listener : Listener.get()
+                                            .<IClusterMsgListener>invoke(IClusterMsgListener.class)) {
+                                if (permitContinue) {
+                                    LOG.debug("calling: {}", listener);
+                                    permitContinue = listener.onMessage(msg);
+                                } else {
+                                    LOG.debug("skipped: {}", listener);
+                                }
+                            }
+                        } catch (final EFapsException e) {
+                            LOG.error("Catched", e);
+                        }
                     }
 
                     @Override
