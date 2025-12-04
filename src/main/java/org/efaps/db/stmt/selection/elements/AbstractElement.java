@@ -15,15 +15,31 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.EnumSet;
+
+import org.efaps.db.stmt.AbstractFlagged;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 public abstract class AbstractElement<T>
+    extends AbstractFlagged
 {
+
     /** The previous. */
     private AbstractElement<?> previous;
 
     /** The next. */
     private AbstractElement<?> next;
+
+    public AbstractElement()
+    {
+        this(EnumSet.noneOf(StmtFlag.class));
+    }
+
+    public AbstractElement(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
 
     /**
      * Gets the previous.
@@ -65,7 +81,6 @@ public abstract class AbstractElement<T>
     {
         this.next = _next;
     }
-
 
     /**
      * Gets the path.

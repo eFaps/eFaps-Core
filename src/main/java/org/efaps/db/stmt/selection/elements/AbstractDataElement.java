@@ -15,9 +15,12 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.EnumSet;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.efaps.admin.datamodel.DBTable;
 import org.efaps.db.wrapper.SQLSelect;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 /**
@@ -32,6 +35,16 @@ public abstract class AbstractDataElement<T>
 
     /** The table. */
     private DBTable table;
+
+    public AbstractDataElement()
+    {
+        this(EnumSet.noneOf(StmtFlag.class));
+    }
+
+    public AbstractDataElement(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
 
     /**
      * Gets the table.

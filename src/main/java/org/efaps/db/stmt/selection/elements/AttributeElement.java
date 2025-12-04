@@ -16,6 +16,7 @@
 package org.efaps.db.stmt.selection.elements;
 
 import java.util.Collections;
+import java.util.EnumSet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.efaps.admin.datamodel.Attribute;
@@ -23,6 +24,7 @@ import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.db.wrapper.SQLOrder;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 /**
@@ -40,6 +42,11 @@ public class AttributeElement
 
     /** The attribute. */
     private Attribute attribute;
+
+    public AttributeElement(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
 
     /**
      * Gets the attribute.
@@ -80,7 +87,8 @@ public class AttributeElement
                 colIdxs = ArrayUtils.add(colIdxs, _sqlSelect.columnIndex(tableIdx.getIdx(), colName));
             }
 
-            // in case of dependencies for the attribute they must be selected also
+            // in case of dependencies for the attribute they must be selected
+            // also
             for (final Attribute attr : attribute.getDependencies().values()) {
                 for (final String colName : attr.getSqlColNames()) {
                     final int colidx = _sqlSelect.column(tableIdx.getIdx(), colName).getColumnIdx();
@@ -103,7 +111,7 @@ public class AttributeElement
                 ((Object[]) ret)[i] = _row[colIdxs[i]];
             }
         }
-        return callAuxillary(attribute.value(Collections.singletonList(ret)));
+        return callAuxillary(attribute.value(Collections.singletonList(ret), has(StmtFlag.EVENTOFF)));
     }
 
     @Override
@@ -112,6 +120,7 @@ public class AttributeElement
                                 final boolean _desc)
         throws EFapsException
     {
-        _order.addElement(_orderSequence, getTableIdx(_order.getSqlSelect()).getIdx(), attribute.getSqlColNames(), _desc);
+        _order.addElement(_orderSequence, getTableIdx(_order.getSqlSelect()).getIdx(), attribute.getSqlColNames(),
+                        _desc);
     }
 }

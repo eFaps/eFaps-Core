@@ -70,7 +70,7 @@ public class CountQuery
         final var mainType = Selection.evalMainType(getTypes());
         final var selection = new Selection();
         final Select select = Select.get();
-        select.getElements().add(new CountElement().setDBTable(mainType.getMainTable()));
+        select.getElements().add(new CountElement(getFlags()).setDBTable(mainType.getMainTable()));
         selection.getSelects().add(select);
         setSelection(selection);
     }

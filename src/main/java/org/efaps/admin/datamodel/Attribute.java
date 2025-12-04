@@ -343,7 +343,6 @@ public class Attribute
         this.parentSetId = parentSetId;
     }
 
-
     /**
      * This is the constructor for class {@link Attribute}. Every instance of
      * class {@link Attribute} must have a name (parameter <i>_name</i>) and an
@@ -745,15 +744,18 @@ public class Attribute
         return ret;
     }
 
-    public Object value(final List<Object> _objectList)
+    public Object value(final List<Object> _objectList,
+                        boolean eventoff)
         throws EFapsException
     {
         Object ret = AttributeType.get(attributeTypeId).getDbAttrType().readValue(this, _objectList);
-        final List<Return> returns = executeEvents(EventType.READ_VALUE, ParameterValues.CLASS, this,
-                        ParameterValues.OTHERS, ret);
-        for (final Return aRet : returns) {
-            if (aRet.contains(ReturnValues.VALUES)) {
-                ret = aRet.get(ReturnValues.VALUES);
+        if (!eventoff) {
+            final List<Return> returns = executeEvents(EventType.READ_VALUE, ParameterValues.CLASS, this,
+                            ParameterValues.OTHERS, ret);
+            for (final Return aRet : returns) {
+                if (aRet.contains(ReturnValues.VALUES)) {
+                    ret = aRet.get(ReturnValues.VALUES);
+                }
             }
         }
         return ret;
@@ -803,7 +805,8 @@ public class Attribute
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheAttribute(this, getParent());
     }
@@ -847,10 +850,10 @@ public class Attribute
     {
         final var cache = InfinispanCache.get().<Long, Attribute>getCache(Attribute.IDCACHE);
         if (!cache.containsKey(_id)) {
-           final var type = Type.get(Attribute.getTypeID(_id));
-           if (!cache.containsKey(_id)) {
-               Attribute.add4Type(type);
-           }
+            final var type = Type.get(Attribute.getTypeID(_id));
+            if (!cache.containsKey(_id)) {
+                Attribute.add4Type(type);
+            }
         }
         return cache.get(_id);
     }
@@ -883,7 +886,7 @@ public class Attribute
      * @param _type Parent Type
      */
     static void cacheAttribute(final Attribute _attr,
-                                       final Type _type)
+                               final Type _type)
     {
 
         final var nameCache = InfinispanCache.get().<String, Attribute>getCache(Attribute.NAMECACHE);
@@ -1034,7 +1037,7 @@ public class Attribute
                 Attribute.LOG.debug("read attribute '{}/{}' (id = {})", type.getName(), name, id);
 
                 if (Type.check4Type(typeAttrId, CIAdminDataModel.AttributeSet.uuid)) {
-                    final AttributeSet set = new AttributeSet(id, type.getId(),type.getName(), name, attrTypeId,
+                    final AttributeSet set = new AttributeSet(id, type.getId(), type.getName(), name, attrTypeId,
                                     sqlCol, tableId, typeLinkId, dimensionUUID);
                     id2Set.put(id, set);
                 } else {

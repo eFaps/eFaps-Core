@@ -15,14 +15,22 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.EnumSet;
+
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 public abstract class AbstractAttributeElement<T>
     extends AbstractDataElement<T>
 {
+
+    public AbstractAttributeElement(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
 
     protected TableIdx getTableIdx(final SQLSelect _sqlSelect)
         throws EFapsException

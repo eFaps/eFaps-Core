@@ -15,8 +15,11 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.EnumSet;
+
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.db.wrapper.SQLSelect;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 /**
@@ -27,6 +30,12 @@ import org.efaps.util.EFapsException;
 public class CountElement
     extends AbstractAttributeElement<CountElement>
 {
+
+    public CountElement(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
+
     @Override
     public CountElement getThis()
     {
@@ -47,6 +56,6 @@ public class CountElement
     public Object getObject(final Object[] row)
         throws EFapsException
     {
-      return row[0];
+        return row[0];
     }
 }

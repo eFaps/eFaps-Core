@@ -18,6 +18,7 @@ package org.efaps.db.stmt.selection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -31,6 +32,7 @@ import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.AttributeSet;
 import org.efaps.admin.datamodel.Classification;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.db.stmt.IFlagged;
 import org.efaps.db.stmt.filter.Filter;
 import org.efaps.db.stmt.selection.elements.AbstractDataElement;
 import org.efaps.db.stmt.selection.elements.AbstractElement;
@@ -72,6 +74,7 @@ import org.efaps.eql2.IPrintStatement;
 import org.efaps.eql2.ISelect;
 import org.efaps.eql2.ISelectElement;
 import org.efaps.eql2.IStatement;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
@@ -101,15 +104,15 @@ public final class Selection
     /**
      * Analyze.
      *
-     * @param _stmtProvider the stmt provider
+     * @param stmtProvider the stmt provider
      * @return the selection
      * @throws EFapsException on error
      */
-    private Selection analyze(final IStmtProvider _stmtProvider)
+    private Selection analyze(final IStmtProvider stmtProvider)
         throws EFapsException
     {
-        final Type type = evalMainType(_stmtProvider.getTypes());
-        final IStatement<?> stmt = _stmtProvider.getStmt();
+        final Type type = evalMainType(stmtProvider.getTypes());
+        final IStatement<?> stmt = stmtProvider.getStmt();
         for (final ISelect sel : ((IPrintStatement<?>) stmt).getSelection().getSelects()) {
             final Select select = Select.get(sel.getAlias());
             if (selects.isEmpty()) {
@@ -124,7 +127,7 @@ public final class Selection
                     if (attr == null) {
                         if (currentType.isAbstract()) {
                             LOG.debug("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
-                            for (final var childType: currentType.getChildTypes()) {
+                            for (final var childType : currentType.getChildTypes()) {
                                 attr = childType.getAttribute(attrName);
                                 if (attr != null) {
                                     LOG.debug("Using attribute on child type: {}", childType);
@@ -135,7 +138,7 @@ public final class Selection
                             LOG.error("Could not find Attribute '{}' on Type '{}'", attrName, currentType.getName());
                         }
                     }
-                    final AttributeElement element = new AttributeElement().setAttribute(attr);
+                    final AttributeElement element = new AttributeElement(evalFlags(stmtProvider)).setAttribute(attr);
                     select.addElement(element);
                 } else if (ele instanceof ILinktoSelectElement) {
                     final String attrName = ((ILinktoSelectElement) ele).getName();
@@ -151,7 +154,8 @@ public final class Selection
                     final String typeName = ((ILinkfromSelectElement) ele).getTypeName();
                     final String attrName = ((ILinkfromSelectElement) ele).getAttribute();
                     final Type linkFromType = UUIDUtil.isUUID(typeName)
-                                    ? Type.get(UUID.fromString(typeName)) : Type.get(typeName);
+                                    ? Type.get(UUID.fromString(typeName))
+                                    : Type.get(typeName);
                     final Attribute attr = linkFromType.getAttribute(attrName);
                     final LinkfromElement element = new LinkfromElement().setAttribute(attr).setStartType(currentType);
                     final IFilter filter = ((ILinkfromSelectElement) ele).getFilter();
@@ -164,7 +168,8 @@ public final class Selection
                 } else if (ele instanceof IClassSelectElement) {
                     final String typeName = ((IClassSelectElement) ele).getName();
                     final Classification classification = UUIDUtil.isUUID(typeName)
-                                    ? Classification.get(UUID.fromString(typeName)) :  Classification.get(typeName);
+                                    ? Classification.get(UUID.fromString(typeName))
+                                    : Classification.get(typeName);
                     final ClassElement element = new ClassElement().setClassification(classification)
                                     .setType(currentType);
                     select.addElement(element);
@@ -187,7 +192,7 @@ public final class Selection
                             select.addElement(new OIDElement(currentType));
                             break;
                         case STATUS:
-                            select.addElement(new StatusElement(currentType));
+                            select.addElement(new StatusElement(currentType, evalFlags(stmtProvider)));
                             break;
                         case TYPE:
                             select.addElement(new TypeElement(currentType));
@@ -270,7 +275,9 @@ public final class Selection
      * @param _currentType the current type
      * @throws CacheReloadException on error
      */
-    private void addInstSelect(final Select _select, final AbstractDataElement<?> _element, final Object _attrOrClass,
+    private void addInstSelect(final Select _select,
+                               final AbstractDataElement<?> _element,
+                               final Object _attrOrClass,
                                final Type _currentType)
         throws CacheReloadException
     {
@@ -388,6 +395,17 @@ public final class Selection
         final List<Select> ret = new ArrayList<>(selects);
         ret.addAll(instSelects.values());
         return Collections.unmodifiableCollection(ret);
+    }
+
+    public EnumSet<StmtFlag> evalFlags(Object provider)
+    {
+        EnumSet<StmtFlag> flags;
+        if (provider instanceof final IFlagged flagged) {
+            flags = flagged.getFlags();
+        } else {
+            flags = EnumSet.noneOf(StmtFlag.class);
+        }
+        return flags;
     }
 
     /**

@@ -15,6 +15,8 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.EnumSet;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Status;
@@ -22,6 +24,7 @@ import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.datamodel.attributetype.StatusType;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 
 /**
@@ -43,14 +46,16 @@ public class StatusElement
      * @param _type the type
      * @throws EFapsException
      */
-    public StatusElement(final Type _type)
+    public StatusElement(final Type type,
+                         final EnumSet<StmtFlag> flags)
         throws EFapsException
     {
-        if (!_type.isCheckStatus() && _type.getAttributes(StatusType.class).isEmpty()) {
-            throw new EFapsException(StatusElement.class, "Type has not Status", _type);
+        super(flags);
+        if (!type.isCheckStatus() && type.getAttributes(StatusType.class).isEmpty()) {
+            throw new EFapsException(StatusElement.class, "Type has not Status", type);
         }
-        setDBTable(_type.getMainTable());
-        typeId = _type.getId();
+        setDBTable(type.getMainTable());
+        typeId = type.getId();
     }
 
     @Override
