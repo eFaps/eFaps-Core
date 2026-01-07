@@ -196,6 +196,10 @@ public class SQLRunner
                     throw new EFapsException(SQLRunner.class, "prepareInsert", e);
                 }
             }
+            // if the attribute is in another table it must be added
+            if (_instances.length == 0 && !updatemap.containsKey(attr.getTable())) {
+                getSQLInsert(attr.getTable());
+            }
         }
 
         final IUpdateElementsStmt<?> eqlStmt = ((AbstractUpdate) runnable).getEqlStmt();
@@ -399,7 +403,6 @@ public class SQLRunner
         return runnable instanceof CountQuery;
     }
 
-
     /**
      * Adds the company criteria.
      *
@@ -465,10 +468,10 @@ public class SQLRunner
                     final var group = new Group().setConnection(Connection.AND);
                     group.add(criteria);
                     group.add(new Criteria()
-                                .tableIndex(entry.getKey().getIdx())
-                                .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
-                                .comparison(Comparison.NULL)
-                                .connection(Connection.OR));
+                                    .tableIndex(entry.getKey().getIdx())
+                                    .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
+                                    .comparison(Comparison.NULL)
+                                    .connection(Connection.OR));
                     where.section(group);
                 } else {
                     where.section(criteria.setMain(true));
@@ -822,6 +825,7 @@ public class SQLRunner
         private final long id;
 
         private final boolean childTable;
+
         /**
          * Instantiates a new type criteria.
          *
