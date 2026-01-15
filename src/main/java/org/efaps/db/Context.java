@@ -710,13 +710,15 @@ public final class Context
      * @param _company Company to set
      * @throws CacheReloadException on error
      */
-    public void setCompany(final Company _company)
+    public void setCompany(final Company company)
         throws CacheReloadException
     {
-        if (_company == null) {
+        if (company == null) {
             companyId = null;
+            MDC.remove("company");
         } else {
-            companyId = _company.getId();
+            companyId = company.getId();
+            MDC.put("company", String.format("'%s' (%s)", company.getUUID(), company.getName()));
         }
     }
 
