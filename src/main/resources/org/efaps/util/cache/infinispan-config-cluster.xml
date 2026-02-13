@@ -207,6 +207,21 @@
         </local-cache>
             -->
 
+       <local-cache name="${prefix:}org.efaps.db.store.S3StoreResource.ExistsCache">
+            <!--Only experation no eviction 5 minutes, 3 minutes (miliseconds) -->
+            <expiration lifespan="300000" max-idle="180000" />
+            <persistence passivation="false">
+                <remote-store
+                    xmlns="urn:infinispan:config:store:remote:15.0"
+                    cache="${prefix:}org.efaps.db.store.S3StoreResource.ExistsCache-persistence"
+                    remote-cache-container="remote-cache"
+                    raw-values="true"
+                    shared="true"
+                >
+                </remote-store>
+            </persistence>
+        </local-cache>
+
        <local-cache name="${prefix:}org.efaps.admin.index.Queue.Cache" >
             <persistence passivation="false">
                 <remote-store
