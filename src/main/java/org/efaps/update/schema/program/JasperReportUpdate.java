@@ -14,26 +14,38 @@
  * limitations under the License.
  */
 package org.efaps.update.schema.program;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+import org.efaps.update.DefaultEmptyUpdate;
+import org.efaps.update.IUpdate;
 import org.efaps.update.Install.InstallFile;
 import org.efaps.update.schema.program.jasperreport.JasperReportImporter;
+import org.efaps.update.schema.program.jasperreport.JasperReportImporter.FakeQueryExecuterFactory;
 import org.efaps.update.util.InstallationException;
+
+import net.sf.jasperreports.engine.DefaultJasperReportsContext;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.xml.ReportLoader;
 
 /**
  * TODO comment!
  *
  * @author The eFaps Team
  */
-public class JasperReportUpdate extends AbstractSourceUpdate
+public class JasperReportUpdate
+    extends AbstractSourceUpdate
 {
 
     /**
      * Link from JavaScript extending JavaScript.
      */
     private static final Link LINK2SUPER = new Link("Admin_Program_JasperReport2JasperReport", "From",
-                                                    "Admin_Program_JasperReport", "To");
+                    "Admin_Program_JasperReport7", "To");
 
     /**
      * Set off all links for this JasperReportUpdate.
@@ -48,9 +60,21 @@ public class JasperReportUpdate extends AbstractSourceUpdate
      *
      * @param _installFile the install file
      */
-    public JasperReportUpdate(final InstallFile _installFile)
+    private JasperReportUpdate(final InstallFile installFile)
     {
-        super(_installFile, "Admin_Program_JasperReport", JasperReportUpdate.ALLLINKS);
+        super(installFile, "Admin_Program_JasperReport7", JasperReportUpdate.ALLLINKS);
+    }
+
+    public static IUpdate evalUpdate(InstallFile installFile)
+    {
+        IUpdate ret;
+        if (validateJasperVersion(installFile)) {
+            ret = new JasperReportUpdate(installFile);
+        } else {
+            LOG.info("Invalid jrxml for Jasper 7 in InstallFile: {} ", installFile);
+            ret = new DefaultEmptyUpdate(installFile);
+        }
+        return ret;
     }
 
     /**
@@ -59,11 +83,39 @@ public class JasperReportUpdate extends AbstractSourceUpdate
      * @param _installFile the install file
      * @return JavaScriptUpdate
      */
-    public static JasperReportUpdate readFile(final InstallFile _installFile)
+    public static IUpdate readFile(final InstallFile installFile)
     {
-        final JasperReportUpdate ret = new JasperReportUpdate(_installFile);
-        final JasperReportDefinition definition = ret.new JasperReportDefinition(_installFile);
-        ret.addDefinition(definition);
+        IUpdate ret;
+        if (validateJasperVersion(installFile)) {
+            final var jasperReportUpdate = new JasperReportUpdate(installFile);
+            final JasperReportDefinition definition = jasperReportUpdate.new JasperReportDefinition(installFile);
+            jasperReportUpdate.addDefinition(definition);
+            ret = jasperReportUpdate;
+        } else {
+            LOG.info("Invalid jrxml for Jasper 7 in InstallFile: {} ", installFile);
+            ret = new DefaultEmptyUpdate(installFile);
+        }
+        return ret;
+    }
+
+    public static boolean validateJasperVersion(final InstallFile installFile)
+    {
+        final boolean ret = false;
+        final var jasperContext = DefaultJasperReportsContext.getInstance();
+        jasperContext.setProperty("net.sf.jasperreports.query.executer.factory.eFaps",
+                        FakeQueryExecuterFactory.class.getName());
+        try {
+            final InputStream input = installFile.getUrl().openStream();
+            final var data = IOUtils.toByteArray(input);
+            for (final ReportLoader reportLoader : jasperContext.getExtensions(ReportLoader.class)) {
+                final var designOpt = reportLoader.loadReport(jasperContext, data);
+                if (designOpt.isPresent()) {
+                    return true;
+                }
+            }
+        } catch (IOException | JRException e) {
+            LOG.error("Catched error while reading: " + installFile, e);
+        }
         return ret;
     }
 
@@ -71,7 +123,8 @@ public class JasperReportUpdate extends AbstractSourceUpdate
      * Definition for the JasperReport.
      *
      */
-    public class JasperReportDefinition extends AbstractSourceDefinition
+    public class JasperReportDefinition
+        extends AbstractSourceDefinition
     {
 
         /**
@@ -93,9 +146,8 @@ public class JasperReportUpdate extends AbstractSourceUpdate
          * Search the instance.
          *
          * @throws InstallationException if the source code for the Jasper
-         *                               Report could not be read or file could
-         *                               not be accessed because of the wrong
-         *                               URL
+         *             Report could not be read or file could not be accessed
+         *             because of the wrong URL
          */
         @Override
         protected void searchInstance()

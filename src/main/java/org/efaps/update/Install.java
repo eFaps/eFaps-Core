@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -201,7 +202,7 @@ public class Install
         for (final UpdateLifecycle cycle : UpdateLifecycle.values()) {
             ret.add(cycle);
         }
-        Collections.sort(ret, (_cycle1, _cycle2) -> _cycle1.getOrder().compareTo(_cycle2.getOrder()));
+        Collections.sort(ret, Comparator.comparing(UpdateLifecycle::getOrder));
         return ret;
     }
 
@@ -248,7 +249,7 @@ public class Install
                     }
                     // initialize JexlContext (used to evaluate version)
                     final JexlContext jexlContext = new MapContext();
-                    if (latestVersion == null) {
+                    if (latestVersion == null && !(update instanceof DefaultEmptyUpdate)) {
                         Install.LOG.warn("Could not find any version for {} with Application {}",
                                         update.getInstallFile(), update.getFileApplication());
                     } else {
@@ -379,8 +380,7 @@ public class Install
                                 } catch (final InvocationTargetException e) {
                                     throw new InstallationException("initialise()", e);
                                 }
-                                if (obj != null && obj instanceof IUpdate) {
-                                    final IUpdate iUpdate = (IUpdate) obj;
+                                if (obj != null && obj instanceof final IUpdate iUpdate) {
                                     final List<IUpdate> list;
                                     if (cache.containsKey(iUpdate.getIdentifier())) {
                                         list = cache.get(iUpdate.getIdentifier());

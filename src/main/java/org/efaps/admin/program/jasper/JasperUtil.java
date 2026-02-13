@@ -17,19 +17,15 @@ package org.efaps.admin.program.jasper;
 
 import java.io.InputStream;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.efaps.db.Checkout;
 import org.efaps.db.Instance;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.design.JasperDesign;
-import net.sf.jasperreports.engine.xml.JRXmlDigesterFactory;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 /**
@@ -69,14 +65,7 @@ public final class JasperUtil
         JasperDesign jasperDesign = null;
         try {
             JasperUtil.LOG.debug("Loading JasperDesign for :{}", _instance);
-            final DefaultJasperReportsContext reportContext = DefaultJasperReportsContext.getInstance();
-            final JRXmlLoader loader = new JRXmlLoader(reportContext,
-                            JRXmlDigesterFactory.createDigester(reportContext));
-            jasperDesign = loader.loadXML(source);
-        } catch (final ParserConfigurationException e) {
-            throw new EFapsException(JasperUtil.class, "getJasperDesign", e);
-        } catch (final SAXException e) {
-            throw new EFapsException(JasperUtil.class, "getJasperDesign", e);
+            jasperDesign = JRXmlLoader.load(DefaultJasperReportsContext.getInstance(), source);
         } catch (final JRException e) {
             throw new EFapsException(JasperUtil.class, "getJasperDesign", e);
         }

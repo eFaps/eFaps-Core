@@ -26,17 +26,20 @@ import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.admin.program.esjp.EFapsUUID;
 import org.efaps.db.Context;
 import org.efaps.util.EFapsException;
-import org.jfree.util.Log;
 import org.jgroups.Global;
 import org.jgroups.util.ByteArray;
 import org.jgroups.util.SizeStreamable;
 import org.jgroups.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @EFapsUUID("deceedf1-9dc9-4f8c-9178-0c276a926969")
 @EFapsApplication("eFaps-Kernel")
 public class StreamableWrapper
     implements SizeStreamable
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(StreamableWrapper.class);
 
     protected Object obj;
     protected ByteArray serialized;
@@ -125,7 +128,7 @@ public class StreamableWrapper
             obj = Util.objectFromBuffer(serialized, classloader);
             Context.rollback();
         } catch (EFapsException | ClassNotFoundException | IOException e) {
-            Log.error("Catched", e);
+            LOG.error("Catched", e);
         }
     }
 }

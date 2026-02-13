@@ -59,9 +59,9 @@ public class JasperReportCompiler
      *
      * @param _classPathElements elemnts for the classpath
      */
-    public JasperReportCompiler(final List<String> _classPathElements)
+    public JasperReportCompiler(final List<String> classPathElements)
     {
-        this.classPathElements = _classPathElements;
+        this.classPathElements = classPathElements;
     }
 
     /**
@@ -76,15 +76,15 @@ public class JasperReportCompiler
     }
 
     /**
-     * @param _sources source to be compiled
+     * @param sources source to be compiled
      * @throws EFapsException on error
      */
-    public void compile(final OneJasperReport... _sources)
+    public void compile(final OneJasperReport... sources)
         throws EFapsException
     {
         final Map<String, String> compiled = readCompiledSources();
 
-        for (final OneJasperReport onesource : _sources) {
+        for (final var onesource : sources) {
 
             if (AbstractStaticSourceCompiler.LOG.isInfoEnabled()) {
                 AbstractStaticSourceCompiler.LOG.info("compiling " + onesource.getName());
@@ -108,12 +108,12 @@ public class JasperReportCompiler
     /**
      * Method to compile one JasperReport.
      *
-     * @param _instSource instance of the source
-     * @param _instCompiled instance of the compiled source
+     * @param instSource instance of the source
+     * @param instCompiled instance of the compiled source
      * @throws EFapsException on error
      */
-    private void compileJasperReport(final Instance _instSource,
-                                     final Instance _instCompiled)
+    private void compileJasperReport(final Instance instSource,
+                                     final Instance instCompiled)
         throws EFapsException
     {
         // make the classPath
@@ -128,7 +128,7 @@ public class JasperReportCompiler
         reportContext.setProperty("net.sf.jasperreports.query.executer.factory.eFaps",
                         FakeQueryExecuterFactory.class.getName());
         try {
-            final JasperDesign jasperDesign = JasperUtil.getJasperDesign(_instSource);
+            final JasperDesign jasperDesign = JasperUtil.getJasperDesign(instSource);
 
             // the fault value for the language is no information but the used compiler needs a value,
             // therefore it must be set explicitly
@@ -140,7 +140,7 @@ public class JasperReportCompiler
             JasperCompileManager.compileReportToStream(jasperDesign, out);
 
             final ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-            final Checkin checkin = new Checkin(_instCompiled);
+            final Checkin checkin = new Checkin(instCompiled);
             checkin.executeWithoutAccessCheck(jasperDesign.getName() + ".jasper", in, in.available());
             out.close();
             in.close();
@@ -191,10 +191,10 @@ public class JasperReportCompiler
      * {@inheritDoc}
      */
     @Override
-    public OneJasperReport getNewSource(final String _name,
-                                       final Instance _instance)
+    public OneJasperReport getNewSource(final String name,
+                                        final Instance instance)
     {
-        return new OneJasperReport(_name, _instance);
+        return new OneJasperReport(name, instance);
     }
 
     /**
@@ -203,13 +203,13 @@ public class JasperReportCompiler
         extends AbstractStaticSourceCompiler.AbstractSource
     {
         /**
-         * @param _name name
-         * @param _instance Instance
+         * @param name name
+         * @param instance Instance
          */
-        public OneJasperReport(final String _name,
-                               final Instance _instance)
+        public OneJasperReport(final String name,
+                               final Instance instance)
         {
-            super(_name, _instance);
+            super(name, instance);
         }
     }
 }

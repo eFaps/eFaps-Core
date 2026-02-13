@@ -32,11 +32,11 @@ import org.efaps.admin.program.esjp.EFapsClassLoader;
 import groovy.lang.GroovyClassLoader;
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
-import net.sf.jasperreports.compilers.JRGroovyCompiler;
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.design.JRCompilationUnit;
+import net.sf.jasperreports.groovy.JRGroovyCompiler;
 
 /**
  * Calculator compiler that uses groovy to compile expressions. It is used due
@@ -87,9 +87,9 @@ public class JasperGroovyCompiler
         final GroovyClassLoader loader = new GroovyClassLoader(EFapsClassLoader.getInstance(), config, true);
         final CompilationUnit unit = new CompilationUnit(loader);
 
-        for (int i = 0; i < _units.length; i++) {
+        for (final JRCompilationUnit _unit : _units) {
             try {
-                unit.addSource("calculator_" + _units[i].getName(), new ByteArrayInputStream(_units[i].getSourceCode()
+                unit.addSource("calculator_" + _unit.getName(), new ByteArrayInputStream(_unit.getSourceCode()
                                 .getBytes("UTF-8")));
             } catch (final UnsupportedEncodingException e) {
                 throw new JRException("Cannot add Source", e);
@@ -108,13 +108,15 @@ public class JasperGroovyCompiler
         if (collector.classes.size() < _units.length) {
             throw new JRException("Too few groovy class were generated.");
         } else if (collector.classCount > _units.length) {
-            throw new JRException("Too many groovy classes were generated.\n"
-                      + "Please make sure that you don't use Groovy features such as closures "
-                      + "that are not supported by this report compiler.\n");
+            throw new JRException("""
+                Too many groovy classes were generated.
+                Please make sure that you don't use Groovy features such as closures \
+                that are not supported by this report compiler.
+                """);
         }
 
-        for (int i = 0; i < _units.length; i++) {
-            _units[i].setCompileData((Serializable) collector.classes.get(_units[i].getName()));
+        for (final JRCompilationUnit _unit : _units) {
+            _unit.setCompileData((Serializable) collector.classes.get(_unit.getName()));
         }
 
         return null;
@@ -124,12 +126,12 @@ public class JasperGroovyCompiler
      * Class is a exact copy of the inner class of this parent class. This is
      * done due to private definition.
      */
-    private static class ClassCollector extends CompilationUnit.ClassgenCallback
+    private static class ClassCollector implements CompilationUnit.ClassgenCallback
     {
         /**
          * Name to classes.
          */
-        private final Map<String, Object> classes = new HashMap<String, Object>();
+        private final Map<String, Object> classes = new HashMap<>();
 
         /**
          * Count of classes.

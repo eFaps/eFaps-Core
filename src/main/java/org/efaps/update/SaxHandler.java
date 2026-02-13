@@ -224,94 +224,37 @@ public class SaxHandler
             }
         } else {
             switch (_qName) {
-                case "access-set":
-                    this.update = new AccessSetUpdate(this.installFile);
-                    break;
-                case "access-type":
-                    this.update = new AccessTypeUpdate(this.installFile);
-                    break;
-                case "bpm-image":
-                    this.update = new BPMImageUpdate(this.installFile);
-                    break;
-                case "common-msgphrase":
-                    this.update = new MsgPhraseUpdate(this.installFile);
-                    break;
-                case "common-systemconfiguration":
-                    this.update = new SystemConfigurationUpdate(this.installFile);
-                    break;
-                case "datamodel-sqltable":
-                    this.update = new SQLTableUpdate(this.installFile);
-                    break;
-                case "datamodel-type":
-                    this.update = new TypeUpdate(this.installFile);
-                    break;
-                case "datamodel-dimension":
-                    this.update = new DimensionUpdate(this.installFile);
-                    break;
-                case "datamodel-statusgroup":
-                    this.update = new StatusGroupUpdate(this.installFile);
-                    break;
-                case "db-store":
-                    this.update = new StoreUpdate(this.installFile);
-                    break;
-                case "integration-webdav":
-                    this.update = new WebDAVUpdate(this.installFile);
-                    break;
-                case "jasperReport":
-                    this.update = new JasperReportUpdate(this.installFile);
-                    break;
-                case "jasper-image":
-                    this.update = new JasperImageUpdate(this.installFile);
-                    break;
-                case "numbergenerator":
-                    this.update = new NumberGeneratorUpdate(this.installFile);
-                    break;
-                case "ui-command":
-                    this.update = new CommandUpdate(this.installFile);
-                    break;
-                case "ui-form":
-                    this.update = new FormUpdate(this.installFile);
-                    break;
-                case "ui-image":
-                    this.update = new ImageUpdate(this.installFile);
-                    break;
-                case "ui-menu":
-                    this.update = new MenuUpdate(this.installFile);
-                    break;
-                case "ui-module":
-                    this.update = new ModuleUpdate(this.installFile);
-                    break;
-                case "ui-search":
-                    this.update = new SearchUpdate(this.installFile);
-                    break;
-                case "ui-table":
-                    this.update = new TableUpdate(this.installFile);
-                    break;
-                case "user-company":
-                    this.update = new CompanyUpdate(this.installFile);
-                    break;
-                case "user-jaassystem":
-                    this.update = new JAASSystemUpdate(this.installFile);
-                    break;
-                case "user-role":
-                    this.update = new RoleUpdate(this.installFile);
-                    break;
-                case "user-group":
-                    this.update = new GroupUpdate(this.installFile);
-                    break;
-                case "dbproperties":
-                    this.update = new DBPropertiesUpdate(this.installFile);
-                    break;
-                case "help-menu":
-                    this.update = new HelpMenuUpdate(this.installFile);
-                    break;
-                case "wiki-image":
-                    this.update = new WikiImageUpdate(this.installFile);
-                    break;
-                default:
-                    this.update = new DefaultEmptyUpdate(this.installFile);
-                    break;
+                case "access-set" -> this.update = new AccessSetUpdate(this.installFile);
+                case "access-type" -> this.update = new AccessTypeUpdate(this.installFile);
+                case "bpm-image" -> this.update = new BPMImageUpdate(this.installFile);
+                case "common-msgphrase" -> this.update = new MsgPhraseUpdate(this.installFile);
+                case "common-systemconfiguration" -> this.update = new SystemConfigurationUpdate(this.installFile);
+                case "datamodel-sqltable" -> this.update = new SQLTableUpdate(this.installFile);
+                case "datamodel-type" -> this.update = new TypeUpdate(this.installFile);
+                case "datamodel-dimension" -> this.update = new DimensionUpdate(this.installFile);
+                case "datamodel-statusgroup" -> this.update = new StatusGroupUpdate(this.installFile);
+                case "db-store" -> this.update = new StoreUpdate(this.installFile);
+                case "integration-webdav" -> this.update = new WebDAVUpdate(this.installFile);
+                case "jasperReport" -> this.update = JasperReportUpdate.evalUpdate(installFile);
+                case "jasper-image" -> this.update = new JasperImageUpdate(this.installFile);
+                case "numbergenerator" -> this.update = new NumberGeneratorUpdate(this.installFile);
+                case "ui-command" -> this.update = new CommandUpdate(this.installFile);
+                case "ui-form" -> this.update = new FormUpdate(this.installFile);
+                case "ui-image" -> this.update = new ImageUpdate(this.installFile);
+                case "ui-menu" -> this.update = new MenuUpdate(this.installFile);
+                case "ui-module" -> this.update = new ModuleUpdate(this.installFile);
+                case "ui-search" -> this.update = new SearchUpdate(this.installFile);
+                case "ui-table" -> this.update = new TableUpdate(this.installFile);
+                case "user-company" -> this.update = new CompanyUpdate(this.installFile);
+                case "user-jaassystem" -> this.update = new JAASSystemUpdate(this.installFile);
+                case "user-role" -> this.update = new RoleUpdate(this.installFile);
+                case "user-group" -> this.update = new GroupUpdate(this.installFile);
+                case "dbproperties" -> this.update = new DBPropertiesUpdate(this.installFile);
+                case "help-menu" -> this.update = new HelpMenuUpdate(this.installFile);
+                case "wiki-image" -> this.update = new WikiImageUpdate(this.installFile);
+                default -> this.update = new DefaultEmptyUpdate(this.installFile);
             }
+            ;
         }
     }
 }
