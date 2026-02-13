@@ -53,6 +53,8 @@
         <local-cache name="org.efaps.admin.index.Queue.Cache"/>
         <local-cache name="org.efaps.admin.index.IndexDefinition.UUID"/>
 
+
+
         <!-- the Sql Query cache -->
         <local-cache name="org.efaps.db.QueryCache">
             <!--Only experation no eviction 10 minutes, 5 minutes (miliseconds) -->
@@ -74,7 +76,13 @@
                 </indexed-entities>
             </indexing>
         </local-cache>
+
             -->
+        <local-cache name="org.efaps.db.store.S3StoreResource.ExistsCache">
+            <!--Only experation no eviction 5 minutes, 3 minutes (miliseconds) -->
+            <expiration lifespan="300000" max-idle="180000" />
+        </local-cache>
+
         <local-cache name="org.efaps.admin.dbproperty.DBProperties"/>
 
         <!-- UserInterface -->

@@ -25,6 +25,8 @@ import javax.transaction.xa.Xid;
 
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,14 @@ public class S3StoreResource
 
     private static final Logger LOG = LoggerFactory.getLogger(S3StoreResource.class);
 
+    public static final String EXISTSCACHE = S3StoreResource.class.getName() + ".ExistsCache";
+
     private static Map<Long, S3Client> S3CLIENTS = new HashMap<>();
+
+    public static BasicCache<String, Boolean> getExistsCache()
+    {
+        return InfinispanCache.get().<String, Boolean>getCache(EXISTSCACHE);
+    }
 
     private S3Client getS3Client()
     {
@@ -109,6 +118,7 @@ public class S3StoreResource
         final var response = getS3Client().putObject(objectRequest, body);
         LOG.info("Uploaded {}, response: {}", getInstance().getOid(), response);
         setFileInfo(fileName, size);
+        getExistsCache().put(getInstance().getOid(), true);
         return size;
     }
 
@@ -117,18 +127,25 @@ public class S3StoreResource
         throws EFapsException
     {
         var ret = super.exists();
-        if (super.exists()) {
+        if (ret) {
             ret = false;
-            final var headObjectRequest = HeadObjectRequest.builder()
-                            .bucket(getBucketName())
-                            .key(getInstance().getOid())
-                            .build();
-            try {
-                final var response = getS3Client().headObject(headObjectRequest);
-                LOG.info("Checked for {}, response: {}", getInstance().getOid(), response);
-                ret = true;
-            } catch (final NoSuchKeyException e) {
-                LOG.debug("Catched", e);
+            final var cache = getExistsCache();
+            if (cache.containsKey(getInstance().getOid())) {
+                ret = cache.get(getInstance().getOid());
+                LOG.info("Checked for {} using ExistsCache: {}", getInstance().getOid(), ret);
+            } else {
+                final var headObjectRequest = HeadObjectRequest.builder()
+                                .bucket(getBucketName())
+                                .key(getInstance().getOid())
+                                .build();
+                try {
+                    final var response = getS3Client().headObject(headObjectRequest);
+                    LOG.info("Checked for {}, response: {}", getInstance().getOid(), response);
+                    ret = true;
+                } catch (final NoSuchKeyException e) {
+                    LOG.debug("Catched", e);
+                }
+                cache.put(getInstance().getOid(), ret);
             }
         }
         return ret;
