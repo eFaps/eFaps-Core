@@ -208,8 +208,8 @@
             -->
 
        <local-cache name="${prefix:}org.efaps.db.store.S3StoreResource.ExistsCache">
-            <!--Only experation no eviction 5 minutes, 3 minutes (miliseconds) -->
-            <expiration lifespan="300000" max-idle="180000" />
+            <!--Only experation no eviction 5 minutes -->
+            <expiration lifespan="300000" />
             <persistence passivation="false">
                 <remote-store
                     xmlns="urn:infinispan:config:store:remote:15.0"
