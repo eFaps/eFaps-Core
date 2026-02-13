@@ -555,7 +555,7 @@ public class ESJPCompiler
                 is.close();
                 final var orginalStr = new String(bytes, "UTF-8");
                 final var migratedStr = Migrator.migrate(orginalStr);
-                ret.append(orginalStr);
+                ret.append(migratedStr);
                 if (!orginalStr.equals(migratedStr)) {
                     ESJPCompiler.LOG.info("{}: content original '{}'", javaName, orginalStr);
                     ESJPCompiler.LOG.info("{}: content replacement '{}'", javaName, migratedStr);
