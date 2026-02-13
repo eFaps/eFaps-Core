@@ -19,15 +19,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.efaps.admin.program.jasper.JasperUtil;
 import org.efaps.ci.CIAdminProgram;
 import org.efaps.ci.CIType;
 import org.efaps.db.Checkin;
-import org.efaps.db.Insert;
 import org.efaps.db.Instance;
-import org.efaps.db.Update;
+import org.efaps.eql.EQL;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.update.schema.program.jasperreport.JasperReportCompiler.OneJasperReport;
 import org.efaps.update.schema.program.jasperreport.JasperReportImporter.FakeQueryExecuterFactory;
 import org.efaps.update.schema.program.staticsource.AbstractStaticSourceCompiler;
@@ -82,26 +81,27 @@ public class JasperReportCompiler
     public void compile(final OneJasperReport... sources)
         throws EFapsException
     {
-        final Map<String, String> compiled = readCompiledSources();
-
         for (final var onesource : sources) {
-
-            if (AbstractStaticSourceCompiler.LOG.isInfoEnabled()) {
-                AbstractStaticSourceCompiler.LOG.info("compiling " + onesource.getName());
+            AbstractStaticSourceCompiler.LOG.info("compiling {}", onesource.getName());
+            final var eval = EQL.builder().with(StmtFlag.TRIGGEROFF)
+                            .print().query(getClassName4TypeCompiled())
+                            .where()
+                            .attribute("ProgramLink").eq(onesource.getInstance())
+                            .select()
+                            .instance()
+                            .evaluate();
+            while (eval.next()) {
+                EQL.builder().with(StmtFlag.TRIGGEROFF)
+                                .delete(eval.inst()).stmt().execute();
             }
 
-            final Update update;
-            if (compiled.containsKey(onesource.getName())) {
-                update = new Update(compiled.get(onesource.getName()));
-            } else {
-                update = new Insert(getClassName4TypeCompiled());
-            }
-            update.add("Name", onesource.getName());
-            update.add("ProgramLink", "" + onesource.getInstance().getId());
-            update.executeWithoutAccessCheck();
-            final Instance instance = update.getInstance();
-            update.close();
-            compileJasperReport(onesource.getInstance(), instance);
+            final var compiledInst = EQL.builder().with(StmtFlag.TRIGGEROFF)
+                            .insert(getClassName4TypeCompiled())
+                            .set(CIAdminProgram.JasperReportCompiled.Name, onesource.getName())
+                            .set(CIAdminProgram.JasperReportCompiled.ProgramLink, onesource.getInstance())
+                            .execute();
+
+            compileJasperReport(onesource.getInstance(), compiledInst);
         }
     }
 
@@ -130,7 +130,8 @@ public class JasperReportCompiler
         try {
             final JasperDesign jasperDesign = JasperUtil.getJasperDesign(instSource);
 
-            // the fault value for the language is no information but the used compiler needs a value,
+            // the fault value for the language is no information but the used
+            // compiler needs a value,
             // therefore it must be set explicitly
             if (jasperDesign.getLanguage() == null) {
                 jasperDesign.setLanguage(JRReport.LANGUAGE_JAVA);
@@ -202,6 +203,7 @@ public class JasperReportCompiler
     public static class OneJasperReport
         extends AbstractStaticSourceCompiler.AbstractSource
     {
+
         /**
          * @param name name
          * @param instance Instance

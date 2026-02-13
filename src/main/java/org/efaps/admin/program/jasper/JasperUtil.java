@@ -19,6 +19,7 @@ import java.io.InputStream;
 
 import org.efaps.db.Checkout;
 import org.efaps.db.Instance;
+import org.efaps.update.schema.program.jasperreport.JasperReportImporter.FakeQueryExecuterFactory;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +65,11 @@ public final class JasperUtil
         final InputStream source = checkout.execute();
         JasperDesign jasperDesign = null;
         try {
+            final var jasperContext = DefaultJasperReportsContext.getInstance();
+            jasperContext.setProperty("net.sf.jasperreports.query.executer.factory.eFaps",
+                            FakeQueryExecuterFactory.class.getName());
             JasperUtil.LOG.debug("Loading JasperDesign for :{}", _instance);
-            jasperDesign = JRXmlLoader.load(DefaultJasperReportsContext.getInstance(), source);
+            jasperDesign = JRXmlLoader.load(jasperContext, source);
         } catch (final JRException e) {
             throw new EFapsException(JasperUtil.class, "getJasperDesign", e);
         }
