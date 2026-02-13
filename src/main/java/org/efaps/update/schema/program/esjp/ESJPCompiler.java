@@ -43,7 +43,6 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.program.esjp.EsjpScanner;
@@ -526,13 +525,13 @@ public class ESJPCompiler
          * @param _javaName Java name of the ESJP
          * @param _id id used from eFaps within database
          */
-        private SourceObject(final URI _uri,
-                             final String _javaName,
-                             final long _id)
+        private SourceObject(final URI uri,
+                             final String javaName,
+                             final long id)
         {
-            super(_uri, JavaFileObject.Kind.SOURCE);
-            this.javaName = _javaName;
-            this.id = _id;
+            super(uri, JavaFileObject.Kind.SOURCE);
+            this.javaName = javaName;
+            this.id = id;
         }
 
         /**
@@ -544,7 +543,7 @@ public class ESJPCompiler
          *             database
          */
         @Override
-        public CharSequence getCharContent(final boolean _ignoreEncodingErrors)
+        public CharSequence getCharContent(final boolean ignoreEncodingErrors)
             throws IOException
         {
             final StringBuilder ret = new StringBuilder();
@@ -555,15 +554,11 @@ public class ESJPCompiler
                 is.read(bytes);
                 is.close();
                 final var orginalStr = new String(bytes, "UTF-8");
-                if (orginalStr.contains("javax.")) {
-                    final var replacementStr1 = StringUtils.replace(orginalStr, "javax.ws", "jakarta.ws");
-                    final var replacementStr = StringUtils.replace(replacementStr1, "javax.xml.soap",
-                                    "jakarta.xml.soap");
-                    ESJPCompiler.LOG.info("content original '{}'", orginalStr);
-                    ESJPCompiler.LOG.info("content replacement '{}'", replacementStr);
-                    ret.append(replacementStr);
-                } else {
-                    ret.append(orginalStr);
+                final var migratedStr = Migrator.migrate(orginalStr);
+                ret.append(orginalStr);
+                if (!orginalStr.equals(migratedStr)) {
+                    ESJPCompiler.LOG.info("{}: content original '{}'", javaName, orginalStr);
+                    ESJPCompiler.LOG.info("{}: content replacement '{}'", javaName, migratedStr);
                 }
             } catch (final EFapsException e) {
                 throw new IOException("could not checkout class '" + this.javaName + "'", e);
