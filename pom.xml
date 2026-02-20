@@ -28,7 +28,7 @@
     </parent>
 
     <packaging>jar</packaging>
-    <artifactId>efaps-core</artifactId>
+    <artifactId>efaps-core-jasper-6</artifactId>
 
     <description>eFaps is a framework used to map objects with or without
         attached files to
