@@ -35,9 +35,11 @@ import org.efaps.admin.datamodel.Classification;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Status;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.admin.datamodel.attributetype.CreatedType;
 import org.efaps.admin.datamodel.attributetype.IAttributeType;
 import org.efaps.admin.datamodel.attributetype.LinkType;
 import org.efaps.admin.datamodel.attributetype.LongType;
+import org.efaps.admin.datamodel.attributetype.ModifiedType;
 import org.efaps.admin.datamodel.attributetype.StatusType;
 import org.efaps.db.Instance;
 import org.efaps.db.stmt.selection.elements.LinktoElement;
@@ -61,11 +63,14 @@ import org.efaps.eql2.IWhereElementTerm;
 import org.efaps.eql2.IWhereGroupTerm;
 import org.efaps.eql2.IWhereSelect;
 import org.efaps.eql2.IWhereTerm;
+import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ctc.wstx.shaded.msv_core.datatype.xsd.DateTimeType;
 
 /**
  * The Class Filter.
@@ -289,6 +294,7 @@ public class Filter
     protected Section status(final SQLSelect _sqlSelect,
                              final Connection connection,
                              final IWhereElement _element)
+        throws EFapsException
     {
 
         Section ret = null;
@@ -342,6 +348,7 @@ public class Filter
                                 final Attribute _attr,
                                 final Connection connection,
                                 final IWhereElement _element)
+        throws EFapsException
     {
         Section ret = null;
         if (_attr != null) {
@@ -354,9 +361,10 @@ public class Filter
     protected Section attribute(final SQLSelect _sqlSelect,
                                 final Attribute _attr,
                                 final Connection connection,
-                                final IWhereElement _element,
+                                final IWhereElement element,
                                 final TableIdx _tableIdx,
                                 final boolean _nullable)
+        throws EFapsException
     {
         Section ret = null;
         if (_attr != null) {
@@ -365,27 +373,32 @@ public class Filter
             final boolean noEscape;
             final List<String> values;
             if (attrType instanceof StatusType) {
-                values = _element.getValuesList().stream()
+                values = element.getValuesList().stream()
                                 .flatMap(val -> convertStatusValue(_attr, val).stream())
                                 .collect(Collectors.toList());
                 noEscape = true;
             } else if (attrType instanceof LinkType) {
                 noEscape = true;
-                values = _element.getValuesList().stream()
+                values = element.getValuesList().stream()
                                 .map(this::convertLinkValue)
                                 .collect(Collectors.toList());
+            } else if (attrType instanceof CreatedType || attrType instanceof ModifiedType
+                            || attrType.getClass().equals(DateTimeType.class)) {
+                final var dateTime = DateTimeUtil.toDBDateTime(element.getValues(0));
+                values = Arrays.asList(dateTime.toString());
+                noEscape = false;
             } else {
                 noEscape = attrType instanceof LongType;
-                values = Arrays.asList(_element.getValues());
+                values = Arrays.asList(element.getValues());
             }
 
-            if (_nullable && !Comparison.NULL.equals(_element.getComparison())
-                            && !Comparison.NOTNULL.equals(_element.getComparison())) {
+            if (_nullable && !Comparison.NULL.equals(element.getComparison())
+                            && !Comparison.NOTNULL.equals(element.getComparison())) {
                 final Group group = new Group().setConnection(Connection.AND);
                 group.add(new Criteria()
                                 .tableIndex(_tableIdx.getIdx())
                                 .colName(_attr.getSqlColNames().get(0))
-                                .comparison(_element.getComparison())
+                                .comparison(element.getComparison())
                                 .values(new LinkedHashSet<>(values))
                                 .escape(!noEscape)
                                 .connection(Connection.OR));
@@ -399,7 +412,7 @@ public class Filter
                 ret = new Criteria()
                                 .tableIndex(_tableIdx.getIdx())
                                 .colNames(_attr.getSqlColNames())
-                                .comparison(_element.getComparison())
+                                .comparison(element.getComparison())
                                 .values(new LinkedHashSet<>(values))
                                 .escape(!noEscape)
                                 .connection(connection)
