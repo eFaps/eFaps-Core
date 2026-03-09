@@ -361,12 +361,12 @@ public class SQLRunner
             if (_print instanceof ObjectPrint) {
                 addWhere4ObjectPrint((ObjectPrint) _print);
                 if (!typeCriteria.isEmpty()) {
-                    Filter.get(null).addTypeCriteria(sqlSelect, typeCriteria);
+                    Filter.get(_print.getFlags(), null).addTypeCriteria(sqlSelect, typeCriteria);
                 }
             } else if (_print instanceof ListPrint) {
                 addWhere4ListPrint((ListPrint) _print);
                 if (!typeCriteria.isEmpty()) {
-                    Filter.get(null).addTypeCriteria(sqlSelect, typeCriteria);
+                    Filter.get(_print.getFlags(), null).addTypeCriteria(sqlSelect, typeCriteria);
                 }
             } else {
                 addBaseTypeCriteria(_print, typeCriteria);

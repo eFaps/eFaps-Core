@@ -16,6 +16,7 @@
 package org.efaps.db.stmt.filter;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ import java.util.Set;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.db.stmt.AbstractFlagged;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLWhere.Criteria;
 import org.efaps.db.wrapper.SQLWhere.Section;
@@ -35,22 +37,26 @@ import org.efaps.eql2.ISelectElement;
 import org.efaps.eql2.IWhereElement;
 import org.efaps.eql2.IWhereElementTerm;
 import org.efaps.eql2.IWhereTerm;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 import org.efaps.util.TypeUtil;
 
 public class NestedQuery
+    extends AbstractFlagged
 {
 
     private final IWhereElement whereElement;
 
-    public NestedQuery(final IWhereElement _whereElement)
+    public NestedQuery(final EnumSet<StmtFlag> flags,
+                       final IWhereElement whereElement)
     {
-        whereElement = _whereElement;
+        super(flags);
+        this.whereElement = whereElement;
     }
 
     public List<Section> append2SQLSelect(final List<Type> parentTypes,
-                                           final SQLSelect parentSqlSelect,
-                                           final IWhereTerm<?> term)
+                                          final SQLSelect parentSqlSelect,
+                                          final IWhereTerm<?> term)
         throws EFapsException
     {
         final var sections = new ArrayList<Section>();
@@ -98,7 +104,7 @@ public class NestedQuery
             sqlSelect.column(tableidx.getIdx(), "ID");
         }
 
-        final Filter filter = Filter.get(nestedQuery.getWhere(), types.toArray(new Type[types.size()]));
+        final Filter filter = Filter.get(getFlags(), nestedQuery.getWhere(), types.toArray(new Type[types.size()]));
         filter.append2SQLSelect(sqlSelect, typeCriteria);
 
         // add if to the parent part
