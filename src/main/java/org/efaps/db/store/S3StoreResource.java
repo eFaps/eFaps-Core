@@ -132,7 +132,7 @@ public class S3StoreResource
             final var cache = getExistsCache();
             if (cache.containsKey(getInstance().getOid())) {
                 ret = cache.get(getInstance().getOid());
-                LOG.info("Checked for {} using ExistsCache: {}", getInstance().getOid(), ret);
+                LOG.debug("Checked for {} using ExistsCache: {}", getInstance().getOid(), ret);
             } else {
                 final var headObjectRequest = HeadObjectRequest.builder()
                                 .bucket(getBucketName())
@@ -143,7 +143,7 @@ public class S3StoreResource
                     LOG.info("Checked for {}, response: {}", getInstance().getOid(), response);
                     ret = true;
                 } catch (final NoSuchKeyException e) {
-                    LOG.debug("Catched", e);
+                    LOG.warn("Catched", e);
                 }
                 cache.put(getInstance().getOid(), ret);
             }
