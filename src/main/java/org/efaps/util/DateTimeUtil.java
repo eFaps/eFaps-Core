@@ -245,7 +245,15 @@ public final class DateTimeUtil
         } else if (value instanceof DateTime) {
             ret = OffsetDateTime.parse(((DateTime) value).toString(), FORMATTER);
         } else if (value instanceof final String valueStr) {
-            ret = OffsetDateTime.parse(valueStr, FORMATTER);
+            // check it just a date
+            if (valueStr.matches("\\d\\d\\d\\d-\\d\\d-\\d\\d")) {
+                final var localDate = LocalDate.parse(valueStr);
+                final var localDateTime = LocalDateTime.of(localDate, LocalTime.MIN);
+                ret = OffsetDateTime.of(localDateTime,
+                                valueZoneId.getRules().getOffset(localDateTime));
+            } else {
+                ret = OffsetDateTime.parse(valueStr, FORMATTER);
+            }
         } else if (value instanceof LocalDate) {
             final LocalDateTime localDateTime = LocalDateTime.of((LocalDate) value, LocalTime.MIN);
             ret = OffsetDateTime.of(localDateTime,
@@ -338,13 +346,13 @@ public final class DateTimeUtil
                 frmt = DateTimeFormatter.ofPattern("H:mm:ss");
             } else if (strValue.matches("\\d\\d:\\d\\d")) {
                 frmt = DateTimeFormatter.ofPattern("HH:mm");
-            }else if (strValue.matches("\\d\\d:\\d")) {
+            } else if (strValue.matches("\\d\\d:\\d")) {
                 frmt = DateTimeFormatter.ofPattern("HH:m");
             } else if (strValue.matches("\\d:\\d\\d")) {
                 frmt = DateTimeFormatter.ofPattern("H:mm");
             } else if (strValue.matches("\\d:\\d")) {
                 frmt = DateTimeFormatter.ofPattern("H:m");
-            }  else {
+            } else {
                 frmt = null;
             }
             if (frmt == null) {
