@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.efaps.admin.datamodel.attributetype.LongType;
 import org.efaps.admin.datamodel.attributetype.ModifiedType;
 import org.efaps.admin.datamodel.attributetype.StatusType;
 import org.efaps.db.Instance;
+import org.efaps.db.stmt.AbstractFlagged;
 import org.efaps.db.stmt.selection.elements.LinktoElement;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLSelect.FromTableLeftJoin;
@@ -63,6 +65,7 @@ import org.efaps.eql2.IWhereElementTerm;
 import org.efaps.eql2.IWhereGroupTerm;
 import org.efaps.eql2.IWhereSelect;
 import org.efaps.eql2.IWhereTerm;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
@@ -76,6 +79,7 @@ import com.ctc.wstx.shaded.msv_core.datatype.xsd.DateTimeType;
  * The Class Filter.
  */
 public class Filter
+    extends AbstractFlagged
 {
 
     /** The Constant LOG. */
@@ -89,27 +93,37 @@ public class Filter
 
     private Map<Type, TableIdx> type2tableIdx;
 
+    public Filter(final StmtFlag... flags)
+    {
+        super(flags);
+    }
+
+    public Filter(final EnumSet<StmtFlag> flags)
+    {
+        super(flags);
+    }
+
     /**
-     * Analyze.
+     * s Analyze.
      *
-     * @param _where the where
+     * @param where the where
      * @param _types the types
      * @return the filter
      */
-    private Filter analyze(final IWhere _where,
-                           final List<Type> _types)
+    private Filter analyze(final IWhere where,
+                           final List<Type> types)
     {
-        iWhere = _where;
-        types = _types;
+        iWhere = where;
+        this.types = types;
         return this;
     }
 
-    public void append2SQLSelect(final SQLSelect _sqlSelect,
-                                 final Map<Type, TableIdx> _type2tableIdx)
+    public void append2SQLSelect(final SQLSelect sqlSelect,
+                                 final Map<Type, TableIdx> type2tableIdx)
         throws EFapsException
     {
-        type2tableIdx = _type2tableIdx;
-        append2SQLSelect(_sqlSelect, Collections.emptySet());
+        this.type2tableIdx = type2tableIdx;
+        append2SQLSelect(sqlSelect, Collections.emptySet());
     }
 
     /**
@@ -137,7 +151,7 @@ public class Filter
             if (term instanceof IWhereElementTerm) {
                 final IWhereElement element = ((IWhereElementTerm) term).getElement();
                 if (element.getNestedQuery() != null) {
-                    final NestedQuery nestedQuery = new NestedQuery(element);
+                    final NestedQuery nestedQuery = new NestedQuery(getFlags(), element);
                     sections.addAll(nestedQuery.append2SQLSelect(types, sqlSelect, term));
                 } else if (element.getAttribute() != null) {
                     sections.add(attribute(sqlSelect, term.getConnection(), element, null, null));
@@ -208,7 +222,7 @@ public class Filter
         final var colName = classification.getAttribute(classification.getLinkAttributeName()).getSqlColNames().get(0);
         sqlSelect.column(classTableIdx.getIdx(), colName);
 
-        final var subFilter = Filter.get(null, classification);
+        final var subFilter = Filter.get(getFlags(), null, classification);
         final List<Section> subSections = new ArrayList<>();
         for (int i = 1; i < element.getSelect().getElements().length; i++) {
             final var ele = element.getSelect().getElements()[i];
@@ -232,19 +246,19 @@ public class Filter
                         .connection(connection);
     }
 
-    protected Section attribute(final SQLSelect _sqlSelect,
+    protected Section attribute(final SQLSelect sqlSelect,
                                 final Connection connection,
-                                final IWhereElement _element,
-                                final ISelectElement _selectElement,
+                                final IWhereElement element,
+                                final ISelectElement selectElement,
                                 final List<ILinktoSelectElement> linktoElementStmts)
         throws EFapsException
     {
         Section ret = null;
         final String attrName;
-        if (_selectElement != null && _selectElement instanceof IAttributeSelectElement) {
-            attrName = ((IAttributeSelectElement) _selectElement).getName();
+        if (selectElement != null && selectElement instanceof IAttributeSelectElement) {
+            attrName = ((IAttributeSelectElement) selectElement).getName();
         } else {
-            attrName = _element.getAttribute();
+            attrName = element.getAttribute();
         }
         if (CollectionUtils.isNotEmpty(linktoElementStmts)) {
             final var linktoElements = new ArrayList<LinktoElement>();
@@ -264,18 +278,18 @@ public class Filter
             }
 
             for (final var linktoElement : linktoElements) {
-                linktoElement.append2SQLSelect(_sqlSelect);
+                linktoElement.append2SQLSelect(sqlSelect);
             }
             final var last = linktoElements.get(linktoElements.size() - 1);
             final Type currentType = last.getAttribute().getLink();
-            final var tableIdx = last.getJoinTableIdx(_sqlSelect);
+            final var tableIdx = last.getJoinTableIdx(sqlSelect);
             final Attribute attr = currentType.getAttribute(attrName);
-            ret = attribute(_sqlSelect, attr, connection, _element, tableIdx, false);
+            ret = attribute(sqlSelect, attr, connection, element, tableIdx, false);
         } else if (types.isEmpty() && type2tableIdx != null) {
             for (final var entry : type2tableIdx.entrySet()) {
                 final Attribute attr = entry.getKey().getAttribute(attrName);
                 if (attr != null) {
-                    ret = attribute(_sqlSelect, attr, connection, _element, entry.getValue(), false);
+                    ret = attribute(sqlSelect, attr, connection, element, entry.getValue(), false);
                     break;
                 }
             }
@@ -283,7 +297,7 @@ public class Filter
             for (final Type type : types) {
                 final Attribute attr = type.getAttribute(attrName);
                 if (attr != null) {
-                    ret = attribute(_sqlSelect, attr, connection, _element);
+                    ret = attribute(sqlSelect, attr, connection, element);
                     break;
                 }
             }
@@ -291,9 +305,9 @@ public class Filter
         return ret;
     }
 
-    protected Section status(final SQLSelect _sqlSelect,
+    protected Section status(final SQLSelect sqlSelect,
                              final Connection connection,
-                             final IWhereElement _element)
+                             final IWhereElement element)
         throws EFapsException
     {
 
@@ -302,7 +316,7 @@ public class Filter
             for (final var entry : type2tableIdx.entrySet()) {
                 final Attribute attr = entry.getKey().getStatusAttribute();
                 if (attr != null) {
-                    ret = attribute(_sqlSelect, attr, connection, _element, entry.getValue(), true);
+                    ret = attribute(sqlSelect, attr, connection, element, entry.getValue(), true);
                     break;
                 }
             }
@@ -310,7 +324,7 @@ public class Filter
             for (final Type type : types) {
                 final Attribute attr = type.getStatusAttribute();
                 if (attr != null) {
-                    ret = attribute(_sqlSelect, attr, connection, _element);
+                    ret = attribute(sqlSelect, attr, connection, element);
                     break;
                 }
             }
@@ -318,63 +332,63 @@ public class Filter
         return ret;
     }
 
-    protected TableIdx tableIndex4Attr(final SQLSelect _sqlSelect,
-                                       final Attribute _attr)
+    protected TableIdx tableIndex4Attr(final SQLSelect sqlSelect,
+                                       final Attribute attr)
     {
-        final SQLTable table = _attr.getTable();
+        final SQLTable table = attr.getTable();
         final TableIdx tableIdx;
         if (table.getMainTable() != null) {
-            final var mainTableIdx = _sqlSelect.getIndexer().getTableIdx(table.getMainTable().getSqlTable());
+            final var mainTableIdx = sqlSelect.getIndexer().getTableIdx(table.getMainTable().getSqlTable());
             if (mainTableIdx.isCreated()) {
-                _sqlSelect.from(mainTableIdx.getTable(), mainTableIdx.getIdx());
+                sqlSelect.from(mainTableIdx.getTable(), mainTableIdx.getIdx());
             }
-            tableIdx = _sqlSelect.getIndexer().getTableIdx(table.getSqlTable(), table.getMainTable().getSqlTable(),
+            tableIdx = sqlSelect.getIndexer().getTableIdx(table.getSqlTable(), table.getMainTable().getSqlTable(),
                             "ID");
 
             if (tableIdx.isCreated()) {
-                _sqlSelect.leftJoin(tableIdx.getTable(), tableIdx.getIdx(), "ID", mainTableIdx.getIdx(), "ID");
+                sqlSelect.leftJoin(tableIdx.getTable(), tableIdx.getIdx(), "ID", mainTableIdx.getIdx(), "ID");
             }
 
         } else {
-            tableIdx = _sqlSelect.getIndexer().getTableIdx(table.getSqlTable());
+            tableIdx = sqlSelect.getIndexer().getTableIdx(table.getSqlTable());
             if (tableIdx.isCreated()) {
-                _sqlSelect.from(tableIdx.getTable(), tableIdx.getIdx());
+                sqlSelect.from(tableIdx.getTable(), tableIdx.getIdx());
             }
         }
         return tableIdx;
     }
 
-    protected Section attribute(final SQLSelect _sqlSelect,
-                                final Attribute _attr,
+    protected Section attribute(final SQLSelect sqlSelect,
+                                final Attribute attr,
                                 final Connection connection,
-                                final IWhereElement _element)
+                                final IWhereElement element)
         throws EFapsException
     {
         Section ret = null;
-        if (_attr != null) {
-            final var tableIdx = tableIndex4Attr(_sqlSelect, _attr);
-            ret = attribute(_sqlSelect, _attr, connection, _element, tableIdx, false);
+        if (attr != null) {
+            final var tableIdx = tableIndex4Attr(sqlSelect, attr);
+            ret = attribute(sqlSelect, attr, connection, element, tableIdx, false);
         }
         return ret;
     }
 
-    protected Section attribute(final SQLSelect _sqlSelect,
-                                final Attribute _attr,
+    protected Section attribute(final SQLSelect sqlSelect,
+                                final Attribute attr,
                                 final Connection connection,
                                 final IWhereElement element,
-                                final TableIdx _tableIdx,
-                                final boolean _nullable)
+                                final TableIdx tableIdx,
+                                final boolean nullable)
         throws EFapsException
     {
         Section ret = null;
-        if (_attr != null) {
-            final IAttributeType attrType = _attr.getAttributeType().getDbAttrType();
+        if (attr != null) {
+            final IAttributeType attrType = attr.getAttributeType().getDbAttrType();
 
             final boolean noEscape;
             final List<String> values;
             if (attrType instanceof StatusType) {
                 values = element.getValuesList().stream()
-                                .flatMap(val -> convertStatusValue(_attr, val).stream())
+                                .flatMap(val -> convertStatusValue(attr, val).stream())
                                 .collect(Collectors.toList());
                 noEscape = true;
             } else if (attrType instanceof LinkType) {
@@ -384,34 +398,40 @@ public class Filter
                                 .collect(Collectors.toList());
             } else if (attrType instanceof CreatedType || attrType instanceof ModifiedType
                             || attrType.getClass().equals(DateTimeType.class)) {
-                final var dateTime = DateTimeUtil.toDBDateTime(element.getValues(0));
-                values = Arrays.asList(dateTime.toString());
                 noEscape = false;
+                if (has(StmtFlag.RAWDATETIME)) {
+                    values = Arrays.asList(element.getValues());
+                } else {
+                    // convert the given context date/datetime into the database
+                    // datetime
+                    final var dateTime = DateTimeUtil.toDBDateTime(element.getValues(0));
+                    values = Arrays.asList(dateTime.toString());
+                }
             } else {
                 noEscape = attrType instanceof LongType;
                 values = Arrays.asList(element.getValues());
             }
 
-            if (_nullable && !Comparison.NULL.equals(element.getComparison())
+            if (nullable && !Comparison.NULL.equals(element.getComparison())
                             && !Comparison.NOTNULL.equals(element.getComparison())) {
                 final Group group = new Group().setConnection(Connection.AND);
                 group.add(new Criteria()
-                                .tableIndex(_tableIdx.getIdx())
-                                .colName(_attr.getSqlColNames().get(0))
+                                .tableIndex(tableIdx.getIdx())
+                                .colName(attr.getSqlColNames().get(0))
                                 .comparison(element.getComparison())
                                 .values(new LinkedHashSet<>(values))
                                 .escape(!noEscape)
                                 .connection(Connection.OR));
                 group.add(new Criteria()
-                                .tableIndex(_tableIdx.getIdx())
-                                .colName(_attr.getSqlColNames().get(0))
+                                .tableIndex(tableIdx.getIdx())
+                                .colName(attr.getSqlColNames().get(0))
                                 .comparison(Comparison.NULL)
                                 .connection(Connection.OR));
                 ret = group;
             } else {
                 ret = new Criteria()
-                                .tableIndex(_tableIdx.getIdx())
-                                .colNames(_attr.getSqlColNames())
+                                .tableIndex(tableIdx.getIdx())
+                                .colNames(attr.getSqlColNames())
                                 .comparison(element.getComparison())
                                 .values(new LinkedHashSet<>(values))
                                 .escape(!noEscape)
@@ -453,31 +473,31 @@ public class Filter
         return ret;
     }
 
-    protected String convertLinkValue(final String _val)
+    protected String convertLinkValue(final String val)
     {
         String ret;
-        if (StringUtils.isNumeric(_val)) {
-            ret = _val;
+        if (StringUtils.isNumeric(val)) {
+            ret = val;
         } else {
-            final var instance = Instance.get(_val);
+            final var instance = Instance.get(val);
             if (!instance.isValid()) {
-                LOG.error("Invalid value for where term on LinkType Attribute: {} ", _val);
+                LOG.error("Invalid value for where term on LinkType Attribute: {} ", val);
             }
             ret = String.valueOf(instance.getId());
         }
         return ret;
     }
 
-    public void addTypeCriteria(final SQLSelect _sqlSelect,
-                                final Set<TypeCriterion> _typeCriteria)
+    public void addTypeCriteria(final SQLSelect sqlSelect,
+                                final Set<TypeCriterion> typeCriteria)
     {
-        if (!_typeCriteria.isEmpty()) {
+        if (!typeCriteria.isEmpty()) {
             final ComparatorChain<TypeCriterion> chain = new ComparatorChain<>();
             chain.addComparator(Comparator.comparing(TypeCriterion::getTableIndex));
             chain.addComparator(Comparator.comparing(TypeCriterion::getTypeId));
 
-            final SQLWhere where = _sqlSelect.getWhere();
-            _typeCriteria.stream()
+            final SQLWhere where = sqlSelect.getWhere();
+            typeCriteria.stream()
                             .sorted(chain)
                             .collect(Collectors.groupingBy(TypeCriterion::getTableIndex))
                             .forEach((index,
@@ -506,7 +526,7 @@ public class Filter
                                                     .connection(Connection.OR));
                                     where.section(group);
                                 } else {
-                                    final var fromTable = _sqlSelect.getFromTables().stream()
+                                    final var fromTable = sqlSelect.getFromTables().stream()
                                                     .filter(ft -> (criteria.get(0).getTableIdx().getIdx() == ft
                                                                     .getTableIndex()))
                                                     .findFirst();
@@ -530,10 +550,11 @@ public class Filter
      * @return the selection
      * @throws CacheReloadException the cache reload exception
      */
-    public static Filter get(final IWhere _where,
-                             final Type... _baseTypes)
+    public static Filter get(final EnumSet<StmtFlag> flags,
+                             final IWhere where,
+                             final Type... baseTypes)
         throws CacheReloadException
     {
-        return new Filter().analyze(_where, Arrays.asList(_baseTypes));
+        return new Filter(flags).analyze(where, Arrays.asList(baseTypes));
     }
 }

@@ -160,7 +160,7 @@ public final class Selection
                     final LinkfromElement element = new LinkfromElement().setAttribute(attr).setStartType(currentType);
                     final IFilter filter = ((ILinkfromSelectElement) ele).getFilter();
                     if (filter != null) {
-                        element.setFilter(Filter.get(filter));
+                        element.setFilter(Filter.get(EnumSet.noneOf(StmtFlag.class) , filter));
                     }
                     select.addElement(element);
                     addInstSelect(select, element, attr, currentType);

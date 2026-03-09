@@ -92,11 +92,12 @@ public class QueryPrint
      * @return the filter
      * @throws CacheReloadException the cache reload exception
      */
+    @Override
     public Filter getFilter()
         throws CacheReloadException
     {
         final IWhere where = eqlStmt.getQuery().getWhere();
-        return Filter.get(where, getTypes().toArray(new Type[getTypes().size()]));
+        return Filter.get(getFlags(), where, getTypes().toArray(new Type[getTypes().size()]));
     }
 
     @Override
