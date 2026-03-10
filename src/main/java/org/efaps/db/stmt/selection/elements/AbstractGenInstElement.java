@@ -20,6 +20,7 @@ import java.util.Set;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.db.GeneralInstance;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
@@ -27,7 +28,7 @@ import org.efaps.util.EFapsException;
 
 public abstract class AbstractGenInstElement<T>
     extends AbstractDataElement<T>
-    implements ITypeCriterion
+    implements ICriterion
 {
 
     private final Type type;
@@ -83,16 +84,16 @@ public abstract class AbstractGenInstElement<T>
     }
 
     @Override
-    public void add2TypeCriteria(final SQLSelect sqlSelect,
-                                 final Set<TypeCriterion> typeCriterias)
+    public void add2Criteria(final SQLSelect sqlSelect,
+                             final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
         if (addTypeClause) {
             final TableIdx tableidx = getJoinGenInstTableIdx(sqlSelect);
-            typeCriterias.add(TypeCriterion.of(tableidx, GeneralInstance.ISTYPECOLUMN, getType().getId()));
+            criteria.add(TypeCriterion.of(tableidx, GeneralInstance.ISTYPECOLUMN, getType().getId()));
 
             for (final Type childType : getType().getChildTypes()) {
-                typeCriterias.add(TypeCriterion.of(tableidx, GeneralInstance.ISTYPECOLUMN, childType.getId()));
+                criteria.add(TypeCriterion.of(tableidx, GeneralInstance.ISTYPECOLUMN, childType.getId()));
             }
         }
     }

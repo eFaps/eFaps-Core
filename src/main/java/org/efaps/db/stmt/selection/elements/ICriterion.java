@@ -17,14 +17,14 @@ package org.efaps.db.stmt.selection.elements;
 
 import java.util.Set;
 
-import org.efaps.db.stmt.filter.TypeCriterion;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 
-public interface ITypeCriterion
+public interface ICriterion
 {
 
-    void add2TypeCriteria(final SQLSelect _sqlSelect,
-                          final Set<TypeCriterion> _typeCriteria)
+    void add2Criteria(final SQLSelect sqlSelect,
+                      final Set<AbstractCriterion> criteria)
         throws EFapsException;
 }

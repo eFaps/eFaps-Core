@@ -52,6 +52,7 @@ import org.efaps.db.QueryCache;
 import org.efaps.db.QueryKey;
 import org.efaps.db.QueryValue;
 import org.efaps.db.stmt.delete.AbstractDelete;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.stmt.filter.Filter;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.stmt.print.AbstractPrint;
@@ -63,8 +64,8 @@ import org.efaps.db.stmt.selection.ISelectionProvider;
 import org.efaps.db.stmt.selection.Select;
 import org.efaps.db.stmt.selection.elements.AbstractDataElement;
 import org.efaps.db.stmt.selection.elements.AbstractElement;
+import org.efaps.db.stmt.selection.elements.ICriterion;
 import org.efaps.db.stmt.selection.elements.IOrderable;
-import org.efaps.db.stmt.selection.elements.ITypeCriterion;
 import org.efaps.db.stmt.update.AbstractObjectUpdate;
 import org.efaps.db.stmt.update.AbstractUpdate;
 import org.efaps.db.stmt.update.Insert;
@@ -271,14 +272,14 @@ public class SQLRunner
         throws EFapsException
     {
         count.getStmt();
-        final Set<TypeCriterion> typeCriteria = new HashSet<>();
+        final Set<AbstractCriterion> typeCriteria = new HashSet<>();
         for (final Select select : count.getSelection().getAllSelects()) {
             for (final AbstractElement<?> element : select.getElements()) {
                 if (element instanceof AbstractDataElement) {
                     ((AbstractDataElement<?>) element).append2SQLSelect(sqlSelect);
                 }
-                if (element instanceof ITypeCriterion) {
-                    ((ITypeCriterion) element).add2TypeCriteria(sqlSelect, typeCriteria);
+                if (element instanceof final ICriterion criterionElement) {
+                    criterionElement.add2Criteria(sqlSelect, typeCriteria);
                 }
             }
         }
@@ -309,7 +310,7 @@ public class SQLRunner
             offset = ((IPageable<?>) stmt).getQuery().getOffset();
         }
 
-        final Set<TypeCriterion> typeCriteria = new HashSet<>();
+        final Set<AbstractCriterion> criteria = new HashSet<>();
         int idx = 1;
         boolean isSquash = false;
         for (final Select select : _print.getSelection().getAllSelects()) {
@@ -320,8 +321,8 @@ public class SQLRunner
                 if (element instanceof AbstractDataElement) {
                     ((AbstractDataElement<?>) element).append2SQLSelect(sqlSelect);
                 }
-                if (element instanceof ITypeCriterion) {
-                    ((ITypeCriterion) element).add2TypeCriteria(sqlSelect, typeCriteria);
+                if (element instanceof final ICriterion criterionElement) {
+                    criterionElement.add2Criteria(sqlSelect, criteria);
                 }
             }
 
@@ -360,17 +361,17 @@ public class SQLRunner
         if (sqlSelect.getColumns().size() > 0) {
             if (_print instanceof ObjectPrint) {
                 addWhere4ObjectPrint((ObjectPrint) _print);
-                if (!typeCriteria.isEmpty()) {
-                    Filter.get(_print.getFlags(), null).addTypeCriteria(sqlSelect, typeCriteria);
+                if (!criteria.isEmpty()) {
+                    Filter.get(_print.getFlags(), null).addCriteria(sqlSelect, criteria);
                 }
             } else if (_print instanceof ListPrint) {
                 addWhere4ListPrint((ListPrint) _print);
-                if (!typeCriteria.isEmpty()) {
-                    Filter.get(_print.getFlags(), null).addTypeCriteria(sqlSelect, typeCriteria);
+                if (!criteria.isEmpty()) {
+                    Filter.get(_print.getFlags(), null).addCriteria(sqlSelect, criteria);
                 }
             } else {
-                addBaseTypeCriteria(_print, typeCriteria);
-                addWhere4QueryPrint((QueryPrint) _print, typeCriteria);
+                addBaseTypeCriteria(_print, criteria);
+                addWhere4QueryPrint((QueryPrint) _print, criteria);
             }
             addCompanyCriteria(_print);
             addAssociationCriteria(_print);
@@ -562,7 +563,7 @@ public class SQLRunner
      * @param typeCriteria2
      */
     private void addBaseTypeCriteria(final AbstractPrint _print,
-                                     final Set<TypeCriterion> _typeCriteria)
+                                     final Set<AbstractCriterion> _typeCriteria)
     {
         final List<Type> types = _print.getTypes().stream().collect(Collectors.toList());
         for (final Type type : types) {
@@ -583,11 +584,11 @@ public class SQLRunner
      * @throws CacheReloadException on error
      */
     private void addWhere4QueryPrint(final IFiltered filtered,
-                                     final Set<TypeCriterion> typeCriteria)
+                                     final Set<AbstractCriterion> Criteria)
         throws EFapsException
     {
         final Filter filter = filtered.getFilter();
-        filter.append2SQLSelect(sqlSelect, typeCriteria);
+        filter.append2SQLSelect(sqlSelect, Criteria);
     }
 
     /**

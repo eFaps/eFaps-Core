@@ -64,7 +64,7 @@ public class NestedQuery
         final List<Type> types = TypeUtil.getTypes(nestedQuery.getTypes());
         final SQLSelect sqlSelect = new SQLSelect("N");
 
-        final Set<TypeCriterion> typeCriteria = new HashSet<>();
+        final Set<AbstractCriterion> typeCriteria = new HashSet<>();
         for (final Type type : types) {
             final String tableName = type.getMainTable().getSqlTable();
             final TableIdx tableIdx = sqlSelect.getIndexer().getTableIdx(tableName);

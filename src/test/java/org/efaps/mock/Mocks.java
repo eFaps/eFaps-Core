@@ -121,6 +121,37 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.StringType.getId())
                     .build();
 
+    Type CompanyType = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("CompanyType")
+                    .build();
+
+    SQLTable CompanyTypeSQLTable = SQLTable.builder()
+                    .withName("CompanyTypeSQLTable")
+                    .withSqlTableName("COMPANYTABLE")
+                    .build();
+
+    Attribute CompanyCompanyAttribute = Attribute.builder()
+                    .withName("Company")
+                    .withDataModelTypeId(CompanyType.getId())
+                    .withSqlTableId(CompanyTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.CompanyLinkType.getId())
+                    .build();
+
+    Attribute CompanyIDAttribute = Attribute.builder()
+                    .withName("ID")
+                    .withDataModelTypeId(CompanyType.getId())
+                    .withSqlTableId(CompanyTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute CompanyStringAttribute = Attribute.builder()
+                    .withName("StringAttribute")
+                    .withDataModelTypeId(CompanyType.getId())
+                    .withSqlTableId(CompanyTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
     Type AllAttrType = Type.builder()
                     .withId(AbstractTest.nextLong())
                     .withName("AllAttrType")
@@ -221,6 +252,14 @@ public interface Mocks
                     .withSqlTableId(AllAttrTypeSQLTable.getId())
                     .withAttributeTypeId(IDataModel.LinkType.getId())
                     .withLinkTypeId(SimpleType.getId())
+                    .build();
+
+    Attribute AllAttrLinkAttributeCompany = Attribute.builder()
+                    .withName("AllAttrLinkAttributeCompany")
+                    .withDataModelTypeId(AllAttrType.getId())
+                    .withSqlTableId(AllAttrTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LinkType.getId())
+                    .withLinkTypeId(CompanyType.getId())
                     .build();
 
     Attribute AllAttrLinkAttributeTyped = Attribute.builder()
@@ -494,30 +533,6 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.StringType.getId())
                     .build();
 
-    Type CompanyType = Type.builder()
-                    .withId(AbstractTest.nextLong())
-                    .withName("CompanyType")
-                    .build();
-
-    SQLTable CompanyTypeSQLTable = SQLTable.builder()
-                    .withName("CompanyTypeSQLTable")
-                    .withSqlTableName("COMPANYTABLE")
-                    .build();
-
-    Attribute CompanyCompanyAttribute = Attribute.builder()
-                    .withName("Company")
-                    .withDataModelTypeId(CompanyType.getId())
-                    .withSqlTableId(CompanyTypeSQLTable.getId())
-                    .withAttributeTypeId(IDataModel.CompanyLinkType.getId())
-                    .build();
-
-    Attribute CompanyStringAttribute = Attribute.builder()
-                    .withName("StringAttribute")
-                    .withDataModelTypeId(CompanyType.getId())
-                    .withSqlTableId(CompanyTypeSQLTable.getId())
-                    .withAttributeTypeId(IDataModel.StringType.getId())
-                    .build();
-
     StatusGroup StatusGrp = StatusGroup.builder()
                     .withId(AbstractTest.nextLong())
                     .withName("TestStatusGroup")
@@ -568,11 +583,11 @@ public interface Mocks
                     .withObjectLink(AllEventType.getId())
                     .withInstId(100L, 101L, 102L, 103L, 104L, 105L)
                     .withTypeId(IDataModel.Admin_DataModel_Type_Trigger_DeletePre.getId(),
-                                IDataModel.Admin_DataModel_Type_Trigger_DeleteOverride.getId(),
-                                IDataModel.Admin_DataModel_Type_Trigger_DeletePost.getId(),
-                                IDataModel.Admin_DataModel_Type_Trigger_InsertPre.getId(),
-                                IDataModel.Admin_DataModel_Type_Trigger_InsertOverride.getId(),
-                                IDataModel.Admin_DataModel_Type_Trigger_InsertPost.getId())
+                                    IDataModel.Admin_DataModel_Type_Trigger_DeleteOverride.getId(),
+                                    IDataModel.Admin_DataModel_Type_Trigger_DeletePost.getId(),
+                                    IDataModel.Admin_DataModel_Type_Trigger_InsertPre.getId(),
+                                    IDataModel.Admin_DataModel_Type_Trigger_InsertOverride.getId(),
+                                    IDataModel.Admin_DataModel_Type_Trigger_InsertPost.getId())
                     .withESJP(TriggerEvent.class.getName())
                     .withMethod("event")
                     .build();

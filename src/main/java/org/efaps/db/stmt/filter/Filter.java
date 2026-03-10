@@ -134,13 +134,13 @@ public class Filter
      * @throws EFapsException
      */
     public void append2SQLSelect(final SQLSelect sqlSelect,
-                                 final Set<TypeCriterion> typeCriteria)
+                                 final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
         if (iWhere != null) {
             analyzeTerms(sqlSelect, iWhere.getTerms(), sqlSelect.getWhere().getSections());
         }
-        addTypeCriteria(sqlSelect, typeCriteria);
+        addCriteria(sqlSelect, criteria);
     }
 
     protected void analyzeTerms(final SQLSelect sqlSelect,
@@ -489,26 +489,26 @@ public class Filter
         return ret;
     }
 
-    public void addTypeCriteria(final SQLSelect sqlSelect,
-                                final Set<TypeCriterion> typeCriteria)
+    public void addCriteria(final SQLSelect sqlSelect,
+                                final Set<AbstractCriterion> criteria)
     {
-        if (!typeCriteria.isEmpty()) {
-            final ComparatorChain<TypeCriterion> chain = new ComparatorChain<>();
-            chain.addComparator(Comparator.comparing(TypeCriterion::getTableIndex));
-            chain.addComparator(Comparator.comparing(TypeCriterion::getTypeId));
+        if (!criteria.isEmpty()) {
+            final ComparatorChain<AbstractCriterion> chain = new ComparatorChain<>();
+            chain.addComparator(Comparator.comparing(AbstractCriterion::getTableIndex));
+            chain.addComparator(Comparator.comparing(AbstractCriterion::getTypeId));
 
             final SQLWhere where = sqlSelect.getWhere();
-            typeCriteria.stream()
+            criteria.stream()
                             .sorted(chain)
-                            .collect(Collectors.groupingBy(TypeCriterion::getTableIndex))
+                            .collect(Collectors.groupingBy(AbstractCriterion::getTableIndex))
                             .forEach((index,
-                                      criteria) -> {
-                                final boolean nullable = criteria.stream()
-                                                .filter(TypeCriterion::isNullable)
+                                      groupedCriteria) -> {
+                                final boolean nullable = groupedCriteria.stream()
+                                                .filter(AbstractCriterion::isNullable)
                                                 .findAny()
                                                 .isPresent();
                                 final Set<String> values = new LinkedHashSet<>();
-                                criteria.stream()
+                                groupedCriteria.stream()
                                                 .map(citerion -> String.valueOf(citerion.getTypeId()))
                                                 .forEach(typeId -> values.add(typeId));
 
@@ -516,26 +516,26 @@ public class Filter
                                     final Group group = new Group().setConnection(Connection.AND);
                                     group.add(new Criteria()
                                                     .tableIndex(index.intValue())
-                                                    .colName(criteria.get(0).getSqlColType())
+                                                    .colName(groupedCriteria.get(0).getSqlCol())
                                                     .comparison(Comparison.EQUAL)
                                                     .values(values)
                                                     .connection(Connection.OR));
                                     group.add(new Criteria()
                                                     .tableIndex(index.intValue())
-                                                    .colName(criteria.get(0).getSqlColType())
+                                                    .colName(groupedCriteria.get(0).getSqlCol())
                                                     .comparison(Comparison.EQUAL)
                                                     .connection(Connection.OR));
                                     where.section(group);
                                 } else {
                                     final var fromTable = sqlSelect.getFromTables().stream()
-                                                    .filter(ft -> (criteria.get(0).getTableIdx().getIdx() == ft
+                                                    .filter(ft -> (groupedCriteria.get(0).getTableIdx().getIdx() == ft
                                                                     .getTableIndex()))
                                                     .findFirst();
                                     if (fromTable.isPresent() && fromTable.get() instanceof FromTableLeftJoin) {
-                                        ((FromTableLeftJoin) fromTable.get()).addTypeCriterias(criteria.get(0));
+                                        ((FromTableLeftJoin) fromTable.get()).addCriteria(groupedCriteria.get(0));
                                     } else {
                                         where.addCriteria(index.intValue(),
-                                                        Collections.singletonList(criteria.get(0).getSqlColType()),
+                                                        Collections.singletonList(groupedCriteria.get(0).getSqlCol()),
                                                         Comparison.EQUAL, values, false, Connection.AND).setMain(true);
                                     }
                                 }

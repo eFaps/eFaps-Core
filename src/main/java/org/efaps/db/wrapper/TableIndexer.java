@@ -39,21 +39,21 @@ public class TableIndexer
     /**
      * Gets the table idx.
      *
-     * @param _tableName the table name
-     * @param _keys the key
+     * @param tableName the table name
+     * @param keys the key
      * @return the table idx
      */
-    public TableIdx getTableIdx(final String _tableName,
-                                final String... _keys)
+    public TableIdx getTableIdx(final String tableName,
+                                final String... keys)
     {
         TableIdx ret = null;
-        final String key = _tableName + "-" + StringUtils.join(_keys, "-");
+        final String key = tableName + "-" + StringUtils.join(keys, "-");
         final Optional<TableIdx> val = tableidxs.stream().filter(t -> t.getKey().equals(key)).findFirst();
         if (val.isPresent()) {
             ret = val.get();
             ret.setCreated(false);
         } else {
-            ret = new TableIdx().setCreated(true).setTable(_tableName).setIdx(currentIdx++).setKey(key);
+            ret = new TableIdx().setCreated(true).setTable(tableName).setIdx(currentIdx++).setKey(key);
             tableidxs.add(ret);
         }
         return ret;
@@ -172,8 +172,7 @@ public class TableIndexer
         public boolean equals(final Object _obj)
         {
             final boolean ret;
-            if (_obj instanceof TableIdx) {
-                final TableIdx obj = (TableIdx) _obj;
+            if (_obj instanceof final TableIdx obj) {
                 ret = key.equals(obj.key) && idx == obj.idx && table.equals(obj.table);
             } else {
                 ret = super.equals(_obj);

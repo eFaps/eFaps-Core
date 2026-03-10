@@ -17,51 +17,48 @@ package org.efaps.db.stmt.filter;
 
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 
-public class TypeCriterion
+public class CompanyCriterion
     extends AbstractCriterion
 {
 
-    public TypeCriterion(final TableIdx tableIdx,
-                         final String sqlCol,
-                         final long typeId,
-                         final boolean nullable)
+    private final long companyId;
+
+    public CompanyCriterion(final TableIdx tableIdx,
+                            final String sqlCol,
+                            final long typeId,
+                            final long companyId)
     {
-        super(tableIdx, sqlCol, typeId, nullable);
+        super(tableIdx, sqlCol, typeId, false);
+        this.companyId = companyId;
     }
 
     @Override
     public long getValue()
     {
-        return getTypeId();
+        return companyId;
     }
 
     @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;
-        if (_obj instanceof final TypeCriterion obj) {
+        if (_obj instanceof final CompanyCriterion obj) {
             ret = getSqlCol().equals(obj.getSqlCol())
                             && getTypeId() == obj.getTypeId()
                             && isNullable() == obj.isNullable()
-                            && getTableIdx().equals(obj.getTableIdx());
+                            && getTableIdx().equals(obj.getTableIdx())
+                            && getValue() == obj.getValue();
         } else {
             ret = super.equals(_obj);
         }
         return ret;
     }
 
-    public static TypeCriterion of(final TableIdx _tableIdx,
-                                   final String _sqlColType,
-                                   final long _typeId,
-                                   final boolean _nullable)
+    public static CompanyCriterion of(final TableIdx tableIdx,
+                                      final String sqlCol,
+                                      final long typeId,
+                                      final long companyId)
     {
-        return new TypeCriterion(_tableIdx, _sqlColType, _typeId, _nullable);
-    }
-
-    public static TypeCriterion of(final TableIdx _tableIdx,
-                                   final String _sqlColType,
-                                   final long _typeId)
-    {
-        return new TypeCriterion(_tableIdx, _sqlColType, _typeId, false);
+        return new CompanyCriterion(tableIdx, sqlCol, typeId, companyId);
     }
 }

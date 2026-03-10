@@ -20,6 +20,7 @@ import java.util.Set;
 import org.efaps.admin.datamodel.AttributeSet;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
@@ -30,7 +31,7 @@ import org.efaps.util.EFapsException;
  */
 public class AttributeSetElement
     extends AbstractDataElement<AttributeSetElement>
-    implements IJoinTableIdx, ISquash, ITypeCriterion
+    implements IJoinTableIdx, ISquash, ICriterion
 {
     /** The type. */
     private AttributeSet attributeSet;
@@ -129,12 +130,12 @@ public class AttributeSetElement
     }
 
     @Override
-    public void add2TypeCriteria(final SQLSelect _sqlSelect, final Set<TypeCriterion> _typeCriterias)
+    public void add2Criteria(final SQLSelect sqlSelect, final Set<AbstractCriterion> criterias)
         throws EFapsException
     {
         if (((SQLTable) getTable()).getSqlColType() != null) {
-            final TableIdx tableidx = getJoinTableIdx(_sqlSelect);
-            _typeCriterias.add(TypeCriterion.of(tableidx, ((SQLTable) getTable()).getSqlColType(), getAttributeSet().getId()));
+            final TableIdx tableidx = getJoinTableIdx(sqlSelect);
+            criterias.add(TypeCriterion.of(tableidx, ((SQLTable) getTable()).getSqlColType(), getAttributeSet().getId()));
         }
     }
 }

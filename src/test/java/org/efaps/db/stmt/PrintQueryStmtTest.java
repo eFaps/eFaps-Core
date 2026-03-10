@@ -23,12 +23,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.stmt.selection.Evaluator;
 import org.efaps.eql2.EQL2;
 import org.efaps.eql2.IPrintQueryStatement;
 import org.efaps.mock.MockResult;
 import org.efaps.mock.Mocks;
+import org.efaps.mock.datamodel.Company;
+import org.efaps.mock.datamodel.Company.CompanyBuilder;
 import org.efaps.test.AbstractTest;
 import org.efaps.test.SQLVerify;
 import org.efaps.util.EFapsException;
@@ -41,6 +44,7 @@ import acolyte.jdbc.RowLists;
 public class PrintQueryStmtTest
     extends AbstractTest
 {
+
     @Test
     public void testSimpleType()
         throws EFapsException
@@ -49,13 +53,13 @@ public class PrintQueryStmtTest
                         Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName());
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s select attribute[%s]",
                         Mocks.SimpleType.getName(), Mocks.TestAttribute.getName());
@@ -72,6 +76,83 @@ public class PrintQueryStmtTest
     }
 
     @Test
+    public void testLinktoCompanyType()
+        throws EFapsException
+    {
+        final Company company = new CompanyBuilder()
+                        .withName("Mock Company")
+                        .build();
+        Context.getThreadContext().setCompany(org.efaps.admin.user.Company.get(company.getId()));
+        final String sql = String.format("select T1.%s,T0.ID,T1.ID from %s T0 "
+                        + "left join %s T1 on T0.%s=T1.ID and T1.%s=%s",
+                        Mocks.CompanyStringAttribute.getSQLColumnName(),
+                        Mocks.AllAttrTypeSQLTable.getSqlTableName(),
+                        Mocks.CompanyTypeSQLTable.getSqlTableName(),
+                        Mocks.AllAttrLinkAttributeCompany.getSQLColumnName(),
+                        Mocks.CompanyCompanyAttribute.getSQLColumnName(), company.getId());
+
+        MockResult.builder()
+                        .withSql(sql)
+                        .withResult(RowLists.rowList3(String.class, Long.class, Long.class)
+                                        .append("Val1", 6L, 1L)
+                                        .append("Val2", 8L, 2L)
+                                        .append("Val3", 11L, 3L)
+                                        .asResult())
+                        .build();
+
+        final String stmtStr = String.format("print query type %s select linkto[%s].attribute[%s]",
+                        Mocks.AllAttrType.getName(), Mocks.AllAttrLinkAttributeCompany.getName(),
+                        Mocks.CompanyStringAttribute.getName());
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(stmtStr);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final Evaluator evaluator = printStmt.evaluate();
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val1");
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val2");
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val3");
+        assertFalse(evaluator.next());
+    }
+
+    @Test
+    public void testCompanyType()
+        throws EFapsException
+    {
+        final Company company = new CompanyBuilder()
+                        .withName("Mock Company")
+                        .build();
+        Context.getThreadContext().setCompany(org.efaps.admin.user.Company.get(company.getId()));
+        final String sql = String.format("select T0.%s,T0.ID from %s T0 where T0.%s = %s",
+                        Mocks.CompanyStringAttribute.getSQLColumnName(), Mocks.CompanyTypeSQLTable.getSqlTableName(),
+                        Mocks.CompanyCompanyAttribute.getSQLColumnName(), company.getId());
+
+        MockResult.builder()
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
+
+        final String stmtStr = String.format("print query type %s select attribute[%s]",
+                        Mocks.CompanyType.getName(), Mocks.CompanyStringAttribute.getName());
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(stmtStr);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final Evaluator evaluator = printStmt.evaluate();
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val1");
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val2");
+        assertTrue(evaluator.next());
+        assertEquals(evaluator.get(1), "Val3");
+        assertFalse(evaluator.next());
+    }
+
+
+
+    @Test
     public void testAbstractType()
         throws EFapsException
     {
@@ -80,18 +161,20 @@ public class PrintQueryStmtTest
                         Mocks.AbstractTypeStringAttribute.getSQLColumnName(),
                         Mocks.AbstractTypeSQLTable.getSqlTableName(),
                         Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                            ? Mocks.ChildType1.getId() : Mocks.ChildType2.getId() ,
+                                        ? Mocks.ChildType1.getId()
+                                        : Mocks.ChildType2.getId(),
                         Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                            ? Mocks.ChildType2.getId() : Mocks.ChildType1.getId());
+                                        ? Mocks.ChildType2.getId()
+                                        : Mocks.ChildType1.getId());
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList3(String.class, Long.class, Long.class)
-                            .append("Val1", 6L, Mocks.ChildType1.getId())
-                            .append("Val2", 8L, Mocks.ChildType2.getId())
-                            .append("Val3", 11L, Mocks.ChildType1.getId())
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList3(String.class, Long.class, Long.class)
+                                        .append("Val1", 6L, Mocks.ChildType1.getId())
+                                        .append("Val2", 8L, Mocks.ChildType2.getId())
+                                        .append("Val3", 11L, Mocks.ChildType1.getId())
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s select attribute[%s]",
                         Mocks.AbstractType.getName(), Mocks.AbstractTypeStringAttribute.getName());
@@ -118,13 +201,13 @@ public class PrintQueryStmtTest
                         Mocks.StatusGrp.getStatusId("Open"));
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s where %s = \"Open\" select attribute[%s]",
                         Mocks.StatusType.getName(), _statusFilter, Mocks.StatusStringAttribute.getName());
@@ -149,13 +232,13 @@ public class PrintQueryStmtTest
                         Mocks.StatusGrp.getStatusId("Closed"));
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s where %s in (\"Open\",\"Closed\") "
                         + "select attribute[%s]",
@@ -180,13 +263,13 @@ public class PrintQueryStmtTest
                         Mocks.StatusGrp.getStatusId("Open"));
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s where %s = %s select attribute[%s]",
                         Mocks.StatusType.getName(),
@@ -214,13 +297,13 @@ public class PrintQueryStmtTest
                         Mocks.StatusGrp.getStatusId("Closed"));
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s where %s in (%s,%s) select attribute[%s]",
                         Mocks.StatusType.getName(),
@@ -249,20 +332,20 @@ public class PrintQueryStmtTest
                         Mocks.StatusGrp.getStatusId("Closed"));
 
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList2(String.class, Long.class)
-                            .append("Val1", 6L)
-                            .append("Val2", 8L)
-                            .append("Val3", 11L)
-                            .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList2(String.class, Long.class)
+                                        .append("Val1", 6L)
+                                        .append("Val2", 8L)
+                                        .append("Val3", 11L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s where %s in (\"Open\",%s) select attribute[%s]",
                         Mocks.StatusType.getName(),
                         _statusFilter,
                         Mocks.StatusGrp.getStatusId("Closed"),
                         Mocks.StatusStringAttribute.getName());
-System.out.println(stmtStr);
+        System.out.println(stmtStr);
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(stmtStr);
 
         final Evaluator evaluator = PrintStmt.get(stmt)
@@ -278,12 +361,12 @@ System.out.println(stmtStr);
         final String sql = String.format("select T0.ID from %s T0",
                         Mocks.SimpleTypeSQLTable.getSqlTableName());
         MockResult.builder()
-            .withSql(sql)
-            .withResult(RowLists.rowList1(Long.class)
-                .append(4L)
-                .append(8L)
-                .asResult())
-            .build();
+                        .withSql(sql)
+                        .withResult(RowLists.rowList1(Long.class)
+                                        .append(4L)
+                                        .append(8L)
+                                        .asResult())
+                        .build();
 
         final String stmtStr = String.format("print query type %s select exec %s as barcode",
                         Mocks.SimpleType.getName(), org.efaps.mock.esjp.SimpleSelect.class.getName());
@@ -303,7 +386,8 @@ System.out.println(stmtStr);
     }
 
     @Test(description = "Test for different single where", dataProvider = "SingleWhereDataProvider")
-    public void testSingleWheres(final String _stmt, final String _sql)
+    public void testSingleWheres(final String _stmt,
+                                 final String _sql)
         throws EFapsException
     {
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
@@ -314,7 +398,8 @@ System.out.println(stmtStr);
     }
 
     @Test(description = "Test for different two where", dataProvider = "TwoWhereDataProvider")
-    public void testTwoWheres(final String _stmt, final String _sql)
+    public void testTwoWheres(final String _stmt,
+                              final String _sql)
         throws EFapsException
     {
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
@@ -325,7 +410,8 @@ System.out.println(stmtStr);
     }
 
     @Test(description = "Test specific stmts", dataProvider = "SpecificDataProvider")
-    public void testSpecific(final String _stmt, final String _sql)
+    public void testSpecific(final String _stmt,
+                             final String _sql)
         throws EFapsException
     {
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
@@ -336,7 +422,8 @@ System.out.println(stmtStr);
     }
 
     @Test(description = "Test for order by", dataProvider = "orderByDataProvider")
-    public void testOrderBy(final String _stmt, final String _sql)
+    public void testOrderBy(final String _stmt,
+                            final String _sql)
         throws EFapsException
     {
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
@@ -347,7 +434,8 @@ System.out.println(stmtStr);
     }
 
     @Test(description = "Test for limit", dataProvider = "limitDataProvider")
-    public void testLimit(final String _stmt, final String _sql)
+    public void testLimit(final String _stmt,
+                          final String _sql)
         throws EFapsException
     {
         final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(_stmt);
@@ -364,15 +452,15 @@ System.out.println(stmtStr);
 
         ret.add(new Object[] {
                         String.format("""
-                            print query type %s\s\s\
-                            where attribute[%s] like "F988" or attribute[%s] like "F999" \
-                            select attribute[%s]""",
+                                        print query type %s\s\s\
+                                        where attribute[%s] like "F988" or attribute[%s] like "F999" \
+                                        select attribute[%s]""",
                                         Mocks.TypedType.getName(), Mocks.TypedTypeTestAttr.getName(),
                                         Mocks.TypedTypeTestAttr.getName(), Mocks.TypedTypeTestAttr.getName()),
                         String.format("""
-                            select T0.%s,T0.ID,T0.TYPE\s\
-                            from %s T0\s\
-                            where (T0.%s like 'F988' or T0.%s like 'F999') and T0.TYPE = %s""",
+                                        select T0.%s,T0.ID,T0.TYPE\s\
+                                        from %s T0\s\
+                                        where (T0.%s like 'F988' or T0.%s like 'F999') and T0.TYPE = %s""",
                                         Mocks.TypedTypeTestAttr.getSQLColumnName(),
                                         Mocks.AbstractTypeSQLTable.getSqlTableName(),
                                         Mocks.TypedTypeTestAttr.getSQLColumnName(),
@@ -381,15 +469,15 @@ System.out.println(stmtStr);
         });
         ret.add(new Object[] {
                         String.format("""
-                            print query type %s\s\s\
-                            where attribute[%s] like "F988" or attribute[%s] like "F999" \
-                            select attribute[%s]""",
+                                        print query type %s\s\s\
+                                        where attribute[%s] like "F988" or attribute[%s] like "F999" \
+                                        select attribute[%s]""",
                                         Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(),
                                         Mocks.TestAttribute.getName(), Mocks.TestAttribute.getName()),
                         String.format("""
-                            select T0.%s,T0.ID\s\
-                            from %s T0\s\
-                            where T0.%s like 'F988' or T0.%s like 'F999'""",
+                                        select T0.%s,T0.ID\s\
+                                        from %s T0\s\
+                                        where T0.%s like 'F988' or T0.%s like 'F999'""",
                                         Mocks.TestAttribute.getSQLColumnName(),
                                         Mocks.SimpleTypeSQLTable.getSqlTableName(),
                                         Mocks.TestAttribute.getSQLColumnName(),
@@ -409,7 +497,8 @@ System.out.println(stmtStr);
         return ret.iterator();
     }
 
-    public static List<String> getStmtParts2() {
+    public static List<String> getStmtParts2()
+    {
 
         final List<String> ret = new ArrayList<>();
         for (final String val : getStmtWheres(Mocks.TestAttribute.getName())) {
@@ -427,11 +516,13 @@ System.out.println(stmtStr);
         return ret;
     }
 
-    public static List<String> getSQLParts2() {
+    public static List<String> getSQLParts2()
+    {
         final List<String> ret = new ArrayList<>();
         for (final String val : getSQLWheres(Mocks.TestAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID from %s T0 where T0.%s and T0.%s",
-                        Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName(), val, val));
+                            Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName(), val,
+                            val));
         }
         for (final String val : getSQLWheres(Mocks.TypedTypeTestAttr.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID,T0.TYPE from %s T0 where T0.%s and T0.%s and T0.TYPE = %s",
@@ -445,9 +536,11 @@ System.out.println(stmtStr);
                             Mocks.AbstractTypeSQLTable.getSqlTableName(),
                             val, val,
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType1.getId() : Mocks.ChildType2.getId(),
+                                            ? Mocks.ChildType1.getId()
+                                            : Mocks.ChildType2.getId(),
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType2.getId() : Mocks.ChildType1.getId()));
+                                            ? Mocks.ChildType2.getId()
+                                            : Mocks.ChildType1.getId()));
         }
         return ret;
     }
@@ -463,7 +556,8 @@ System.out.println(stmtStr);
         return ret.iterator();
     }
 
-    public static List<String> getSQLParts1() {
+    public static List<String> getSQLParts1()
+    {
         final List<String> ret = new ArrayList<>();
         for (final String element : getSQLWheres(Mocks.TestAttribute.getSQLColumnName())) {
             ret.add(String.format("select T0.%s,T0.ID from %s T0 where T0.%s", Mocks.TestAttribute.getSQLColumnName(),
@@ -480,14 +574,17 @@ System.out.println(stmtStr);
                             Mocks.AbstractTypeSQLTable.getSqlTableName(),
                             element,
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType1.getId() : Mocks.ChildType2.getId(),
+                                            ? Mocks.ChildType1.getId()
+                                            : Mocks.ChildType2.getId(),
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType2.getId() : Mocks.ChildType1.getId()));
+                                            ? Mocks.ChildType2.getId()
+                                            : Mocks.ChildType1.getId()));
         }
         return ret;
     }
 
-    public static List<String> getStmtParts1() {
+    public static List<String> getStmtParts1()
+    {
 
         final List<String> ret = new ArrayList<>();
         for (final String element : getStmtWheres(Mocks.TestAttribute.getName())) {
@@ -505,7 +602,8 @@ System.out.println(stmtStr);
         return ret;
     }
 
-    public static List<String> getSQLWheres(final String _colName) {
+    public static List<String> getSQLWheres(final String _colName)
+    {
         final List<String> ret = new ArrayList<>();
         ret.add(String.format("%s = 'ABC'", _colName));
         ret.add(String.format("%s = 'ABC'", _colName));
@@ -520,7 +618,8 @@ System.out.println(stmtStr);
         return ret;
     }
 
-    public static List<String> getStmtWheres(final String _attributeName) {
+    public static List<String> getStmtWheres(final String _attributeName)
+    {
         final List<String> ret = new ArrayList<>();
         ret.add(String.format("%s == 'ABC'", _attributeName));
         ret.add(String.format("%s eq 'ABC'", _attributeName));
@@ -536,11 +635,12 @@ System.out.println(stmtStr);
     }
 
     @DataProvider(name = "status")
-    static public Object[][] statusDataProvider() {
+    static public Object[][] statusDataProvider()
+    {
         return new Object[][] {
-            new Object[] { "status" },
-            new Object[] { Mocks.StatusAttribute.getName() },
-            new Object[] { "attribute["+  Mocks.StatusAttribute.getName() + "]" },
+                        new Object[] { "status" },
+                        new Object[] { Mocks.StatusAttribute.getName() },
+                        new Object[] { "attribute[" + Mocks.StatusAttribute.getName() + "]" },
         };
     }
 
@@ -558,18 +658,20 @@ System.out.println(stmtStr);
         final List<String> stmts = new ArrayList<>();
         final List<String> sqls = new ArrayList<>();
         final List<String[]> orderbys = new ArrayList<>();
-        orderbys.add(new String[]{"1", ""});
-        orderbys.add(new String[]{"SomeKey", ""});
-        orderbys.add(new String[]{"1 asc", ""});
-        orderbys.add(new String[]{"SomeKey asc", ""});
-        orderbys.add(new String[]{"1 desc", "desc"});
-        orderbys.add(new String[]{"SomeKey desc", "desc"});
+        orderbys.add(new String[] { "1", "" });
+        orderbys.add(new String[] { "SomeKey", "" });
+        orderbys.add(new String[] { "1 asc", "" });
+        orderbys.add(new String[] { "SomeKey asc", "" });
+        orderbys.add(new String[] { "1 desc", "desc" });
+        orderbys.add(new String[] { "SomeKey desc", "desc" });
 
         for (final String[] values : orderbys) {
             stmts.add(String.format("print query type %s select attribute[%s] as SomeKey order by %s",
                             Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), values[0]));
-            sqls.add(String.format("select T0.%s,T0.ID from %s T0  order by T0.%s %s", Mocks.TestAttribute.getSQLColumnName(),
-                            Mocks.SimpleTypeSQLTable.getSqlTableName(), Mocks.TestAttribute.getSQLColumnName(), values[1]).trim());
+            sqls.add(String.format("select T0.%s,T0.ID from %s T0  order by T0.%s %s",
+                            Mocks.TestAttribute.getSQLColumnName(),
+                            Mocks.SimpleTypeSQLTable.getSqlTableName(), Mocks.TestAttribute.getSQLColumnName(),
+                            values[1]).trim());
         }
         for (final String[] values : orderbys) {
             stmts.add(String.format("print query type %s select attribute[%s] as SomeKey order by %s",
@@ -585,9 +687,11 @@ System.out.println(stmtStr);
                             Mocks.AbstractTypeStringAttribute.getSQLColumnName(),
                             Mocks.AbstractTypeSQLTable.getSqlTableName(),
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType1.getId() : Mocks.ChildType2.getId(),
+                                            ? Mocks.ChildType1.getId()
+                                            : Mocks.ChildType2.getId(),
                             Mocks.ChildType1.getId() < Mocks.ChildType2.getId()
-                                ? Mocks.ChildType2.getId() : Mocks.ChildType1.getId(),
+                                            ? Mocks.ChildType2.getId()
+                                            : Mocks.ChildType1.getId(),
                             Mocks.AbstractTypeStringAttribute.getSQLColumnName(), values[1]).trim());
         }
 
@@ -604,40 +708,46 @@ System.out.println(stmtStr);
         final List<String> stmts = new ArrayList<>();
         final List<String> sqls = new ArrayList<>();
         final List<String[]> orderbys = new ArrayList<>();
-        orderbys.add(new String[]{"1", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key1", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"2", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key2", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"3", "T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key3", "T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"4", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key4", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"5", "T0." + Mocks.AllAttrStringAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key5", "T0." + Mocks.AllAttrStringAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"1, 2", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key1, Key2", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"2,3,5", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + ", T0." + Mocks.AllAttrStringAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key2,Key3,Key5", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + ", T0." + Mocks.AllAttrStringAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"4,1,3", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"Key4,Key1,Key3", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName()});
-        orderbys.add(new String[]{"4 desc,1 asc,3 desc", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
-                + " desc, T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + " desc"});
-        orderbys.add(new String[]{"Key4 desc,Key1 asc,Key3 desc", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
-                + " desc, T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
-                + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + " desc"});
+        orderbys.add(new String[] { "1", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key1", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "2", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key2", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "3", "T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key3", "T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "4", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key4", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "5", "T0." + Mocks.AllAttrStringAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key5", "T0." + Mocks.AllAttrStringAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "1, 2", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key1, Key2", "T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "2,3,5", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + ", T0."
+                        + Mocks.AllAttrStringAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key2,Key3,Key5", "T0." + Mocks.AllAttrDecimalAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + ", T0."
+                        + Mocks.AllAttrStringAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "4,1,3", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() + ", T0."
+                        + Mocks.AllAttrIntegerAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "Key4,Key1,Key3", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrDateAttribute.getSQLColumnName() + ", T0."
+                        + Mocks.AllAttrIntegerAttribute.getSQLColumnName() });
+        orderbys.add(new String[] { "4 desc,1 asc,3 desc", "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
+                        + " desc, T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
+                        + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + " desc" });
+        orderbys.add(new String[] { "Key4 desc,Key1 asc,Key3 desc",
+                        "T0." + Mocks.AllAttrLongAttribute.getSQLColumnName()
+                                        + " desc, T0." + Mocks.AllAttrDateAttribute.getSQLColumnName()
+                                        + ", T0." + Mocks.AllAttrIntegerAttribute.getSQLColumnName() + " desc" });
 
         for (final String[] values : orderbys) {
-            stmts.add(String.format("""
-                print query type %s select attribute[%s] as Key1, attribute[%s] as Key2, attribute[%s] as Key3,\s\
-                attribute[%s] as Key4, attribute[%s] as Key5\s\
-                order by %s""",
+            stmts.add(String.format(
+                            """
+                                            print query type %s select attribute[%s] as Key1, attribute[%s] as Key2, attribute[%s] as Key3,\s\
+                                            attribute[%s] as Key4, attribute[%s] as Key5\s\
+                                            order by %s""",
                             Mocks.AllAttrType.getName(), Mocks.AllAttrDateAttribute.getName(),
                             Mocks.AllAttrDecimalAttribute.getName(), Mocks.AllAttrIntegerAttribute.getName(),
                             Mocks.AllAttrLongAttribute.getName(), Mocks.AllAttrStringAttribute.getName(),
@@ -675,7 +785,7 @@ System.out.println(stmtStr);
         final List<String> sqls = new ArrayList<>();
 
         stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s] ",
-                            Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
         sqls.add(String.format("select T0.%s,T0.ID from %s T0  limit 100 offset 200",
                         Mocks.TestAttribute.getSQLColumnName(), Mocks.SimpleTypeSQLTable.getSqlTableName()));
 
@@ -683,75 +793,75 @@ System.out.println(stmtStr);
                         Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), Mocks.RelationType.getName(),
                         Mocks.RealtionFromLinkAttribute.getName()));
         sqls.add(String.format("""
-            select T0.%s,T1.ID,T0.ID from %s T0 left join %s T1 on T0.ID=T1.%s  \
-            where T0.ID in ( \
-            select L0.ID from  %s L0  limit 100 offset 200\
-            )""",
-                    Mocks.TestAttribute.getSQLColumnName(),
-                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
-                    Mocks.RelationTypeSQLTable.getSqlTableName(),
-                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
-                    Mocks.SimpleTypeSQLTable.getSqlTableName()));
+                        select T0.%s,T1.ID,T0.ID from %s T0 left join %s T1 on T0.ID=T1.%s  \
+                        where T0.ID in ( \
+                        select L0.ID from  %s L0  limit 100 offset 200\
+                        )""",
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.RelationTypeSQLTable.getSqlTableName(),
+                        Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName()));
 
-
-        stmts.add(String.format("print query type %s limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid order by 1",
+        stmts.add(String.format(
+                        "print query type %s limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid order by 1",
                         Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), Mocks.RelationType.getName(),
                         Mocks.RealtionFromLinkAttribute.getName()));
         sqls.add(String.format("""
-            select T0.%s,T1.ID,T0.ID \
-            from %s T0 \
-            left join %s T1 on T0.ID=T1.%s  \
-            where T0.ID in ( \
-            select L0.ID from  %s L0  order by L0.%s limit 100 offset 200\
-            ) \
-            order by T0.%s""",
-                    Mocks.TestAttribute.getSQLColumnName(),
-                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
-                    Mocks.RelationTypeSQLTable.getSqlTableName(),
-                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
-                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
-                    Mocks.TestAttribute.getSQLColumnName(),
-                    Mocks.TestAttribute.getSQLColumnName()));
+                        select T0.%s,T1.ID,T0.ID \
+                        from %s T0 \
+                        left join %s T1 on T0.ID=T1.%s  \
+                        where T0.ID in ( \
+                        select L0.ID from  %s L0  order by L0.%s limit 100 offset 200\
+                        ) \
+                        order by T0.%s""",
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.RelationTypeSQLTable.getSqlTableName(),
+                        Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.TestAttribute.getSQLColumnName()));
 
         stmts.add(String.format("print query type %s where attribute[%s] like \"F988\"  "
                         + "limit 100 offset 200 select attribute[%s], linkfrom[%s#%s].oid order by 1",
-                        Mocks.SimpleType.getName(),Mocks.TestAttribute.getName(), Mocks.TestAttribute.getName(),
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName(), Mocks.TestAttribute.getName(),
                         Mocks.RelationType.getName(), Mocks.RealtionFromLinkAttribute.getName()));
         sqls.add(String.format("""
-            select T0.%1$s,T1.ID,T0.ID \
-            from %2$s T0 \
-            left join %3$s T1 on T0.ID=T1.%4$s \
-            where T0.%1$s like 'F988' and T0.ID in ( \
-            select L0.ID from  %2$s L0 where L0.%1$s like 'F988' order by L0.%1$s limit 100 offset 200\
-            ) \
-            order by T0.%1$s""",
-                    Mocks.TestAttribute.getSQLColumnName(),
-                    Mocks.SimpleTypeSQLTable.getSqlTableName(),
-                    Mocks.RelationTypeSQLTable.getSqlTableName(),
-                    Mocks.RealtionFromLinkAttribute.getSQLColumnName()));
-
+                        select T0.%1$s,T1.ID,T0.ID \
+                        from %2$s T0 \
+                        left join %3$s T1 on T0.ID=T1.%4$s \
+                        where T0.%1$s like 'F988' and T0.ID in ( \
+                        select L0.ID from  %2$s L0 where L0.%1$s like 'F988' order by L0.%1$s limit 100 offset 200\
+                        ) \
+                        order by T0.%1$s""",
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.RelationTypeSQLTable.getSqlTableName(),
+                        Mocks.RealtionFromLinkAttribute.getSQLColumnName()));
 
         stmts.add(String.format("""
-            print query type %1$s where attribute[%2$s] like "F988" \
-            and ( attribute[%3$s] in ( query type %4$s ) or attribute[%3$s] in ( 44,55 )) \
-            limit 100 offset 200 select attribute[%2$s], linkfrom[%5$s#%6$s].oid order by 1""",
+                        print query type %1$s where attribute[%2$s] like "F988" \
+                        and ( attribute[%3$s] in ( query type %4$s ) or attribute[%3$s] in ( 44,55 )) \
+                        limit 100 offset 200 select attribute[%2$s], linkfrom[%5$s#%6$s].oid order by 1""",
                         Mocks.AllAttrType.getName(),
                         Mocks.AllAttrStringAttribute.getName(),
                         Mocks.AllAttrLongAttribute.getName(),
                         Mocks.SimpleType.getName(),
                         Mocks.RelationType.getName(),
                         Mocks.RealtionFromLinkAttribute.getName()));
-        sqls.add(String.format("""
-            select T0.%1$s,T1.ID,T0.ID \
-            from %2$s T0 left join %3$s T1 on T0.ID=T1.%4$s \
-            where T0.%1$s like 'F988' and (T0.%5$s in ( select N0.ID from T_DEMO N0 ) or T0.%5$s in (44,55)) \
-            and T0.ID in ( select L0.ID from  %2$s L0 where L0.%1$s like 'F988' and (L0.%5$s in ( select N0.ID from T_DEMO N0 ) or L0.%5$s in (44,55)) order by L0.%1$s limit 100 offset 200) \
-            order by T0.%1$s""",
-                    Mocks.AllAttrStringAttribute.getSQLColumnName(),
-                    Mocks.AllAttrTypeSQLTable.getSqlTableName(),
-                    Mocks.RelationTypeSQLTable.getSqlTableName(),
-                    Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
-                    Mocks.AllAttrLongAttribute.getSQLColumnName()));
+        sqls.add(String.format(
+                        """
+                                        select T0.%1$s,T1.ID,T0.ID \
+                                        from %2$s T0 left join %3$s T1 on T0.ID=T1.%4$s \
+                                        where T0.%1$s like 'F988' and (T0.%5$s in ( select N0.ID from T_DEMO N0 ) or T0.%5$s in (44,55)) \
+                                        and T0.ID in ( select L0.ID from  %2$s L0 where L0.%1$s like 'F988' and (L0.%5$s in ( select N0.ID from T_DEMO N0 ) or L0.%5$s in (44,55)) order by L0.%1$s limit 100 offset 200) \
+                                        order by T0.%1$s""",
+                        Mocks.AllAttrStringAttribute.getSQLColumnName(),
+                        Mocks.AllAttrTypeSQLTable.getSqlTableName(),
+                        Mocks.RelationTypeSQLTable.getSqlTableName(),
+                        Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
+                        Mocks.AllAttrLongAttribute.getSQLColumnName()));
 
         final List<Object[]> ret = new ArrayList<>();
         final Iterator<String> sqlIter = sqls.iterator();
