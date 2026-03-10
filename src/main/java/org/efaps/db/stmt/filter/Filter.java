@@ -37,6 +37,7 @@ import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Status;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.datamodel.attributetype.CreatedType;
+import org.efaps.admin.datamodel.attributetype.DateTimeType;
 import org.efaps.admin.datamodel.attributetype.IAttributeType;
 import org.efaps.admin.datamodel.attributetype.LinkType;
 import org.efaps.admin.datamodel.attributetype.LongType;
@@ -73,7 +74,7 @@ import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ctc.wstx.shaded.msv_core.datatype.xsd.DateTimeType;
+
 
 /**
  * The Class Filter.

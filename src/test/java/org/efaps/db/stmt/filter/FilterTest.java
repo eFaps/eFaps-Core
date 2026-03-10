@@ -23,8 +23,13 @@ import static org.testng.Assert.assertEquals;
 
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.db.stmt.selection.elements.NameElement;
+import org.efaps.db.wrapper.SQLWhere.Criteria;
+import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql2.IWhereElement;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.mock.Mocks;
 import org.efaps.test.AbstractTest;
+import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.reflect.Whitebox;
@@ -96,6 +101,44 @@ public class FilterTest
         final String instance = String.valueOf("notaninstance");
         final Filter filter = new Filter();
         assertEquals(filter.convertLinkValue(instance), "0");
+    }
+
+    @Test
+    public void testDateTimeConversion()
+        throws EFapsException
+    {
+
+        final Attribute attr = Attribute.get(Mocks.AllAttrDateTimeAttribute.getId());
+
+        final var factory = org.efaps.eql2.impl.Eql2Factory.init();
+        final IWhereElement element = factory.createWhereElement();
+        element.addValue("2026-03-10T08:49:42.969-05:00");
+
+        final var tableIdx = new TableIdx();
+
+        final Filter filter = new Filter();
+        final Criteria section =  (Criteria) filter.attribute(null, attr, null, element, tableIdx, false);
+        final var convertedValue = section.getValues().iterator().next();
+        assertEquals(convertedValue, "2026-03-10T13:49:42.969Z");
+    }
+
+    @Test
+    public void testDateTimeConversionRaw()
+        throws EFapsException
+    {
+
+        final Attribute attr = Attribute.get(Mocks.AllAttrDateTimeAttribute.getId());
+
+        final var factory = org.efaps.eql2.impl.Eql2Factory.init();
+        final IWhereElement element = factory.createWhereElement();
+        element.addValue("2026-03-10T08:49:42.969-05:00");
+
+        final var tableIdx = new TableIdx();
+
+        final Filter filter = new Filter(StmtFlag.RAWDATETIME);
+        final Criteria section =  (Criteria) filter.attribute(null, attr, null, element, tableIdx, false);
+        final var convertedValue = section.getValues().iterator().next();
+        assertEquals(convertedValue, "2026-03-10T08:49:42.969-05:00");
     }
 
 }
