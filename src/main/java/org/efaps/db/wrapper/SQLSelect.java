@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import org.efaps.db.Context;
 import org.efaps.db.search.section.AbstractQSection;
-import org.efaps.db.stmt.filter.TypeCriterion;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.wrapper.SQLWhere.Criteria;
 import org.efaps.db.wrapper.SQLWhere.Group;
 import org.efaps.util.EFapsException;
@@ -783,7 +783,7 @@ public class SQLSelect
 
         private final SQLWhere where;
 
-        private TypeCriterion[] typeCriterias;
+        private AbstractCriterion[] criteria;
 
         /**
          * Instantiates a new from table left join.
@@ -878,18 +878,18 @@ public class SQLSelect
                                 .append(columnNames[i])
                                 .append(Context.getDbType().getColumnQuote());
             }
-            if (typeCriterias != null) {
+            if (criteria != null) {
                 _cmd.append(" ").append(Context.getDbType().getSQLPart(SQLPart.AND)).append(" ")
                                 .append(getTablePrefix()).append(getTableIndex()).append('.')
                                 .append(Context.getDbType().getColumnQuote())
-                                .append(typeCriterias[0].getSqlColType())
+                                .append(criteria[0].getSqlCol())
                                 .append(Context.getDbType().getColumnQuote());
-                if (typeCriterias.length == 1) {
+                if (criteria.length == 1) {
                     _cmd.append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
-                                    .append(typeCriterias[0].getTypeId());
+                                    .append(criteria[0].getValue());
                 } else {
-                    final var typeIds = Arrays.asList(typeCriterias).stream()
-                                    .map(crit -> String.valueOf(crit.getTypeId()))
+                    final var typeIds = Arrays.asList(criteria).stream()
+                                    .map(crit -> String.valueOf(crit.getValue()))
                                     .collect(Collectors.joining(","));
                     _cmd.append(Context.getDbType().getSQLPart(SQLPart.IN))
                                     .append(Context.getDbType().getSQLPart(SQLPart.PARENTHESIS_OPEN))
@@ -913,9 +913,9 @@ public class SQLSelect
             return SQLPart.LEFT;
         }
 
-        public void addTypeCriterias(final TypeCriterion... typeCriterias)
+        public void addCriteria(final AbstractCriterion... criteria)
         {
-            this.typeCriterias = typeCriterias;
+            this.criteria = criteria;
         }
     }
 

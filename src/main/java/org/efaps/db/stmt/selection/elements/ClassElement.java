@@ -21,6 +21,7 @@ import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.Classification;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.db.stmt.filter.AbstractCriterion;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
@@ -31,7 +32,7 @@ import org.efaps.util.EFapsException;
  */
 public class ClassElement
     extends AbstractDataElement<ClassElement>
-    implements IJoinTableIdx, ITypeCriterion
+    implements IJoinTableIdx, ICriterion
 {
     /** The type. */
     private Classification classification;
@@ -134,12 +135,12 @@ public class ClassElement
     }
 
     @Override
-    public void add2TypeCriteria(final SQLSelect _sqlSelect, final Set<TypeCriterion> _typeCriterias)
+    public void add2Criteria(final SQLSelect sqlSelect, final Set<AbstractCriterion> criterias)
         throws EFapsException
     {
         if (getClassification().getMainTable().getSqlColType() != null) {
-            final TableIdx tableidx = getJoinTableIdx(_sqlSelect);
-            _typeCriterias.add(TypeCriterion.of(tableidx, ((SQLTable) getTable()).getSqlColType(), getClassification().getId()));
+            final TableIdx tableidx = getJoinTableIdx(sqlSelect);
+            criterias.add(TypeCriterion.of(tableidx, ((SQLTable) getTable()).getSqlColType(), getClassification().getId()));
         }
     }
 }

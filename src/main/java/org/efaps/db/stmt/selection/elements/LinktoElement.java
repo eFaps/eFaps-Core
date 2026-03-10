@@ -15,10 +15,21 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.SQLTable;
+import org.efaps.admin.datamodel.attributetype.ConsortiumLinkType;
+import org.efaps.admin.user.Company;
+import org.efaps.db.Context;
+import org.efaps.db.stmt.filter.AbstractCriterion;
+import org.efaps.db.stmt.filter.CompanyCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
 
@@ -27,8 +38,9 @@ import org.efaps.util.cache.CacheReloadException;
  */
 public class LinktoElement
     extends AbstractDataElement<LinktoElement>
-    implements IJoinTableIdx
+    implements IJoinTableIdx, ICriterion
 {
+
     /** The attribute. */
     private Attribute attribute;
 
@@ -66,7 +78,8 @@ public class LinktoElement
         throws EFapsException
     {
         if (getTable() instanceof SQLTable) {
-            // evaluated if the attribute that is used as the base for the linkTo is inside a child table
+            // evaluated if the attribute that is used as the base for the
+            // linkTo is inside a child table
             TableIdx childIdx = null;
             if (attribute != null && !getTable().equals(evalMainTable())) {
                 final TableIdx mainTableIdx;
@@ -121,12 +134,12 @@ public class LinktoElement
     /**
      * Gets the join table idx.
      *
-     * @param _sqlSelect the sql select
+     * @param sqlSelect the sql select
      * @return the join table idx
      * @throws EFapsException the e faps exception
      */
     @Override
-    public TableIdx getJoinTableIdx(final SQLSelect _sqlSelect)
+    public TableIdx getJoinTableIdx(final SQLSelect sqlSelect)
         throws EFapsException
     {
         final String linktoColName = attribute.getSqlColNames().get(0);
@@ -134,11 +147,11 @@ public class LinktoElement
         final String joinTableName = joinAttr.getTable().getSqlTable();
         TableIdx ret;
         if (getPrevious() != null && getPrevious() instanceof IJoinTableIdx) {
-            final var previousIdx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(_sqlSelect);
-            ret = _sqlSelect.getIndexer().getTableIdx(joinTableName, previousIdx.getKey(), linktoColName);
+            final var previousIdx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(sqlSelect);
+            ret = sqlSelect.getIndexer().getTableIdx(joinTableName, previousIdx.getKey(), linktoColName);
         } else {
             final var tableName = ((SQLTable) getTable()).getSqlTable();
-            ret = _sqlSelect.getIndexer().getTableIdx(joinTableName, tableName, linktoColName);
+            ret = sqlSelect.getIndexer().getTableIdx(joinTableName, tableName, linktoColName);
         }
         return ret;
     }
@@ -154,5 +167,45 @@ public class LinktoElement
     public String getPath()
     {
         return super.getPath() + "->" + getAttribute().getName();
+    }
+
+    @Override
+    public void add2Criteria(final SQLSelect sqlSelect,
+                             final Set<AbstractCriterion> criteria)
+        throws EFapsException
+    {
+        final Attribute joinAttr = getAttribute().getLink().getAttribute("ID");
+        if (joinAttr.getParent().isCompanyDependent()) {
+
+            final boolean isConsortium = joinAttr.getParent().getCompanyAttribute()
+                            .getAttributeType().getClassRepr().equals(ConsortiumLinkType.class);
+            Set<Long> ids;
+            if (has(StmtFlag.COMPANYINDEPENDENT)) {
+                if (isConsortium) {
+                    ids = Context.getThreadContext().getPerson().getCompanies().stream()
+                                    .flatMap(compId -> {
+                                        try {
+                                            return Company.get(compId).getConsortiums().stream();
+                                        } catch (final CacheReloadException e) {
+                                            return Arrays.asList(compId).stream();
+                                        }
+                                    }).collect(Collectors.toSet());
+                } else {
+                    ids = Context.getThreadContext().getPerson().getCompanies();
+                }
+            } else if (isConsortium) {
+                ids = Context.getThreadContext().getCompany().getConsortiums();
+            } else {
+                ids = new HashSet<>();
+                ids.add(Context.getThreadContext().getCompany().getId());
+            }
+
+            for (final var id : ids) {
+                criteria.add(CompanyCriterion.of(getJoinTableIdx(sqlSelect),
+                                joinAttr.getParent().getCompanyAttribute().getSqlColNames().get(0),
+                                joinAttr.getParentId(), id));
+            }
+        }
+
     }
 }
