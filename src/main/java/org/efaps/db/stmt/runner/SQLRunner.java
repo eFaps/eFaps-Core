@@ -19,14 +19,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,14 +33,11 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.dbutils.handlers.ArrayListHandler;
 import org.efaps.admin.access.user.AccessCache;
-import org.efaps.admin.common.Association;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.AttributeType;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
-import org.efaps.admin.datamodel.attributetype.ConsortiumLinkType;
 import org.efaps.admin.index.Queue;
-import org.efaps.admin.user.Company;
 import org.efaps.db.Context;
 import org.efaps.db.GeneralInstance;
 import org.efaps.db.ICacheDefinition;
@@ -53,6 +47,8 @@ import org.efaps.db.QueryKey;
 import org.efaps.db.QueryValue;
 import org.efaps.db.stmt.delete.AbstractDelete;
 import org.efaps.db.stmt.filter.AbstractCriterion;
+import org.efaps.db.stmt.filter.AssociationCriterion;
+import org.efaps.db.stmt.filter.CompanyCriterion;
 import org.efaps.db.stmt.filter.Filter;
 import org.efaps.db.stmt.filter.TypeCriterion;
 import org.efaps.db.stmt.print.AbstractPrint;
@@ -82,8 +78,6 @@ import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.SQLSelect.SQLSelectPart;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.db.wrapper.SQLWhere;
-import org.efaps.db.wrapper.SQLWhere.Criteria;
-import org.efaps.db.wrapper.SQLWhere.Group;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
 import org.efaps.eql.builder.Converter;
 import org.efaps.eql2.Comparison;
@@ -272,21 +266,21 @@ public class SQLRunner
         throws EFapsException
     {
         count.getStmt();
-        final Set<AbstractCriterion> typeCriteria = new HashSet<>();
+        final Set<AbstractCriterion> criteria = new HashSet<>();
         for (final Select select : count.getSelection().getAllSelects()) {
             for (final AbstractElement<?> element : select.getElements()) {
                 if (element instanceof AbstractDataElement) {
                     ((AbstractDataElement<?>) element).append2SQLSelect(sqlSelect);
                 }
                 if (element instanceof final ICriterion criterionElement) {
-                    criterionElement.add2Criteria(sqlSelect, typeCriteria);
+                    criterionElement.add2Criteria(sqlSelect, criteria);
                 }
             }
         }
-        addBaseTypeCriteria(count, typeCriteria);
-        addWhere4QueryPrint(count, typeCriteria);
-        addCompanyCriteria(count);
-        addAssociationCriteria(count);
+        addBaseTypeCriteria(count, criteria);
+        addBaseCompanyCriteria(count, criteria);
+        addBaseAssociationCriteria(count, criteria);
+        addWhere4QueryPrint(count, criteria);
     }
 
     /**
@@ -359,6 +353,8 @@ public class SQLRunner
         }
 
         if (sqlSelect.getColumns().size() > 0) {
+            addBaseCompanyCriteria(_print, criteria);
+            addBaseAssociationCriteria(_print, criteria);
             if (_print instanceof ObjectPrint) {
                 addWhere4ObjectPrint((ObjectPrint) _print);
                 if (!criteria.isEmpty()) {
@@ -373,8 +369,6 @@ public class SQLRunner
                 addBaseTypeCriteria(_print, criteria);
                 addWhere4QueryPrint((QueryPrint) _print, criteria);
             }
-            addCompanyCriteria(_print);
-            addAssociationCriteria(_print);
         }
         sqlSelect.setSquash(isSquash);
     }
@@ -410,75 +404,20 @@ public class SQLRunner
      * @param _print the print
      * @throws EFapsException the e faps exception
      */
-    private void addCompanyCriteria(final AbstractPrint _print)
+    private void addBaseCompanyCriteria(final AbstractPrint print,
+                                        final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
-        final Map<TableIdx, CompanyCriteria> companyCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
+        final List<Type> types = print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
                         .collect(Collectors.toList());
         for (final Type type : types) {
             if (type.isCompanyDependent()) {
                 final TableIdx tableIdx = evalTableIdx(type.getCompanyAttribute());
-                final String columnName = type.getCompanyAttribute().getSqlColNames().get(0);
-                final var isChild = type.getCompanyAttribute().getTable().getMainTable() != null;
-                companyCriterias.put(tableIdx, new CompanyCriteria(columnName, type.getId(), isChild));
+                criteria.addAll(CompanyCriterion.eval(tableIdx, type.getCompanyAttribute(),
+                                print.has(StmtFlag.COMPANYINDEPENDENT)));
             }
         }
-        if (!companyCriterias.isEmpty()) {
-            if (Context.getThreadContext().getCompany() == null) {
-                throw new EFapsException(SQLRunner.class, "noCompany");
-            }
-            final SQLWhere where = sqlSelect.getWhere();
-            for (final Entry<TableIdx, CompanyCriteria> entry : companyCriterias.entrySet()) {
-                final boolean isConsortium = Type.get(entry.getValue().id).getCompanyAttribute()
-                                .getAttributeType().getClassRepr().equals(ConsortiumLinkType.class);
-                List<String> ids;
-                if (_print.has(StmtFlag.COMPANYINDEPENDENT)) {
-                    if (isConsortium) {
-                        ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                                        .map(compId -> {
-                                            try {
-                                                return Company.get(compId).getConsortiums().stream();
-                                            } catch (final CacheReloadException e) {
-                                                return Arrays.asList(compId).stream();
-                                            }
-                                        })
-                                        .map(String::valueOf)
-                                        .collect(Collectors.toList());
-                    } else {
-                        ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                                        .map(String::valueOf)
-                                        .collect(Collectors.toList());
-                    }
-                } else if (isConsortium) {
-                    ids = Context.getThreadContext().getCompany().getConsortiums().stream()
-                                    .map(String::valueOf)
-                                    .collect(Collectors.toList());
-                } else {
-                    ids = new ArrayList<>();
-                    ids.add(String.valueOf(Context.getThreadContext().getCompany().getId()));
-                }
-                final Criteria criteria = new Criteria()
-                                .tableIndex(entry.getKey().getIdx())
-                                .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
-                                .comparison(ids.size() > 1 ? Comparison.IN : Comparison.EQUAL)
-                                .values(new LinkedHashSet<>(ids))
-                                .escape(false)
-                                .connection(Connection.AND);
-                if (entry.getValue().childTable) {
-                    final var group = new Group().setConnection(Connection.AND);
-                    group.add(criteria);
-                    group.add(new Criteria()
-                                    .tableIndex(entry.getKey().getIdx())
-                                    .colNames(Collections.singletonList(entry.getValue().sqlColCompany))
-                                    .comparison(Comparison.NULL)
-                                    .connection(Connection.OR));
-                    where.section(group);
-                } else {
-                    where.section(criteria.setMain(true));
-                }
-            }
-        }
+
     }
 
     /**
@@ -487,49 +426,16 @@ public class SQLRunner
      * @param _print the print
      * @throws EFapsException the e faps exception
      */
-    private void addAssociationCriteria(final AbstractPrint _print)
+    private void addBaseAssociationCriteria(final AbstractPrint print, final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
-        final Map<TableIdx, AssociationCriteria> associationCriterias = new HashMap<>();
-        final List<Type> types = _print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
+        new HashMap<>();
+        final List<Type> types = print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
                         .collect(Collectors.toList());
         for (final Type type : types) {
             if (type.hasAssociation()) {
                 final TableIdx tableIdx = evalTableIdx(type.getAssociationAttribute());
-                final String columnName = type.getAssociationAttribute().getSqlColNames().get(0);
-                associationCriterias.put(tableIdx, new AssociationCriteria(columnName, type.getId()));
-            }
-        }
-        if (!associationCriterias.isEmpty()) {
-            if (Context.getThreadContext().getCompany() == null) {
-                throw new EFapsException(SQLRunner.class, "noCompany");
-            }
-            final SQLWhere where = sqlSelect.getWhere();
-            for (final Entry<TableIdx, AssociationCriteria> entry : associationCriterias.entrySet()) {
-                final List<String> ids = new ArrayList<>();
-                if (_print.has(StmtFlag.COMPANYINDEPENDENT)) {
-                    for (final Long companyId : Context.getThreadContext().getPerson().getCompanies()) {
-                        final var association = Association.evaluate(Type.get(entry.getValue().typeId), companyId);
-                        if (association == null) {
-                            LOG.debug("No valid Association was found");
-                            ids.add("0");
-                        } else {
-                            ids.add(String.valueOf(association.getId()));
-                        }
-                    }
-                } else {
-                    final Association association = Association.evaluate(Type.get(entry.getValue().typeId));
-                    if (association == null) {
-                        LOG.debug("No valid Association was found");
-                        ids.add("0");
-                    } else {
-                        ids.add(String.valueOf(association.getId()));
-                    }
-                }
-                where.addCriteria(entry.getKey().getIdx(),
-                                Collections.singletonList(entry.getValue().sqlColAssociation),
-                                ids.size() > 1 ? Comparison.IN : Comparison.EQUAL, new LinkedHashSet<>(ids),
-                                false, Connection.AND).setMain(true);
+                criteria.addAll(AssociationCriterion.eval(tableIdx, type.getAssociationAttribute(), print.has(StmtFlag.COMPANYINDEPENDENT)));
             }
         }
     }
@@ -811,97 +717,5 @@ public class SQLRunner
             ret = true;
         }
         return ret;
-    }
-
-    /**
-     * The Class TypeCriteria.
-     */
-    private static class CompanyCriteria
-    {
-
-        /** The sql column for company. */
-        private final String sqlColCompany;
-
-        /** The id. */
-        private final long id;
-
-        private final boolean childTable;
-
-        /**
-         * Instantiates a new type criteria.
-         *
-         * @param _sqlColCopmany the sql column for company id
-         * @param _id the id
-         */
-        CompanyCriteria(final String _sqlColCompany,
-                        final long _id,
-                        final boolean childTable)
-        {
-            sqlColCompany = _sqlColCompany;
-            id = _id;
-            this.childTable = childTable;
-        }
-
-        @Override
-        public boolean equals(final Object _obj)
-        {
-            final boolean ret;
-            if (_obj instanceof final CompanyCriteria obj) {
-                ret = sqlColCompany.equals(obj.sqlColCompany) && id == obj.id;
-            } else {
-                ret = super.equals(_obj);
-            }
-            return ret;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return sqlColCompany.hashCode() + Long.valueOf(id).hashCode();
-        }
-    }
-
-    /**
-     * The Class TypeCriteria.
-     */
-    private static class AssociationCriteria
-    {
-
-        /** The sql column for company. */
-        private final String sqlColAssociation;
-
-        /** The id. */
-        private final long typeId;
-
-        /**
-         * Instantiates a new type criteria.
-         *
-         * @param _sqlColCopmany the sql column for company id
-         * @param _id the id
-         */
-        AssociationCriteria(final String _sqlColAssociation,
-                            final long _typeId)
-        {
-            sqlColAssociation = _sqlColAssociation;
-            typeId = _typeId;
-        }
-
-        @Override
-        public boolean equals(final Object _obj)
-        {
-            final boolean ret;
-            if (_obj instanceof final AssociationCriteria obj) {
-                ret = sqlColAssociation.equals(obj.sqlColAssociation) && typeId == obj.typeId;
-            } else {
-                ret = super.equals(_obj);
-            }
-            return ret;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return sqlColAssociation.hashCode() + Long.valueOf(typeId).hashCode();
-        }
     }
 }

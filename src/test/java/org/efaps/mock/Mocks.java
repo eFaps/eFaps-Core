@@ -152,6 +152,37 @@ public interface Mocks
                     .withAttributeTypeId(IDataModel.StringType.getId())
                     .build();
 
+    Type AssociationType = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("AssociationType")
+                    .build();
+
+    SQLTable AssociationTypeSQLTable = SQLTable.builder()
+                    .withName("AssociationTypeSQLTable")
+                    .withSqlTableName("ASSOCIATIONTABLE")
+                    .build();
+
+    Attribute AssociationAssociationAttribute = Attribute.builder()
+                    .withName("Association")
+                    .withDataModelTypeId(AssociationType.getId())
+                    .withSqlTableId(AssociationTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.AssociationLinkType.getId())
+                    .build();
+
+    Attribute AssociationIDAttribute = Attribute.builder()
+                    .withName("ID")
+                    .withDataModelTypeId(AssociationType.getId())
+                    .withSqlTableId(AssociationTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute AssociationStringAttribute = Attribute.builder()
+                    .withName("StringAttribute")
+                    .withDataModelTypeId(AssociationType.getId())
+                    .withSqlTableId(AssociationTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
     Type AllAttrType = Type.builder()
                     .withId(AbstractTest.nextLong())
                     .withName("AllAttrType")

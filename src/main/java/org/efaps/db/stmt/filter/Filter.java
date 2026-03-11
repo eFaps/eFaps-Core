@@ -495,7 +495,7 @@ public class Filter
         if (!criteria.isEmpty()) {
             final ComparatorChain<AbstractCriterion> chain = new ComparatorChain<>();
             chain.addComparator(Comparator.comparing(AbstractCriterion::getTableIndex));
-            chain.addComparator(Comparator.comparing(AbstractCriterion::getTypeId));
+            chain.addComparator(Comparator.comparing(AbstractCriterion::getValue));
 
             final SQLWhere where = sqlSelect.getWhere();
             criteria.stream()
@@ -509,8 +509,8 @@ public class Filter
                                                 .isPresent();
                                 final Set<String> values = new LinkedHashSet<>();
                                 groupedCriteria.stream()
-                                                .map(citerion -> String.valueOf(citerion.getTypeId()))
-                                                .forEach(typeId -> values.add(typeId));
+                                                .map(citerion -> String.valueOf(citerion.getValue()))
+                                                .forEach(value -> values.add(value));
 
                                 if (nullable) {
                                     final Group group = new Group().setConnection(Connection.AND);
