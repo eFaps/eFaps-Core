@@ -37,8 +37,10 @@ import org.slf4j.LoggerFactory;
  * The Class QueryPrint.
  */
 public class QueryPrint
-    extends AbstractPrint implements IFiltered
+    extends AbstractPrint
+    implements IFiltered
 {
+
     private static final Logger LOG = LoggerFactory.getLogger(QueryPrint.class);
 
     /** The eql stmt. */
@@ -47,15 +49,16 @@ public class QueryPrint
     /**
      * Instantiates a new object print.
      *
-     * @param _eqlStmt the eql stmt
+     * @param eqlStmt the eql stmt
      * @throws CacheReloadException on error
      */
-    public QueryPrint(final IPrintQueryStatement _eqlStmt, final EnumSet<StmtFlag> _flags)
+    public QueryPrint(final IPrintQueryStatement eqlStmt,
+                      final EnumSet<StmtFlag> flags)
         throws CacheReloadException
     {
-        super(_flags);
-        eqlStmt = _eqlStmt;
-        for (final String typeStr : ((PrintQueryStatement) eqlStmt).getQuery().getTypes()) {
+        super(flags);
+        this.eqlStmt = eqlStmt;
+        for (final String typeStr : ((PrintQueryStatement) this.eqlStmt).getQuery().getTypes()) {
             final Type type;
             if (UUIDUtil.isUUID(typeStr)) {
                 type = Type.get(UUID.fromString(typeStr));
@@ -64,14 +67,14 @@ public class QueryPrint
             }
             if (type.isAbstract()) {
                 type.getChildTypes()
-                    .stream()
-                    .filter(t -> !t.isAbstract())
-                    .forEach(this::addType);
+                                .stream()
+                                .filter(t -> !t.isAbstract())
+                                .forEach(this::addType);
             } else {
                 addType(type);
             }
         }
-        LOG.debug("Instanciated: {}", this);
+        LOG.debug("Instanciated QueryPrint for: {}", this.eqlStmt.eqlStmt());
     }
 
     @Override
