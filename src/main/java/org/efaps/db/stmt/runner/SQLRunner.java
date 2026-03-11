@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -429,7 +428,6 @@ public class SQLRunner
     private void addBaseAssociationCriteria(final AbstractPrint print, final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
-        new HashMap<>();
         final List<Type> types = print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
                         .collect(Collectors.toList());
         for (final Type type : types) {
@@ -468,10 +466,10 @@ public class SQLRunner
      * @param _print the print
      * @param typeCriteria2
      */
-    private void addBaseTypeCriteria(final AbstractPrint _print,
-                                     final Set<AbstractCriterion> _typeCriteria)
+    private void addBaseTypeCriteria(final AbstractPrint print,
+                                     final Set<AbstractCriterion> criteria)
     {
-        final List<Type> types = _print.getTypes().stream().collect(Collectors.toList());
+        final List<Type> types = print.getTypes().stream().collect(Collectors.toList());
         for (final Type type : types) {
             final String tableName = type.getMainTable().getSqlTable();
             final TableIdx tableIdx = sqlSelect.getIndexer().getTableIdx(tableName);
@@ -479,7 +477,7 @@ public class SQLRunner
                 sqlSelect.from(tableIdx.getTable(), tableIdx.getIdx());
             }
             if (type.getMainTable().getSqlColType() != null) {
-                _typeCriteria.add(TypeCriterion.of(tableIdx, type.getMainTable().getSqlColType(), type.getId()));
+                criteria.add(TypeCriterion.of(tableIdx, type.getMainTable().getSqlColType(), type.getId()));
             }
         }
     }
