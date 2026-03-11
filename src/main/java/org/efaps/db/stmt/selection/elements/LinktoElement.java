@@ -15,17 +15,12 @@
  */
 package org.efaps.db.stmt.selection.elements;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.SQLTable;
-import org.efaps.admin.datamodel.attributetype.ConsortiumLinkType;
-import org.efaps.admin.user.Company;
-import org.efaps.db.Context;
 import org.efaps.db.stmt.filter.AbstractCriterion;
+import org.efaps.db.stmt.filter.AssociationCriterion;
 import org.efaps.db.stmt.filter.CompanyCriterion;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
@@ -176,36 +171,12 @@ public class LinktoElement
     {
         final Attribute joinAttr = getAttribute().getLink().getAttribute("ID");
         if (joinAttr.getParent().isCompanyDependent()) {
-
-            final boolean isConsortium = joinAttr.getParent().getCompanyAttribute()
-                            .getAttributeType().getClassRepr().equals(ConsortiumLinkType.class);
-            Set<Long> ids;
-            if (has(StmtFlag.COMPANYINDEPENDENT)) {
-                if (isConsortium) {
-                    ids = Context.getThreadContext().getPerson().getCompanies().stream()
-                                    .flatMap(compId -> {
-                                        try {
-                                            return Company.get(compId).getConsortiums().stream();
-                                        } catch (final CacheReloadException e) {
-                                            return Arrays.asList(compId).stream();
-                                        }
-                                    }).collect(Collectors.toSet());
-                } else {
-                    ids = Context.getThreadContext().getPerson().getCompanies();
-                }
-            } else if (isConsortium) {
-                ids = Context.getThreadContext().getCompany().getConsortiums();
-            } else {
-                ids = new HashSet<>();
-                ids.add(Context.getThreadContext().getCompany().getId());
-            }
-
-            for (final var id : ids) {
-                criteria.add(CompanyCriterion.of(getJoinTableIdx(sqlSelect),
-                                joinAttr.getParent().getCompanyAttribute().getSqlColNames().get(0),
-                                joinAttr.getParentId(), id));
-            }
+            criteria.addAll(CompanyCriterion.eval(getJoinTableIdx(sqlSelect),
+                            joinAttr.getParent().getCompanyAttribute(), has(StmtFlag.COMPANYINDEPENDENT)));
         }
-
+        if (joinAttr.getParent().hasAssociation()) {
+            criteria.addAll(AssociationCriterion.eval(getJoinTableIdx(sqlSelect),
+                            joinAttr.getParent().getAssociationAttribute(), has(StmtFlag.COMPANYINDEPENDENT)));
+        }
     }
 }

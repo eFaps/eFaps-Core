@@ -22,7 +22,6 @@ import org.efaps.mock.Mocks;
 public class CI
 {
 
-
     public static final _SimpleType SimpleType = new _SimpleType(Mocks.SimpleType.getUuid().toString());
 
     public static class _SimpleType
@@ -36,7 +35,6 @@ public class CI
 
         public final CIAttribute TestAttr = new CIAttribute(this, Mocks.TestAttribute.getName());
     }
-
 
     public static final _TypedType TypedType = new _TypedType(Mocks.TypedType.getUuid().toString());
 
@@ -73,7 +71,6 @@ public class CI
         public final CIAttribute DateTimeAttribute = new CIAttribute(this, Mocks.AllAttrDateTimeAttribute.getName());
         public final CIAttribute RateAttribute = new CIAttribute(this, Mocks.AllAttrRateAttribute.getName());
 
-
     }
 
     public static final _CompanyType CompanyType = new _CompanyType(Mocks.CompanyType.getUuid().toString());
@@ -86,8 +83,26 @@ public class CI
         {
             super(_uuid);
         }
+
         public final CIAttribute CompanyAttribute = new CIAttribute(this, Mocks.CompanyCompanyAttribute.getName());
         public final CIAttribute StringAttribute = new CIAttribute(this, Mocks.CompanyStringAttribute.getName());
+    }
+
+    public static final _AssociationType AssociationType = new _AssociationType(
+                    Mocks.AssociationType.getUuid().toString());
+
+    public static class _AssociationType
+        extends CIType
+    {
+
+        protected _AssociationType(final String _uuid)
+        {
+            super(_uuid);
+        }
+
+        public final CIAttribute AssociationAttribute = new CIAttribute(this,
+                        Mocks.AssociationAssociationAttribute.getName());
+        public final CIAttribute StringAttribute = new CIAttribute(this, Mocks.AssociationStringAttribute.getName());
     }
 
 }

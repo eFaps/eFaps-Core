@@ -129,6 +129,14 @@ public interface IDataModel
                     .withCreateUpdate(true)
                     .build();
 
+    AttributeType AssociationLinkType = AttributeType.builder()
+                    .withName("AssociationLink")
+                    .withUuid(UUID.fromString("0d296eba-0c1e-4b78-a2e3-01b1f4991cfe"))
+                    .withClassName("org.efaps.admin.datamodel.attributetype.AssociationLinkType")
+                    .withClassNameUI("org.efaps.admin.datamodel.ui.UserUI")
+                    .withCreateUpdate(true)
+                    .build();
+
     AttributeType StatusType = AttributeType.builder()
                     .withName("StatusType")
                     .withUuid(UUID.fromString("0161bcdb-45e9-4839-a709-3a1c56f8a76a"))
@@ -354,4 +362,78 @@ public interface IDataModel
                     .withUuid(CIAdminCommon.SystemConfigurationLink.uuid)
                     .build();
 
+    Type Admin_Common_AssociationDefinition = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(CIAdminCommon.AssociationDefinition.uuid)
+                    .withName("Admin_Common_AssociationDefinition")
+                    .build();
+
+    SQLTable Admin_Common_AssociationDefinitionSQLTable = SQLTable.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(UUID.fromString("e21148d5-2cb2-4003-ac7f-6b9be31d053e"))
+                    .withName("Admin_Common_AssociationDefinitionSQLTable")
+                    .withSqlTableName("T_CMASSOCDEF")
+                    .build();
+
+    Attribute Admin_Common_AssociationDefinition_CompanyLink = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefinition.CompanyLink.name)
+                    .withDataModelTypeId(Admin_Common_AssociationDefinition.getId())
+                    .withSqlTableId(Admin_Common_AssociationDefinitionSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute Admin_Common_AssociationDefinition_AssociationLink = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefinition.AssociationLink.name)
+                    .withDataModelTypeId(Admin_Common_AssociationDefinition.getId())
+                    .withSqlTableId(Admin_Common_AssociationDefinitionSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Type Admin_Common_AssociationAbstract = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(CIAdminCommon.AssociationAbstract.uuid)
+                    .withName("Admin_Common_AssociationAbstract")
+                    .build();
+
+    SQLTable Admin_Common_AssociationSQLTable = SQLTable.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(UUID.fromString("5aa1e305-7978-4797-95d5-50dc9311da98"))
+                    .withName("Admin_Common_AssociationSQLTable")
+                    .withSqlTableName("T_CMASSOC")
+                    .build();
+
+    Attribute Admin_Common_AssociationAbstract_ID = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefault.ID.name)
+                    .withDataModelTypeId(Admin_Common_AssociationAbstract.getId())
+                    .withSqlTableId(Admin_Common_AssociationSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute Admin_Common_AssociationAbstract_Name = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefault.Name.name)
+                    .withDataModelTypeId(Admin_Common_AssociationAbstract.getId())
+                    .withSqlTableId(Admin_Common_AssociationSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
+    Attribute Admin_Common_AssociationAbstract_UUID = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefault.UUID.name)
+                    .withDataModelTypeId(Admin_Common_AssociationAbstract.getId())
+                    .withSqlTableId(Admin_Common_AssociationSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.StringType.getId())
+                    .build();
+
+    Type Admin_Common_AssociationDefault = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(CIAdminCommon.AssociationDefault.uuid)
+                    .withName("Admin_Common_AssociationDefault")
+                    .withParentTypeId(Admin_Common_AssociationAbstract.getId())
+                    .build();
+
+    Attribute Admin_Common_AssociationDefault_ID = Attribute.builder()
+                    .withName(CIAdminCommon.AssociationDefault.ID.name)
+                    .withDataModelTypeId(Admin_Common_AssociationDefault.getId())
+                    .withSqlTableId(Admin_Common_AssociationSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
 }

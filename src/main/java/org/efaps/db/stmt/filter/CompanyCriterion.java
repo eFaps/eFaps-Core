@@ -15,7 +15,18 @@
  */
 package org.efaps.db.stmt.filter;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.efaps.admin.datamodel.Attribute;
+import org.efaps.admin.datamodel.attributetype.ConsortiumLinkType;
+import org.efaps.admin.user.Company;
+import org.efaps.db.Context;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
+import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 
 public class CompanyCriterion
     extends AbstractCriterion
@@ -60,5 +71,42 @@ public class CompanyCriterion
                                       final long companyId)
     {
         return new CompanyCriterion(tableIdx, sqlCol, typeId, companyId);
+    }
+
+    public static Set<CompanyCriterion> eval(final TableIdx tableIdx,
+                                             final Attribute companyAttribute,
+                                             boolean companyIndependent)
+        throws EFapsException
+    {
+        final Set<CompanyCriterion> criteria = new HashSet<>();
+        final boolean isConsortium = companyAttribute
+                        .getAttributeType().getClassRepr().equals(ConsortiumLinkType.class);
+        Set<Long> ids;
+        if (companyIndependent) {
+            if (isConsortium) {
+                ids = Context.getThreadContext().getPerson().getCompanies().stream()
+                                .flatMap(compId -> {
+                                    try {
+                                        return Company.get(compId).getConsortiums().stream();
+                                    } catch (final CacheReloadException e) {
+                                        return Arrays.asList(compId).stream();
+                                    }
+                                }).collect(Collectors.toSet());
+            } else {
+                ids = Context.getThreadContext().getPerson().getCompanies();
+            }
+        } else if (isConsortium) {
+            ids = Context.getThreadContext().getCompany().getConsortiums();
+        } else {
+            ids = new HashSet<>();
+            ids.add(Context.getThreadContext().getCompany().getId());
+        }
+
+        for (final var id : ids) {
+            criteria.add(CompanyCriterion.of(tableIdx,
+                            companyAttribute.getSqlColNames().get(0),
+                            companyAttribute.getParentId(), id));
+        }
+        return criteria;
     }
 }

@@ -269,12 +269,12 @@ public class Association
         }
     }
 
-    private static Long loadDefault(final long _companyId)
+    private static Long loadDefault(final long companyId)
         throws EFapsException
     {
         Long ret = null;
         final QueryBuilder attrQueryBldr = new QueryBuilder(CIAdminCommon.AssociationDefinition);
-        attrQueryBldr.addWhereAttrEqValue(CIAdminCommon.AssociationDefinition.CompanyLink, _companyId);
+        attrQueryBldr.addWhereAttrEqValue(CIAdminCommon.AssociationDefinition.CompanyLink, companyId);
 
         final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.AssociationDefault);
         queryBldr.addWhereAttrInQuery(CIAdminCommon.AssociationDefault.ID,

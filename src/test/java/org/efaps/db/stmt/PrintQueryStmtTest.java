@@ -150,8 +150,6 @@ public class PrintQueryStmtTest
         assertFalse(evaluator.next());
     }
 
-
-
     @Test
     public void testAbstractType()
         throws EFapsException

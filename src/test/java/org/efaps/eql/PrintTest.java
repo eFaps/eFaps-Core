@@ -27,6 +27,7 @@ import org.efaps.eql.builder.Selectables;
 import org.efaps.eql2.StmtFlag;
 import org.efaps.eql2.bldr.AbstractSelectables;
 import org.efaps.mock.Mocks;
+import org.efaps.mock.datamodel.Association;
 import org.efaps.mock.datamodel.CI;
 import org.efaps.mock.datamodel.Company;
 import org.efaps.mock.datamodel.Company.CompanyBuilder;
@@ -251,8 +252,8 @@ public class PrintTest
                         Mocks.CompanyStringAttribute.getSQLColumnName(),
                         Mocks.CompanyTypeSQLTable.getSqlTableName(),
                         Mocks.CompanyCompanyAttribute.getSQLColumnName(),
-                        company.getId(),
-                        company2.getId());
+                        company.getId() < company2.getId() ? company.getId() : company2.getId(),
+                        company2.getId() < company.getId() ? company.getId() : company2.getId() );
 
         final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
         EQL.builder()
@@ -265,6 +266,38 @@ public class PrintTest
             .execute();
         verify.verify();
     }
+
+    @Test
+    public void testPrintRespectsAssociation()
+        throws EFapsException
+    {
+        final var company = new CompanyBuilder()
+                        .withName("Mock Company")
+                        .build();
+        final var association = Association.builder()
+            .withCompanyId(company.getId())
+            .withName("TestAssociation")
+            .build();
+
+        Context.getThreadContext().setCompany(org.efaps.admin.user.Company.get(company.getId()));
+
+        final String sql = String.format("select T0.%s,T0.ID from %s T0 where T0.%s = %s" ,
+                        Mocks.AssociationStringAttribute.getSQLColumnName(),
+                        Mocks.AssociationTypeSQLTable.getSqlTableName(),
+                        Mocks.AssociationAssociationAttribute.getSQLColumnName(),
+                        association.getId());
+
+        final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
+        EQL.builder()
+            .print()
+            .query(CI.AssociationType)
+            .select()
+            .attribute(CI.AssociationType.StringAttribute)
+            .stmt()
+            .execute();
+        verify.verify();
+    }
+
 
     @Test
     public void testLinkto()
