@@ -18,7 +18,6 @@ package org.efaps.db.stmt.filter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -29,7 +28,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.comparators.ComparatorChain;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.Classification;
@@ -490,55 +488,57 @@ public class Filter
     }
 
     public void addCriteria(final SQLSelect sqlSelect,
-                                final Set<AbstractCriterion> criteria)
+                            final Set<AbstractCriterion> criteria)
     {
         if (!criteria.isEmpty()) {
-            final ComparatorChain<AbstractCriterion> chain = new ComparatorChain<>();
-            chain.addComparator(Comparator.comparing(AbstractCriterion::getTableIndex));
-            chain.addComparator(Comparator.comparing(AbstractCriterion::getValue));
-
             final SQLWhere where = sqlSelect.getWhere();
             criteria.stream()
-                            .sorted(chain)
-                            .collect(Collectors.groupingBy(AbstractCriterion::getTableIndex))
-                            .forEach((index,
-                                      groupedCriteria) -> {
-                                final boolean nullable = groupedCriteria.stream()
-                                                .filter(AbstractCriterion::isNullable)
-                                                .findAny()
-                                                .isPresent();
-                                final Set<String> values = new LinkedHashSet<>();
-                                groupedCriteria.stream()
-                                                .map(citerion -> String.valueOf(citerion.getValue()))
-                                                .forEach(value -> values.add(value));
+                            .collect(Collectors.groupingBy(AbstractCriterion::getClass,
+                                            Collectors.groupingBy(AbstractCriterion::getTableIndex)))
+                            .forEach((identity,
+                                      tableIndexMap) -> {
+                                tableIndexMap.forEach((index,
+                                                       groupedCriteria) -> {
+                                    final boolean nullable = groupedCriteria.stream()
+                                                    .filter(AbstractCriterion::isNullable)
+                                                    .findAny()
+                                                    .isPresent();
+                                    final Set<String> values = new LinkedHashSet<>();
+                                    groupedCriteria.stream()
+                                                    .map(citerion -> String.valueOf(citerion.getValue()))
+                                                    .sorted()
+                                                    .forEach(value -> values.add(value));
 
-                                if (nullable) {
-                                    final Group group = new Group().setConnection(Connection.AND);
-                                    group.add(new Criteria()
-                                                    .tableIndex(index.intValue())
-                                                    .colName(groupedCriteria.get(0).getSqlCol())
-                                                    .comparison(Comparison.EQUAL)
-                                                    .values(values)
-                                                    .connection(Connection.OR));
-                                    group.add(new Criteria()
-                                                    .tableIndex(index.intValue())
-                                                    .colName(groupedCriteria.get(0).getSqlCol())
-                                                    .comparison(Comparison.EQUAL)
-                                                    .connection(Connection.OR));
-                                    where.section(group);
-                                } else {
-                                    final var fromTable = sqlSelect.getFromTables().stream()
-                                                    .filter(ft -> (groupedCriteria.get(0).getTableIdx().getIdx() == ft
-                                                                    .getTableIndex()))
-                                                    .findFirst();
-                                    if (fromTable.isPresent() && fromTable.get() instanceof FromTableLeftJoin) {
-                                        ((FromTableLeftJoin) fromTable.get()).addCriteria(groupedCriteria.get(0));
+                                    if (nullable) {
+                                        final Group group = new Group().setConnection(Connection.AND);
+                                        group.add(new Criteria()
+                                                        .tableIndex(index.intValue())
+                                                        .colName(groupedCriteria.get(0).getSqlCol())
+                                                        .comparison(Comparison.EQUAL)
+                                                        .values(values)
+                                                        .connection(Connection.OR));
+                                        group.add(new Criteria()
+                                                        .tableIndex(index.intValue())
+                                                        .colName(groupedCriteria.get(0).getSqlCol())
+                                                        .comparison(Comparison.EQUAL)
+                                                        .connection(Connection.OR));
+                                        where.section(group);
                                     } else {
-                                        where.addCriteria(index.intValue(),
-                                                        Collections.singletonList(groupedCriteria.get(0).getSqlCol()),
-                                                        Comparison.EQUAL, values, false, Connection.AND).setMain(true);
+                                        final var fromTable = sqlSelect.getFromTables().stream()
+                                                        .filter(ft -> (groupedCriteria.get(0).getTableIdx()
+                                                                        .getIdx() == ft.getTableIndex()))
+                                                        .findFirst();
+                                        if (fromTable.isPresent() && fromTable.get() instanceof FromTableLeftJoin) {
+                                            ((FromTableLeftJoin) fromTable.get()).addCriteria(groupedCriteria.get(0));
+                                        } else {
+                                            where.addCriteria(index.intValue(),
+                                                            Collections.singletonList(
+                                                                            groupedCriteria.get(0).getSqlCol()),
+                                                            Comparison.EQUAL, values, false, Connection.AND)
+                                                            .setMain(true);
+                                        }
                                     }
-                                }
+                                });
                             });
         }
     }
