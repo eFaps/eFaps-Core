@@ -39,6 +39,6 @@ jobs:
       - name: Deploy
         run: mvn deploy -DskipTests -s mySettings.xml
       - name: CodeCov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
 
 
