@@ -15,6 +15,9 @@
  */
 package org.efaps.db.store;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
@@ -23,6 +26,10 @@ import java.util.Map;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.efaps.admin.AppConfigHandler;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -30,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -80,16 +89,34 @@ public class S3StoreResource
     public InputStream read()
         throws EFapsException
     {
+        InputStream ret = null;
         final var objectRequest = GetObjectRequest
                         .builder()
                         .key(getInstance().getOid())
                         .bucket(getBucketName())
                         .build();
-        final var responseInputStream = getS3Client().getObject(objectRequest);
-        final var response = responseInputStream.response();
-
-        LOG.info("Downloaded {}, response: {}", getInstance().getOid(), response);
-        return responseInputStream;
+        try (final var responseInputStream = getS3Client().getObject(objectRequest)) {
+            final var response = responseInputStream.response();
+            LOG.info("Downloaded {}, response: {}", getInstance().getOid(), response);
+            if (response.contentLength() > 1_024_000) {
+                File tempFile;
+                final var tmpFolder = AppConfigHandler.get().getTempFolder();
+                if (tmpFolder != null && tmpFolder.exists()) {
+                    final File storeFolder = new File(tmpFolder, "s3");
+                    FileUtils.forceMkdir(storeFolder);
+                    tempFile = new File(storeFolder, RandomStringUtils.insecure().nextAlphanumeric(12) + ".dat");
+                } else {
+                    tempFile = File.createTempFile("s3-", ".dat");
+                }
+                FileUtils.copyInputStreamToFile(responseInputStream, tempFile);
+                ret = FileUtils.openInputStream(tempFile);
+            } else {
+                ret = new ByteArrayInputStream(IOUtils.toByteArray(responseInputStream));
+            }
+        } catch (AwsServiceException | SdkClientException | IOException e) {
+            LOG.error("Catched", e);
+        }
+        return ret;
     }
 
     @Override
