@@ -29,6 +29,8 @@ import org.efaps.admin.datamodel.IJaxb;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.db.wrapper.AbstractSQLInsertUpdate;
 import org.efaps.util.EFapsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -45,6 +47,8 @@ public class JaxbType
 {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(JaxbType.class);
 
     private static final Map<Long, JAXBContext> JAXBCONTEXTSTORE = new HashMap<>();
 
@@ -166,6 +170,7 @@ public class JaxbType
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                             | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
                             | SecurityException | JAXBException e) {
+                LOG.error("Jaxb problem", e);
                 throw new SQLException("JaxbType Exception", e);
             }
         }
