@@ -99,6 +99,7 @@ public class S3StoreResource
             final var response = responseInputStream.response();
             LOG.info("Downloaded {}, response: {}", getInstance().getOid(), response);
             if (response.contentLength() > 1_024_000) {
+                LOG.debug("Content bigger than 1MB");
                 File tempFile;
                 final var tmpFolder = AppConfigHandler.get().getTempFolder();
                 if (tmpFolder != null && tmpFolder.exists()) {
@@ -108,9 +109,11 @@ public class S3StoreResource
                 } else {
                     tempFile = File.createTempFile("s3-", ".dat");
                 }
+                LOG.debug("Using intermediate file: {}", tempFile.getName());
                 FileUtils.copyInputStreamToFile(responseInputStream, tempFile);
                 ret = FileUtils.openInputStream(tempFile);
             } else {
+                LOG.debug("Copying from Stream to Stream");
                 ret = new ByteArrayInputStream(IOUtils.toByteArray(responseInputStream));
             }
         } catch (AwsServiceException | SdkClientException | IOException e) {
