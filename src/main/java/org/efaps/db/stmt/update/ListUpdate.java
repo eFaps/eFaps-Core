@@ -22,24 +22,33 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.access.AccessTypeEnums;
 import org.efaps.admin.access.user.AccessCache;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.AttributeType;
+import org.efaps.admin.datamodel.Status;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.admin.datamodel.attributetype.IStatusChangeListener;
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.admin.event.EventType;
 import org.efaps.admin.event.Parameter;
 import org.efaps.admin.event.Parameter.ParameterValues;
+import org.efaps.admin.program.esjp.Listener;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.eql2.IUpdateElement;
 import org.efaps.eql2.IUpdateListStatement;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListUpdate
     extends AbstractUpdate
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ListUpdate.class);
 
     final List<Instance> instances;
 
@@ -111,4 +120,44 @@ public class ListUpdate
         }
         return ret;
     }
+
+    public void triggerListeners()
+        throws EFapsException
+    {
+        for (final var instance : getInstances()) {
+            final var statusId = evalStatusChange(instance.getType());
+            if (statusId != null) {
+                for (final IStatusChangeListener listener : Listener.get()
+                                .<IStatusChangeListener>invoke(IStatusChangeListener.class)) {
+                    listener.onInsert(instance, statusId);
+                }
+            }
+        }
+    }
+
+    protected Long evalStatusChange(Type type)
+        throws CacheReloadException
+    {
+        Long statusId = null;
+        if (type.isCheckStatus()) {
+            for (final IUpdateElement updateElement : getEqlStmt().getUpdateElements()) {
+                if (type.getStatusAttribute().getName().equals(updateElement.getAttribute())) {
+                    if (StringUtils.isNumeric(updateElement.getValue())) {
+                        statusId = Long.valueOf(updateElement.getValue());
+                    } else if (updateElement.getValue() != null) {
+                        final var status = Status.find(type.getStatusAttribute().getLink().getUUID(),
+                                        updateElement.getValue());
+                        if (status != null) {
+                            statusId = status.getId();
+                            updateElement.value(String.valueOf(statusId));
+                        }
+                    } else {
+                        LOG.warn("Cannot convert status value to status ID: {}", updateElement.getValue());
+                    }
+                }
+            }
+        }
+        return statusId;
+    }
+
 }

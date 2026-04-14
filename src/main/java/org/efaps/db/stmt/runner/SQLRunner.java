@@ -605,6 +605,12 @@ public class SQLRunner
             }
             if (runnable instanceof final ObjectUpdate update) {
                 update.triggerListeners();
+                Queue.registerUpdate(update.getInstance());
+            } else if (runnable instanceof final ListUpdate listUpdate) {
+                listUpdate.triggerListeners();
+                listUpdate.getInstances().forEach(instance -> {
+                    Queue.registerUpdate(instance);
+                });
             }
         } catch (final SQLException e) {
             throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
@@ -639,6 +645,7 @@ public class SQLRunner
             }
             GeneralInstance.insert(insert.getInstance(), con);
             insert.triggerListeners();
+            Queue.registerUpdate(insert.getInstance());
         } catch (final SQLException e) {
             throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
         }
