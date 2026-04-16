@@ -60,6 +60,7 @@ public class CIAdminProgram
         }
 
         public final CIAttribute Name = new CIAttribute(this, "Name");
+        public final CIAttribute Version = new CIAttribute(this, "Version");
         public final CIAttribute Creator = new CIAttribute(this, "Creator");
         public final CIAttribute Created = new CIAttribute(this, "Created");
         public final CIAttribute Modifier = new CIAttribute(this, "Modifier");

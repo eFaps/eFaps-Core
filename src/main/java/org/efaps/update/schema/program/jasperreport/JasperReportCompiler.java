@@ -86,21 +86,40 @@ public class JasperReportCompiler
             final var eval = EQL.builder().with(StmtFlag.TRIGGEROFF)
                             .print().query(getClassName4TypeCompiled())
                             .where()
-                            .attribute("ProgramLink").eq(onesource.getInstance())
+                            .attribute(CIAdminProgram.JasperReportCompiled.ProgramLink).eq(onesource.getInstance())
                             .select()
+                            .attribute(CIAdminProgram.JasperReportCompiled.Version)
                             .instance()
                             .evaluate();
-            while (eval.next()) {
-                EQL.builder().with(StmtFlag.TRIGGEROFF)
-                                .delete(eval.inst()).stmt().execute();
+            Instance compiledInst = null;
+            Integer version = 1;
+            final var count = eval.count();
+            if (count > 1) {
+                LOG.warn("More than one compiled source, therefore deleting all of them");
+                while (eval.next()) {
+                    EQL.builder().with(StmtFlag.TRIGGEROFF)
+                                    .delete(eval.inst()).stmt().execute();
+                }
+            } else if (count == 1) {
+                eval.next();
+                compiledInst = eval.inst();
+                version = eval.get(CIAdminProgram.JasperReportCompiled.Version);
             }
 
-            final var compiledInst = EQL.builder().with(StmtFlag.TRIGGEROFF)
+            if (compiledInst != null && compiledInst.isValid()) {
+                EQL.builder().with(StmtFlag.TRIGGEROFF)
+                    .update(compiledInst)
+                    .set(CIAdminProgram.JasperReportCompiled.Version, version == null ? 1 : version)
+                    .set(CIAdminProgram.JasperReportCompiled.Name, onesource.getName())
+                    .execute();
+            } else {
+                compiledInst = EQL.builder().with(StmtFlag.TRIGGEROFF)
                             .insert(getClassName4TypeCompiled())
+                            .set(CIAdminProgram.JasperReportCompiled.Version, 1)
                             .set(CIAdminProgram.JasperReportCompiled.Name, onesource.getName())
                             .set(CIAdminProgram.JasperReportCompiled.ProgramLink, onesource.getInstance())
                             .execute();
-
+            }
             compileJasperReport(onesource.getInstance(), compiledInst);
         }
     }
