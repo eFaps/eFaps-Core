@@ -89,7 +89,6 @@ public class JasperReportCompiler
                             .attribute(CIAdminProgram.JasperReportCompiled.ProgramLink).eq(onesource.getInstance())
                             .select()
                             .attribute(CIAdminProgram.JasperReportCompiled.Version)
-                            .instance()
                             .evaluate();
             Instance compiledInst = null;
             Integer version = 1;
