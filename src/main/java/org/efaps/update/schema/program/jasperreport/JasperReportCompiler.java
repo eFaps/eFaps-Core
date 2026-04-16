@@ -108,7 +108,7 @@ public class JasperReportCompiler
             if (compiledInst != null && compiledInst.isValid()) {
                 EQL.builder().with(StmtFlag.TRIGGEROFF)
                     .update(compiledInst)
-                    .set(CIAdminProgram.JasperReportCompiled.Version, version == null ? 1 : version)
+                    .set(CIAdminProgram.JasperReportCompiled.Version, version == null ? 1 : version + 1)
                     .set(CIAdminProgram.JasperReportCompiled.Name, onesource.getName())
                     .execute();
             } else {
