@@ -80,7 +80,6 @@ public final class EventDefinition
 
     private final EventType eventType;
 
-
     /**
      * @param _instance Instance of this EventDefinition
      * @param _name name of this EventDefinition
@@ -189,28 +188,18 @@ public final class EventDefinition
                     EventDefinition.LOG.debug("found Class: {} and method {}", progInstance, method);
                 }
             }
-        } catch (final ClassNotFoundException e) {
-            EventDefinition.LOG.error("could not find Class: '{}'", this.resourceName, e);
-        } catch (final InstantiationException e) {
-            EventDefinition.LOG.error("could not instantiat Class: '{}'", this.resourceName, e);
-        } catch (final IllegalAccessException e) {
-            EventDefinition.LOG.error("could not access Class: '{}'", this.resourceName, e);
-        } catch (final SecurityException e) {
-            EventDefinition.LOG.error("could not access Class: '{}'", this.resourceName, e);
-        } catch (final NoSuchMethodException e) {
-            EventDefinition.LOG.error("could not find method: '{}' in class '{}'",
-                            new Object[] { this.methodName, this.resourceName, e });
-        } catch (final IllegalArgumentException e) {
-            EventDefinition.LOG.error("could not access Class: '{}'", this.resourceName, e);
-        } catch (final InvocationTargetException e) {
-            EventDefinition.LOG.error("could not access Class: '{}'", this.resourceName, e);
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
+                        | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                        | NoClassDefFoundError e) {
+            LOG.error("Catched error on check for program instance!", e);
         }
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
-        //nothing
+        // nothing
     }
 
     /**
