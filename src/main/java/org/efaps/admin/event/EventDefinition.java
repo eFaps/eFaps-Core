@@ -213,7 +213,7 @@ public final class EventDefinition
     public Return execute(final Parameter _parameter)
         throws EFapsException
     {
-        Return ret = null;
+        Return ret = new Return();
         _parameter.put(ParameterValues.PROPERTIES, new HashMap<>(super.evalProperties()));
         try {
             EventDefinition.LOG.debug("Invoking method '{}' for Resource '{}'", this.methodName, this.resourceName);
