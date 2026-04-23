@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.IEnum;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
@@ -29,7 +30,6 @@ import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * TODO comment!
  *
@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class EnumType
     extends AbstractType
 {
+
     /**
      * Name of the Cache for Instances.
      */
@@ -55,24 +56,30 @@ public class EnumType
     private static final Logger LOG = LoggerFactory.getLogger(EnumType.class);
 
     @Override
-    public Object readValue(final Attribute _attribute,
-                            final List<Object> _objectList)
+    public Object readValue(final Attribute attribute,
+                            final List<Object> valueList)
         throws EFapsException
     {
         Object ret = null;
-        if (_objectList.size() < 1) {
+        if (valueList.size() < 1) {
             ret = null;
-        } else  {
+        } else {
             final List<Object> list = new ArrayList<>();
-            for (final Object object : _objectList) {
+            for (final Object value : valueList) {
                 Integer num = null;
-                if (object instanceof Number) {
-                    num = ((Number) object).intValue();
-                } else if (object != null) {
-                    num = Integer.parseInt(object.toString());
+                if (value instanceof final Number number) {
+                    num = number.intValue();
+                } else if (value instanceof final String string) {
+                    if (StringUtils.isNumeric(string)) {
+                        num = Integer.parseInt(string);
+                    } else {
+                        list.add(getEnum4Str(attribute, string));
+                    }
+                } else if (value != null) {
+                    num = Integer.parseInt(value.toString());
                 }
                 if (num != null) {
-                    list.add(getEnum4Int(_attribute, num));
+                    list.add(getEnum4Int(attribute, num));
                 }
             }
             ret = list.isEmpty() ? null : list.size() > 1 ? list : list.get(0);
@@ -80,24 +87,50 @@ public class EnumType
         return ret;
     }
 
-    /**
-     * @param _attribute Attribute the enum class is defined for
-     * @param _num       number from eFapsDatabase thta defines the enum
-     * @return enum
-     */
-    protected Object getEnum4Int(final Attribute _attribute,
-                                 final Integer _num)
+    protected Object getEnum4Str(final Attribute attribute,
+                                 final String string)
     {
         final var cache = InfinispanCache.get().<String, Object>getCache(EnumType.CACHE);
-        final String key = _attribute.getClassName() + "-" + _num;
+        final String key = attribute.getClassName() + "-" + string;
         if (!cache.containsKey(key)) {
             Object ret = null;
             try {
-                final Class<?> clazz = Class.forName(_attribute.getClassName(), false, EFapsClassLoader.getInstance());
+                final Class<?> clazz = Class.forName(attribute.getClassName(), false, EFapsClassLoader.getInstance());
+                final var consts = (Enum<?>[]) clazz.getEnumConstants();
+                if (consts != null) {
+                    for (final Enum<?> constant : consts) {
+                        if (StringUtils.equalsIgnoreCase(constant.name(), string)) {
+                            ret = constant;
+                            break;
+                        }
+                    }
+                }
+            } catch (final ClassNotFoundException e) {
+                LOG.error("Could not read clazz.", e);
+            }
+            cache.put(key, ret);
+        }
+        return cache.get(key);
+    }
+
+    /**
+     * @param attribute Attribute the enum class is defined for
+     * @param idx number from eFapsDatabase thta defines the enum
+     * @return enum
+     */
+    protected Object getEnum4Int(final Attribute attribute,
+                                 final Integer idx)
+    {
+        final var cache = InfinispanCache.get().<String, Object>getCache(EnumType.CACHE);
+        final String key = attribute.getClassName() + "-" + idx;
+        if (!cache.containsKey(key)) {
+            Object ret = null;
+            try {
+                final Class<?> clazz = Class.forName(attribute.getClassName(), false, EFapsClassLoader.getInstance());
                 final Object[] consts = clazz.getEnumConstants();
                 if (consts != null) {
                     for (final Object cons : consts) {
-                        if (_num == ((IEnum) cons).getInt()) {
+                        if (idx == ((IEnum) cons).getInt()) {
                             ret = cons;
                             break;
                         }
@@ -138,9 +171,9 @@ public class EnumType
     }
 
     /**
-     * @param _attribute    Attribute for this enumtype
-     * @param _value        value to be evluated
-     * @return  integer value
+     * @param _attribute Attribute for this enumtype
+     * @param _value value to be evluated
+     * @return integer value
      */
     protected Integer eval(final Attribute _attribute,
                            final Object[] _value)
@@ -148,22 +181,22 @@ public class EnumType
         final Integer ret;
         if (_value == null) {
             ret = null;
-        } else  if (_value[0] instanceof String && ((String) _value[0]).length() > 0) {
+        } else if (_value[0] instanceof String && ((String) _value[0]).length() > 0) {
             ret = Integer.parseInt((String) _value[0]);
         } else if (_value[0] instanceof Integer) {
             ret = (Integer) _value[0];
         } else if (_value[0] instanceof Long) {
             ret = ((Long) _value[0]).intValue();
-        } else  {
+        } else {
             ret = eval4Enum(_attribute, _value[0]);
         }
         return ret;
     }
 
     /**
-     * @param _attribute    Attribute for this enumtype
-     * @param _value        value to be evluated
-     * @return  integer value
+     * @param _attribute Attribute for this enumtype
+     * @param _value value to be evluated
+     * @return integer value
      */
     protected Integer eval4Enum(final Attribute _attribute,
                                 final Object _value)

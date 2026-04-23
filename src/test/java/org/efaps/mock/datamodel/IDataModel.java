@@ -144,6 +144,13 @@ public interface IDataModel
                     .withClassNameUI("org.efaps.admin.datamodel.ui.LinkWithRangesUI")
                     .build();
 
+    AttributeType EnumType = AttributeType.builder()
+                    .withName("EnumType")
+                    .withUuid(UUID.fromString("b7c6a324-5dec-425f-b778-fa8fabf80202"))
+                    .withClassName("org.efaps.admin.datamodel.attributetype.EnumType")
+                    .withClassNameUI("org.efaps.admin.datamodel.ui.EnumUI")
+                    .build();
+
     Type Admin_Abstract = Type.builder()
                     .withId(AbstractTest.nextLong())
                     .withUuid(CIAdmin.Abstract.uuid)

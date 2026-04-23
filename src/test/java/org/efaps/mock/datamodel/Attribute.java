@@ -60,22 +60,25 @@ public final class Attribute
 
     private final Long parentSetId;
 
+    private final String className;
+
     /**
      * Instantiates a new attribute.
      *
      * @param _builder the builder
      */
-    private Attribute(final AttributeBuilder _builder)
+    private Attribute(final AttributeBuilder builder)
     {
-        super(_builder);
-        this.dataModelTypeId = _builder.dataModelTypeId;
-        this.sqlTableId = _builder.sqlTableId;
-        this.attributeTypeId = _builder.attributeTypeId;
-        this.typeId = _builder.typeId;
-        this.linkTypeId = _builder.linkTypeId;
-        this.sqlColumnName = _builder.sqlColumnName;
-        this.dimensionUUID = _builder.dimensionUUID;
-        this.parentSetId = _builder.parentSetId;
+        super(builder);
+        this.dataModelTypeId = builder.dataModelTypeId;
+        this.sqlTableId = builder.sqlTableId;
+        this.attributeTypeId = builder.attributeTypeId;
+        this.typeId = builder.typeId;
+        this.linkTypeId = builder.linkTypeId;
+        this.sqlColumnName = builder.sqlColumnName;
+        this.dimensionUUID = builder.dimensionUUID;
+        this.parentSetId = builder.parentSetId;
+        this.className = builder.className;
     }
 
     @Override
@@ -85,7 +88,7 @@ public final class Attribute
                         String.class, String.class, String.class, String.class)
                         .append(getId(), getName(), this.typeId, this.sqlTableId, this.attributeTypeId, this.linkTypeId,
                                         parentSetId, getSQLColumnName(), null,
-                                        dimensionUUID == null ? null : dimensionUUID.toString(), null)
+                                        dimensionUUID == null ? null : dimensionUUID.toString(), this.className)
                         .asResult();
     }
 
@@ -165,6 +168,7 @@ public final class Attribute
 
         private Long parentSetId;
 
+        private String className;
         /**
          * With data model type id.
          *
@@ -246,6 +250,12 @@ public final class Attribute
         public AttributeBuilder withParentSetId(final Long parentSetId)
         {
             this.parentSetId = parentSetId;
+            return this;
+        }
+
+        public AttributeBuilder withClassName(final String className)
+        {
+            this.className = className;
             return this;
         }
 

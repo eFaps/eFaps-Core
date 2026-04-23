@@ -285,6 +285,14 @@ public interface Mocks
                     .withLinkTypeId(SimpleType.getId())
                     .build();
 
+    Attribute AllAttrEnumAttribute = Attribute.builder()
+                    .withName("AllAttrEnumAttribute")
+                    .withDataModelTypeId(AllAttrType.getId())
+                    .withSqlTableId(AllAttrTypeSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.EnumType.getId())
+                    .withClassName(MockEnum.class.getName())
+                    .build();
+
     Attribute AllAttrLinkAttributeCompany = Attribute.builder()
                     .withName("AllAttrLinkAttributeCompany")
                     .withDataModelTypeId(AllAttrType.getId())
