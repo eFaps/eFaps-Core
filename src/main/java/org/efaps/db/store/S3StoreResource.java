@@ -173,7 +173,7 @@ public class S3StoreResource
                     LOG.info("Checked for {}, response: {}", getInstance().getOid(), response);
                     ret = true;
                 } catch (final NoSuchKeyException e) {
-                    LOG.warn("Catched", e);
+                    LOG.warn("NoSuchKeyException on checke for {}", getInstance().getOid());
                 }
                 cache.put(getInstance().getOid(), ret);
             }
