@@ -159,6 +159,7 @@ public final class InfinispanCache
                 }
                 try {
                     remoteCacheManager.stopAsync().get();
+                    LOG.info("Init infinispan finished");
                 } catch (InterruptedException | ExecutionException e) {
                     LOG.error("Catched error while trying to stop remoteCacheManager async", e);
                 }
