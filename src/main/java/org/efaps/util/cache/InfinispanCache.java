@@ -212,6 +212,10 @@ public final class InfinispanCache
         final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
                         .uri(hotrodUrl)
                         .addContextInitializer(new LibraryInitializerImpl())
+                        .security()
+                        .authentication()
+                           .enable()
+                           .saslMechanism("DIGEST-SHA-256")
                         .build();
         return new RemoteCacheManager(config);
     }
