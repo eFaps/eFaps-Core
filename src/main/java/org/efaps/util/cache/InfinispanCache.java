@@ -110,6 +110,7 @@ public final class InfinispanCache
 
             if (clustered) {
                 final var remoteCacheManager = getRemoteCacheManager();
+                remoteCacheManager.start();
                 for (final var cacheName : this.container.getCacheNames()) {
                     final var cacheConfig = container.getCacheConfiguration(cacheName);
 
@@ -176,12 +177,13 @@ public final class InfinispanCache
                         .uri(hotrodUrl)
                         .addContextInitializer(new LibraryInitializerImpl())
                         .build();
-        return new RemoteCacheManager(config);
+        return new RemoteCacheManager(config).s;
     }
 
     private void registerSchemas()
     {
         final var remoteCacheManager = getRemoteCacheManager();
+        remoteCacheManager.start();
 
         final var initializer = remoteCacheManager.getConfiguration().getContextInitializers().get(0);
         final RemoteCache<String, String> protoMetadataCache = remoteCacheManager
