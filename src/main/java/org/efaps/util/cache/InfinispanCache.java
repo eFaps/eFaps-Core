@@ -17,6 +17,7 @@ package org.efaps.util.cache;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,9 +28,6 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.commons.configuration.io.xml.XmlConfigurationWriter;
-import org.infinispan.commons.dataconversion.MediaType;
-import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.marshall.AbstractMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.lifecycle.ComponentStatus;
@@ -110,45 +108,6 @@ public final class InfinispanCache
                                             : "/org/efaps/util/cache/infinispan-config.xml"),
                             false);
 
-            new AbstractMarshaller() {
-
-                @Override
-                public Object objectFromByteBuffer(byte[] buf,
-                                                   int offset,
-                                                   int length)
-                    throws IOException, ClassNotFoundException
-                {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public boolean isMarshallable(Object o)
-                    throws Exception
-                {
-                    // TODO Auto-generated method stub
-                    return false;
-                }
-
-                @Override
-                public MediaType mediaType()
-                {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                protected ByteBuffer objectToBuffer(Object o,
-                                                    int estimatedSize)
-                    throws IOException, InterruptedException
-                {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-            };
-
-
             if (clustered) {
                 final var remoteCacheManager = getRemoteCacheManager();
                 for (final var cacheName : this.container.getCacheNames()) {
@@ -197,9 +156,12 @@ public final class InfinispanCache
                         remoteConfig.addRemoteCache(persitenceCacheName, consumer);
                         remoteCacheManager.getCache(persitenceCacheName);
                     }
-
                 }
-                remoteCacheManager.close();
+                try {
+                    remoteCacheManager.stopAsync().get();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOG.error("Catched error while trying to stop remoteCacheManager async", e);
+                }
             }
             this.container.start();
         } catch (final IOException e) {
@@ -212,10 +174,6 @@ public final class InfinispanCache
         final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
                         .uri(hotrodUrl)
                         .addContextInitializer(new LibraryInitializerImpl())
-                        .security()
-                        .authentication()
-                           .enable()
-                           .saslMechanism("DIGEST-SHA-256")
                         .build();
         return new RemoteCacheManager(config);
     }
@@ -235,7 +193,11 @@ public final class InfinispanCache
                                 errors + "\nSchema :\n" + initializer.getProtoFileName());
             }
         }
-        remoteCacheManager.close();
+        try {
+            remoteCacheManager.stopAsync().get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Catched error while trying to stop remoteCacheManager async", e);
+        }
     }
 
     /**
