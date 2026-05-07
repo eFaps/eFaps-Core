@@ -26,9 +26,8 @@ import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
+import org.infinispan.api.annotations.indexing.Basic;
+import org.infinispan.api.annotations.indexing.Indexed;
 
 /**
  * Used as a key to store the results of a Query related to access in a map.<br/>
@@ -61,19 +60,19 @@ public final class AccessKey
     /**
      * Id of a instance type.
      */
-    @Field(analyze = Analyze.NO)
+    @Basic
     private final UUID instanceTypeUUID;
 
     /**
      * Id of the Instance.
      */
-    @Field(analyze = Analyze.NO)
+    @Basic
     private final long instanceId;
 
     /**
      * Id of the Person.
      */
-    @Field(analyze = Analyze.NO)
+    @Basic
     private final long personId;
 
     /**
@@ -214,8 +213,7 @@ public final class AccessKey
     public boolean equals(final Object _obj)
     {
         boolean ret = false;
-        if (_obj instanceof AccessKey) {
-            final AccessKey accessKey = (AccessKey) _obj;
+        if (_obj instanceof final AccessKey accessKey) {
             ret = getInstanceTypeUUID().equals(accessKey.getInstanceTypeUUID())
                             && getInstanceId() == accessKey.getInstanceId()
                             && getPersonId() == accessKey.getPersonId()

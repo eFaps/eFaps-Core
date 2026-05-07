@@ -40,11 +40,11 @@ import org.efaps.admin.user.PersonAdapter;
 import org.efaps.admin.user.RoleAdapter;
 import org.efaps.db.store.StoreAdapter;
 import org.infinispan.protostream.GeneratedSchema;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.annotations.ProtoSyntax;
 import org.infinispan.protostream.types.java.CommonContainerTypes;
 
-@AutoProtoSchemaBuilder(dependsOn = {
+@ProtoSchema(dependsOn = {
                 CommonContainerTypes.class
 }, includeClasses = {
                 AccessTypeAdapter.class,

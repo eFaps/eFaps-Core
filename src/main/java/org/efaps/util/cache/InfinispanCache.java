@@ -15,6 +15,7 @@
  */
 package org.efaps.util.cache;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.concurrent.ExecutionException;
@@ -23,17 +24,16 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.infinispan.Cache;
-import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.configuration.io.xml.XmlConfigurationWriter;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +110,6 @@ public final class InfinispanCache
 
             if (clustered) {
                 final var remoteCacheManager = getRemoteCacheManager();
-                remoteCacheManager.start();
                 for (final var cacheName : this.container.getCacheNames()) {
                     final var cacheConfig = container.getCacheConfiguration(cacheName);
 
@@ -134,14 +133,18 @@ public final class InfinispanCache
                             remoteCacheManager.administration().removeCache(persitenceCacheName);
                         }
                         LOG.info("Registering persistence cache: {}", persitenceCacheName);
-                        final var encodingWriter = new StringWriter();
-                        cacheConfig.encoding().write(new XmlConfigurationWriter(encodingWriter, true, true));
+                        final var writer = new StringWriter();
+                        final var encodingWriter = new BufferedWriter(writer);
+
+                        cacheConfig.encoding().write(new XmlConfigurationWriter(
+                                        ConfigurationWriter.to(new BufferedWriter(writer))));
+                        encodingWriter.flush();
                         final var template = """
                                         <?xml version=\"1.0\"?>
                                         <replicated-cache mode=\"ASYNC\" statistics=\"true\">
                                         """
                                         +
-                                        encodingWriter.toString()
+                                        writer.toString()
                                         +
                                         """
                                             <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
@@ -175,7 +178,6 @@ public final class InfinispanCache
     {
         final var config = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
                         .uri(hotrodUrl)
-                        .addContextInitializer(new LibraryInitializerImpl())
                         .build();
         return new RemoteCacheManager(config);
     }
@@ -183,19 +185,10 @@ public final class InfinispanCache
     private void registerSchemas()
     {
         final var remoteCacheManager = getRemoteCacheManager();
-        remoteCacheManager.start();
 
-        final var initializer = remoteCacheManager.getConfiguration().getContextInitializers().get(0);
-        final RemoteCache<String, String> protoMetadataCache = remoteCacheManager
-                        .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-        if (!protoMetadataCache.containsKey(initializer.getProtoFileName())) {
-            protoMetadataCache.put(initializer.getProtoFileName(), initializer.getProtoFile());
-            final String errors = protoMetadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-            if (errors != null) {
-                throw new IllegalStateException("Some Protobuf schema files contain errors: " +
-                                errors + "\nSchema :\n" + initializer.getProtoFileName());
-            }
-        }
+        final var schemaAdmin = remoteCacheManager.administration().schemas();
+        schemaAdmin.createOrUpdate(new LibraryInitializerImpl());
+
         try {
             remoteCacheManager.stopAsync().get();
         } catch (InterruptedException | ExecutionException e) {

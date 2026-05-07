@@ -20,8 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.criteria.AbstractQuery;
-
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.ui.UIValue;
 import org.efaps.admin.ui.AbstractUserInterfaceObject.TargetMode;

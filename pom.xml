@@ -170,7 +170,7 @@
                         <annotationProcessorPath>
                             <groupId>org.infinispan.protostream</groupId>
                             <artifactId>protostream-processor</artifactId>
-                            <version>5.0.12.Final</version>
+                            <version>6.0.7</version>
                         </annotationProcessorPath>
                     </annotationProcessorPaths>
                 </configuration>
@@ -413,17 +413,17 @@
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-queryparser</artifactId>
-            <version>9.11.1</version>
+            <version>9.12.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analysis-common</artifactId>
-            <version>9.11.1</version>
+            <version>9.12.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-backward-codecs</artifactId>
-            <version>9.11.1</version>
+            <version>9.12.3</version>
         </dependency>
         <!-- used to read the jrxml definitions used by jasper -->
         <dependency>
@@ -494,7 +494,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
-            <version>15.1.7.Final</version>
+            <version>16.1.4</version>
             <exclusions>
                 <exclusion>
                     <artifactId>hibernate-jpa-2.0-api</artifactId>
@@ -509,17 +509,19 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <version>15.1.7.Final</version>
+            <version>16.1.4</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote-query-client</artifactId>
-            <version>15.1.7.Final</version>
+            <version>16.1.4</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-remote</artifactId>
-            <version>15.1.7.Final</version>
+            <version>16.1.4</version>
         </dependency>
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>
@@ -538,12 +540,13 @@
             <artifactId>hibernate-search</artifactId>
             <version>${hibernate.version}</version>
         </dependency>
-        -->
+
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.4.29.Final</version>
+            <version>8.2.1</version>
         </dependency>
+        -->
         <!--
             findbug to be able to deactivate findbug alerts using annotations,
             must be inlcluded to be able to compile
@@ -557,11 +560,17 @@
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
         </dependency>
-        <!--  force the javassist version to get scanning to work  -->
+        <!--  force the javassist version to get scanning for reflections to work  -->
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>3.30.2-GA</version>
+        </dependency>
+        <!-- used to read xml for reflections -->
+        <dependency>
+            <groupId>org.dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>2.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.mnode.ical4j</groupId>
