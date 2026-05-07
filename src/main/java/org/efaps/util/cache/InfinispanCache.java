@@ -177,7 +177,7 @@ public final class InfinispanCache
                         .uri(hotrodUrl)
                         .addContextInitializer(new LibraryInitializerImpl())
                         .build();
-        return new RemoteCacheManager(config).s;
+        return new RemoteCacheManager(config);
     }
 
     private void registerSchemas()
