@@ -137,7 +137,7 @@ public final class InfinispanCache
                         final var encodingWriter = new BufferedWriter(writer);
 
                         cacheConfig.encoding().write(new XmlConfigurationWriter(
-                                        ConfigurationWriter.to(new BufferedWriter(writer))));
+                                        ConfigurationWriter.to(encodingWriter)));
                         encodingWriter.flush();
                         final var template = """
                                         <?xml version=\"1.0\"?>
