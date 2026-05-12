@@ -105,11 +105,6 @@ public interface KernelSettings
     String DEACTIVATE_QUERYCACHE = "org.efaps.kernel.DeactivateQueryCache";
 
     /**
-     * Integer: timeOut for JMS sessions. Default: 0
-     */
-    String JMS_TIMEOOUT = "org.efaps.kernel.JmsSessionTimeout";
-
-    /**
      * Boolean (true/false): deactivate the Javascript Compression mechanism.
      * Default: false
      */

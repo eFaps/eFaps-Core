@@ -14,6 +14,6 @@ The core enables the following functionalities:
 - Datamodel abstraction and management
 - REST integration
 - JasperReport integration
-- JMS integration
+
 
 

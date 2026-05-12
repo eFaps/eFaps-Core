@@ -19,6 +19,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,15 +93,12 @@ public final class Listener
         final StringBuilder b = new StringBuilder();
         b.append(_text);
         _classes.stream()
-            .map(clazz -> clazz.getName())
+            .map(Class::getName)
             .sorted()
             .forEach(clazzName -> b.append('\n').append("  ").append(clazzName));
         Listener.LOG.info(b.toString());
     }
 
-    /**
-     * @return the singleton JmsResourceConfig instance
-     */
     public static Listener get()
     {
         return Listener.LISTENER;
@@ -151,7 +149,7 @@ public final class Listener
                 }
             }
         }
-        Collections.sort(ret, (_o1, _o2) -> Integer.compare(_o1.getWeight(), _o2.getWeight()));
+        Collections.sort(ret, Comparator.comparing(T::getWeight));
         return Collections.unmodifiableList(ret);
     }
 }
