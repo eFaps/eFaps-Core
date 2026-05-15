@@ -20,17 +20,9 @@ import java.util.Properties;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
-import org.efaps.message.MessageStatusHolder;
 import org.efaps.util.EFapsException;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.simpl.SimpleJobFactory;
 import org.slf4j.Logger;
@@ -92,8 +84,6 @@ public final class Quartz
                 final Properties props = config.getAttributeValueAsProperties(KernelSettings.QUARTZPROPS);
 
                 final StdSchedulerFactory schedFact = new StdSchedulerFactory();
-                // props.put(StdSchedulerFactory.PROP_SCHED_WRAP_JOB_IN_USER_TX,
-                // "true");
                 props.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
                 props.put(StdSchedulerFactory.PROP_SCHED_JOB_FACTORY_CLASS, SimpleJobFactory.class.getName());
                 props.put("org.quartz.plugin.jobInitializer.class", "org.efaps.admin.common.QuartzSchedulerPlugin");
@@ -101,7 +91,11 @@ public final class Quartz
                 if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON)) {
                     props.put(StdSchedulerFactory.PROP_SCHED_MAKE_SCHEDULER_THREAD_DAEMON, "true");
                 }
-                if (!props.containsKey(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME)) {
+
+                var schedulerName = "eFapsScheduler";
+                if (props.containsKey(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME)) {
+                    schedulerName = props.getProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME);
+                } else {
                     props.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "eFapsScheduler");
                 }
                 if (!props.containsKey("org.quartz.threadPool.threadCount")) {
@@ -119,32 +113,13 @@ public final class Quartz
                 Quartz.LOG.info("Sheduling Quartz with properties {}", props);
 
                 schedFact.initialize(props);
-                Quartz.QUARTZ.scheduler = schedFact.getScheduler("eFapsScheduler");
+                // check if there is already a scheduler (does not create a new one)
+                Quartz.QUARTZ.scheduler = schedFact.getScheduler(schedulerName);
                 if (Quartz.QUARTZ.scheduler != null) {
                     Quartz.QUARTZ.scheduler.shutdown();
                 }
                 Quartz.QUARTZ.scheduler = schedFact.getScheduler();
 
-                if (config.getAttributeValueAsBoolean(KernelSettings.MSGTRIGGERACTIVE)) {
-                    final int interval = config.getAttributeValueAsInteger(KernelSettings.MSGTRIGGERINTERVAL);
-                    final Trigger trigger = TriggerBuilder.newTrigger()
-                                    .withIdentity("SystemMessageTrigger")
-                                    .withSchedule(SimpleScheduleBuilder
-                                                    .repeatMinutelyForever(interval > 0 ? interval : 1))
-                                    .build();
-
-                    JobDetail jobDetail = Quartz.QUARTZ.scheduler.getJobDetail(new JobKey("SystemMessage",
-                                    Quartz.QUARTZGROUP));
-                    if (jobDetail == null) {
-                        jobDetail = JobBuilder.newJob(MessageStatusHolder.class)
-                                        .withIdentity("SystemMessage", Quartz.QUARTZGROUP).build();
-                        Quartz.QUARTZ.scheduler.scheduleJob(jobDetail, trigger);
-                    } else {
-                        Quartz.QUARTZ.scheduler.rescheduleJob(
-                                        new TriggerKey("SystemMessageTrigger", Quartz.QUARTZGROUP),
-                                        trigger);
-                    }
-                }
                 Quartz.QUARTZ.scheduler.start();
             } catch (final SchedulerException e) {
                 throw new EFapsException(Quartz.class, "Quartz.SchedulerException", e);
