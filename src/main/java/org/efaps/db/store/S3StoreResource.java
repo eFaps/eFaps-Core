@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
@@ -30,6 +31,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.efaps.admin.AppConfigHandler;
+import org.efaps.admin.EFapsSystemConfiguration;
+import org.efaps.admin.KernelSettings;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.InfinispanCache;
@@ -176,7 +179,12 @@ public class S3StoreResource
                 } catch (final NoSuchKeyException e) {
                     LOG.warn("NoSuchKeyException on checke for {}", getInstance().getOid());
                 }
-                cache.put(getInstance().getOid(), ret);
+                int lifespan = 60;
+                if (EFapsSystemConfiguration.get().containsAttributeValue(KernelSettings.S3STORECACHELIFESPAN)) {
+                    lifespan = EFapsSystemConfiguration.get()
+                                    .getAttributeValueAsInteger(KernelSettings.S3STORECACHELIFESPAN);
+                }
+                cache.put(getInstance().getOid(), ret, lifespan, TimeUnit.MINUTES);
             }
         }
         return ret;

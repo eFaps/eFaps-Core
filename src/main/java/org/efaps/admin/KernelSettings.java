@@ -123,18 +123,6 @@ public interface KernelSettings
     String QUARTZPROPS = "org.efaps.kernel.QuartzProperties";
 
     /**
-     * Boolean (true/false): Key for the SystemConfiguration attribute that
-     * activates the SystemMessage Trigger.
-     */
-    String MSGTRIGGERACTIVE = "org.efaps.kernel.SystemMessageTriggerActivated";
-
-    /**
-     * Integer :Key for the SystemConfiguration attribute that sets the Interval
-     * for the SystemMessage Trigger.
-     */
-    String MSGTRIGGERINTERVAL = "org.efaps.kernel.SystemMessageTriggerInterval";
-
-    /**
      * String: TimeZoneId from Java Definition.
      */
     String DBTIMEZONE = "org.efaps.kernel.DataBaseTimeZone";
@@ -212,6 +200,11 @@ public interface KernelSettings
      * to 'AND' for eFaps.
      */
     String INDEXDEFAULTOP = "org.efaps.kernel.index.DefaultOperator4Search";
+
+    /*
+     * Lifespan fore the exist cache i minutes, defaults to 60 minutes
+     */
+    String S3STORECACHELIFESPAN = "org.efaps.kernel.store.s3.LifeSpanInMinutes";
 
     String CLASSPATHS = "deprecated";
 
