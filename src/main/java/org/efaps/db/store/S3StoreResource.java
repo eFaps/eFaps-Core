@@ -164,8 +164,9 @@ public class S3StoreResource
             ret = false;
             final var cache = getExistsCache();
             // check for null ,not for exists due to randomly having null values
-            if (cache.get(getInstance().getOid()) != null) {
-                ret = cache.get(getInstance().getOid());
+            final Boolean cachedValue = cache.get(getInstance().getOid());
+            if (cachedValue != null) {
+                ret = cachedValue;
                 LOG.debug("Checked for {} using ExistsCache: {}", getInstance().getOid(), ret);
             } else {
                 final var headObjectRequest = HeadObjectRequest.builder()
