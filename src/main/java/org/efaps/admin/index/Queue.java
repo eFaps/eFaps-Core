@@ -58,10 +58,14 @@ public final class Queue
             if (EFapsSystemConfiguration.get() != null
                             && EFapsSystemConfiguration.get()
                                             .getAttributeValueAsBoolean(KernelSettings.INDEXACTIVATE)) {
+
                 if (instance != null && instance.getType() != null
                                 && IndexDefinition.get(instance.getType().getUUID()) != null) {
                     final var cache = InfinispanCache.get().<String, String>getCache(CACHENAME);
                     cache.put(instance.getOid(), instance.getOid());
+                    LOG.debug("Register for Update of {}", instance.getOid());
+                } else {
+                    LOG.debug("Skipping register for Update for {}", instance.getOid());
                 }
             }
         } catch (final EFapsException e) {

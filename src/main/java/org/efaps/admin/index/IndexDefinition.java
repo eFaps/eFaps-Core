@@ -135,14 +135,14 @@ public final class IndexDefinition
      * @return instance of class {@link Type}
      * @throws EFapsException on error
      */
-    public static IndexDefinition get(final UUID _uuid)
+    public static IndexDefinition get(final UUID uuid)
         throws EFapsException
     {
         final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
-        if (!cache.containsKey(_uuid)) {
-            IndexDefinition.loadDefinition(_uuid);
+        if (!cache.containsKey(uuid)) {
+            IndexDefinition.loadDefinition(uuid);
         }
-        final IndexDefinition ret = cache.get(_uuid);
+        final IndexDefinition ret = cache.get(uuid);
         return ret == null || ret.equals(NULLINDEXDEF) ? null : ret;
     }
 
@@ -152,10 +152,11 @@ public final class IndexDefinition
      * @param _typeUUID the type uuid
      * @throws EFapsException on error
      */
-    private static void loadDefinition(final UUID _typeUUID)
+    private static void loadDefinition(final UUID typeUUID)
         throws EFapsException
     {
-        final Type type = Type.get(_typeUUID);
+        final Type type = Type.get(typeUUID);
+        LOG.debug("Loading definition for: {}", type);
         final QueryBuilder queryBldr = new QueryBuilder(CIAdminIndex.IndexDefinition);
         queryBldr.addWhereAttrEqValue(CIAdminIndex.IndexDefinition.Active, true);
         queryBldr.addWhereAttrEqValue(CIAdminIndex.IndexDefinition.TypeLink, type.getId());
@@ -165,7 +166,7 @@ public final class IndexDefinition
 
         IndexDefinition def;
         if (multi.next()) {
-            def = new IndexDefinition(_typeUUID,
+            def = new IndexDefinition(typeUUID,
                             multi.<Long>getAttribute(CIAdminIndex.IndexDefinition.MsgPhraseLink));
 
             final QueryBuilder fieldQueryBldr = new QueryBuilder(CIAdminIndex.IndexField);
@@ -188,9 +189,10 @@ public final class IndexDefinition
             }
         } else {
             def = NULLINDEXDEF;
+            LOG.debug("--> has NULLINDEXDEF");
         }
         final var cache = InfinispanCache.get().<UUID, IndexDefinition>getCache(IndexDefinition.UUIDCACHE);
-        cache.put(_typeUUID, def);
+        cache.put(typeUUID, def);
 
         // only if it is not a null index check if it must be joined with parent
         // index definitions
@@ -208,7 +210,7 @@ public final class IndexDefinition
             for (final IndexField parentField : parentDef.fields) {
                 boolean found = false;
                 if (def.equals(NULLINDEXDEF)) {
-                    def = new IndexDefinition(_typeUUID, parentDef.msgPhraseId);
+                    def = new IndexDefinition(typeUUID, parentDef.msgPhraseId);
                 }
                 for (final IndexField currentField : def.fields) {
                     if (currentField.getIdentifier().equals(parentField.getIdentifier())) {
@@ -224,7 +226,8 @@ public final class IndexDefinition
             }
         }
         if (dirty) {
-            cache.put(_typeUUID, def);
+            LOG.debug("inherited: {}", def);
+            cache.put(typeUUID, def);
         }
     }
 
