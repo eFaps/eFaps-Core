@@ -202,9 +202,15 @@ public interface KernelSettings
     String INDEXDEFAULTOP = "org.efaps.kernel.index.DefaultOperator4Search";
 
     /*
-     * Lifespan fore the exist cache i minutes, defaults to 60 minutes
+     * Lifespan fore the exist cache in minutes, defaults to 60 minutes
      */
     String S3STORECACHELIFESPAN = "org.efaps.kernel.store.s3.LifeSpanInMinutes";
+
+    /*
+     * Lifespan fore the general instance cache in minutes, defaults to 60 minutes
+     */
+    String GENINSTCACHELIFESPAN = "org.efaps.kernel.db.generalInstance.LifeSpanInMinutes";
+
 
     String CLASSPATHS = "deprecated";
 

@@ -183,6 +183,8 @@
         <local-cache name="org.efaps.db.store.Store.ID" />
         <local-cache name="org.efaps.db.store.Store.Name" />
 
+        <local-cache name="org.efaps.db.GeneralInstance.Cache" />
+
         <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Name" />
         <local-cache name="org.efaps.admin.program.bundle.BundleMaker.BundleMapper" />
         <local-cache name="org.efaps.admin.program.bundle.BundleMaker.Bundles" />

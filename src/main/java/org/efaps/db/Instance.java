@@ -68,6 +68,7 @@ public final class Instance
      */
     private boolean generalised;
 
+
     /**
      * The generalId of this Instance.
      */
@@ -119,8 +120,7 @@ public final class Instance
     public boolean equals(final Object _obj)
     {
         boolean ret = false;
-        if (_obj instanceof Instance) {
-            final Instance other = (Instance) _obj;
+        if (_obj instanceof final Instance other) {
             if (other.uuid != null && this.uuid != null) {
                 ret = other.getId() == getId() && other.uuid.equals(this.uuid);
             } else {
@@ -225,6 +225,11 @@ public final class Instance
     protected void setGeneralised(final boolean _generalised)
     {
         this.generalised = _generalised;
+    }
+
+    protected boolean isGeneralised()
+    {
+        return generalised;
     }
 
     /**

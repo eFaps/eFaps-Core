@@ -126,6 +126,18 @@
     </local-cache>
 
     <local-cache
+      name="${prefix:}org.efaps.db.GeneralInstance.Cache">
+      <persistence passivation="false">
+        <remote-store
+          xmlns="urn:infinispan:config:store:remote:16.1"
+          cache="${prefix:}org.efaps.db.GeneralInstance.Cache-persistence"
+          remote-cache-container="remote-cache" shared="true">
+        </remote-store>
+      </persistence>
+      <encoding media-type="application/x-protostream" />
+    </local-cache>
+
+    <local-cache
       name="${prefix:}org.efaps.admin.index.Queue.Cache">
       <persistence passivation="false">
         <remote-store

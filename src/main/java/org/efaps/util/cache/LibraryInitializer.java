@@ -38,6 +38,7 @@ import org.efaps.admin.user.CompanyAdapter;
 import org.efaps.admin.user.JAASSystemAdapter;
 import org.efaps.admin.user.PersonAdapter;
 import org.efaps.admin.user.RoleAdapter;
+import org.efaps.db.GenInstInfo;
 import org.efaps.db.store.StoreAdapter;
 import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.annotations.ProtoSchema;
@@ -59,6 +60,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 CompanyAdapter.class,
                 EventDefinitionAdapter.class,
                 FormAdapter.class,
+                GenInstInfo.class,
                 ImageAdapter.class,
                 JAASSystemAdapter.class,
                 MenuAdapter.class,
