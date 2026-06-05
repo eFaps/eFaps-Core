@@ -186,6 +186,7 @@ public abstract class AbstractStoreResource
             }
             cache.put(instance.getOid(), info, lifespan, TimeUnit.MINUTES);
         } else {
+            LOG.info("CachedInfo: {}", cachedInfo);
             exist = cachedInfo.getExist();
             generalID = cachedInfo.getGeneralId();
             fileLength = cachedInfo.getFileLength();

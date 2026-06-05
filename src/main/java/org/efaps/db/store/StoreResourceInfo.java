@@ -17,6 +17,7 @@ package org.efaps.db.store;
 
 import java.time.Instant;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 
 public class StoreResourceInfo
@@ -98,6 +99,12 @@ public class StoreResourceInfo
     public void setModifiedZoneId(String modifiedZoneId)
     {
         this.modifiedZoneId = modifiedZoneId;
+    }
+
+    @Override
+    public String toString()
+    {
+        return ToStringBuilder.reflectionToString(this);
     }
 
 }
