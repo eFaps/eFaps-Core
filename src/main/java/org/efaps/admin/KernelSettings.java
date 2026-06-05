@@ -209,8 +209,12 @@ public interface KernelSettings
     /*
      * Lifespan fore the general instance cache in minutes, defaults to 60 minutes
      */
-    String GENINSTCACHELIFESPAN = "org.efaps.kernel.db.generalInstance.LifeSpanInMinutes";
+    String STORERESOURCELIFESPAN = "org.efaps.kernel.store.resource.LifeSpanInMinutes";
 
+    /*
+     * Lifespan fore the general instance cache in minutes, defaults to 60 minutes
+     */
+    String GENINSTCACHELIFESPAN = "org.efaps.kernel.db.generalInstance.LifeSpanInMinutes";
 
     String CLASSPATHS = "deprecated";
 

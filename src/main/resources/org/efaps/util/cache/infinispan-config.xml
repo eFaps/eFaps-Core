@@ -78,10 +78,8 @@
         </local-cache>
 
             -->
-        <local-cache name="org.efaps.db.store.S3StoreResource.ExistsCache">
-            <!--Only experation no eviction 5 minutes, 3 minutes (miliseconds) -->
-            <expiration lifespan="300000" max-idle="180000" />
-        </local-cache>
+        <local-cache name="org.efaps.db.store.S3StoreResource.ExistsCache"/>
+        <local-cache name="org.efaps.db.store.AbstractStoreResource.Cache"/>
 
         <local-cache name="org.efaps.admin.dbproperty.DBProperties"/>
 

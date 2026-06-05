@@ -24,10 +24,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
+import org.efaps.admin.EFapsSystemConfiguration;
+import org.efaps.admin.KernelSettings;
 import org.efaps.db.Context;
 import org.efaps.db.GeneralInstance;
 import org.efaps.db.Instance;
@@ -41,6 +45,8 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +78,8 @@ public abstract class AbstractStoreResource
      * Name of the column for the file length.
      */
     public static final String COLNAME_MODIFIED = "MODIFIED";
+
+    public static final String CACHE = AbstractStoreResource.class.getName() + ".Cache";
 
     /**
      * Logging instance used in this class.
@@ -133,24 +141,61 @@ public abstract class AbstractStoreResource
      */
     private Store store;
 
+    private static BasicCache<String, StoreResourceInfo> getCache()
+    {
+        return InfinispanCache.get().<String, StoreResourceInfo>getCache(CACHE);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void initialize(final Instance _instance,
-                           final Store _store)
+    public void initialize(final Instance instance,
+                           final Store store)
         throws EFapsException
     {
-        this.instance = _instance;
-        this.store = _store;
-        final SQLSelect select = AbstractStoreResource.SQL_SELECT.getCopy()
-                        .addPart(SQLPart.WHERE)
-                        .addColumnPart(0, "INSTTYPEID").addPart(SQLPart.EQUAL)
-                        .addValuePart(_instance.getType().getId())
-                        .addPart(SQLPart.AND)
-                        .addColumnPart(0, "INSTID").addPart(SQLPart.EQUAL).addValuePart(_instance.getId());
-        this.exist = new boolean[1 + add2Select(select)];
-        getGeneralID(select.getSQL());
+        this.instance = instance;
+        this.store = store;
+
+        final var cache = getCache();
+        final var cachedInfo = cache.get(this.instance.getOid());
+        if (cachedInfo == null) {
+            final SQLSelect select = AbstractStoreResource.SQL_SELECT.getCopy()
+                            .addPart(SQLPart.WHERE)
+                            .addColumnPart(0, "INSTTYPEID").addPart(SQLPart.EQUAL)
+                            .addValuePart(this.instance.getType().getId())
+                            .addPart(SQLPart.AND)
+                            .addColumnPart(0, "INSTID").addPart(SQLPart.EQUAL).addValuePart(this.instance.getId());
+            this.exist = new boolean[1 + add2Select(select)];
+            getGeneralID(select.getSQL());
+
+            final var info = new StoreResourceInfo();
+            info.setGeneralId(generalID);
+            info.setFileName(fileName);
+            info.setFileLength(fileLength);
+            if (modified != null) {
+                info.setModifiedInstant(modified.toInstant());
+                info.setModifiedZoneId(modified.getOffset().getId());
+            }
+            info.setExist(exist);
+
+            int lifespan = 60;
+            if (EFapsSystemConfiguration.get().containsAttributeValue(KernelSettings.STORERESOURCELIFESPAN)) {
+                lifespan = EFapsSystemConfiguration.get()
+                                .getAttributeValueAsInteger(KernelSettings.STORERESOURCELIFESPAN);
+            }
+            cache.put(instance.getOid(), info, lifespan, TimeUnit.MINUTES);
+        } else {
+            exist = cachedInfo.getExist();
+            generalID = cachedInfo.getGeneralId();
+            fileLength = cachedInfo.getFileLength();
+            fileName = cachedInfo.getFileName();
+
+            if (cachedInfo.getModifiedInstant() != null) {
+                final var offset = ZoneOffset.of(cachedInfo.getModifiedZoneId());
+                modified = OffsetDateTime.ofInstant(cachedInfo.getModifiedInstant(), offset);
+            }
+        }
     }
 
     @Override
@@ -247,6 +292,7 @@ public abstract class AbstractStoreResource
             final var del = new DeleteDefintion(AbstractStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
             delete.execute(res);
+            getCache().remove(instance.getOid());
         } catch (final SQLException e) {
             throw new EFapsException("clean", e);
         }
@@ -271,6 +317,7 @@ public abstract class AbstractStoreResource
                                 .execute(res);
                 this.fileName = "TMP";
                 this.fileLength = 0L;
+                getCache().remove(instance.getOid());
             } catch (final SQLException e) {
                 throw new EFapsException(AbstractStoreResource.class, "insertDefaults", e);
             }
@@ -320,6 +367,7 @@ public abstract class AbstractStoreResource
                     stmt.execute();
                 } finally {
                     stmt.close();
+                    getCache().remove(instance.getOid());
                 }
             } catch (final EFapsException e) {
                 throw e;
@@ -346,10 +394,10 @@ public abstract class AbstractStoreResource
     /**
      * Get the generalID etc. from the eFasp DataBase.
      *
-     * @param _complStmt Statement to be executed
+     * @param complStmt Statement to be executed
      * @throws EFapsException on error
      */
-    private void getGeneralID(final String _complStmt)
+    private void getGeneralID(final String complStmt)
         throws EFapsException
     {
         ConnectionResource con = null;
@@ -358,7 +406,7 @@ public abstract class AbstractStoreResource
 
             final Statement stmt = con.createStatement();
 
-            final ResultSet rs = stmt.executeQuery(_complStmt.toString());
+            final ResultSet rs = stmt.executeQuery(complStmt.toString());
 
             while (rs.next()) {
                 this.generalID = rs.getLong(1);

@@ -35,6 +35,7 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.InfinispanCache;
+import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,6 +93,12 @@ public final class GeneralInstance
      */
     private static final Logger LOG = LoggerFactory.getLogger(GeneralInstance.class);
 
+    private static BasicCache<String, GenInstInfo> getCache()
+    {
+        return InfinispanCache.get().<String, GenInstInfo>getCache(CACHE);
+    }
+
+
     /**
      * To make a Singleton.
      */
@@ -140,8 +147,7 @@ public final class GeneralInstance
     {
         if (instance != null && instance.isValid() && instance.getType().isGeneralInstance()) {
 
-            final var cache = InfinispanCache.get().<String, GenInstInfo>getCache(CACHE);
-
+            final var cache = getCache();
             final var cachedInfo = cache.get(instance.getOid());
             if (cachedInfo == null) {
                 final Context context = Context.getThreadContext();

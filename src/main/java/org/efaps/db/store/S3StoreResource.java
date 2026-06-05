@@ -62,7 +62,7 @@ public class S3StoreResource
 
     private static Map<Long, S3Client> S3CLIENTS = new HashMap<>();
 
-    public static BasicCache<String, Boolean> getExistsCache()
+    private static BasicCache<String, Boolean> getExistsCache()
     {
         return InfinispanCache.get().<String, Boolean>getCache(EXISTSCACHE);
     }

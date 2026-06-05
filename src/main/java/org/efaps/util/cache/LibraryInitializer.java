@@ -40,6 +40,7 @@ import org.efaps.admin.user.PersonAdapter;
 import org.efaps.admin.user.RoleAdapter;
 import org.efaps.db.GenInstInfo;
 import org.efaps.db.store.StoreAdapter;
+import org.efaps.db.store.StoreResourceInfo;
 import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.annotations.ProtoSyntax;
@@ -71,6 +72,7 @@ import org.infinispan.protostream.types.java.CommonContainerTypes;
                 StatusGroup.class,
                 StatusAdapter.class,
                 StoreAdapter.class,
+                StoreResourceInfo.class,
                 SQLTableAdapter.class,
                 SystemConfigurationAdapter.class,
                 TableAdapter.class,
