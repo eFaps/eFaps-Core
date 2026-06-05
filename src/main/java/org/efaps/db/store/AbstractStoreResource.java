@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.db.Context;
@@ -186,13 +187,13 @@ public abstract class AbstractStoreResource
             }
             cache.put(instance.getOid(), info, lifespan, TimeUnit.MINUTES);
         } else {
-            LOG.info("CachedInfo: {}", cachedInfo);
+            LOG.debug("CachedInfo: {}", cachedInfo);
             exist = cachedInfo.getExist();
             generalID = cachedInfo.getGeneralId();
             fileLength = cachedInfo.getFileLength();
             fileName = cachedInfo.getFileName();
 
-            if (cachedInfo.getModifiedInstant() != null) {
+            if (cachedInfo.getModifiedInstant() != null && StringUtils.isNotEmpty(cachedInfo.getModifiedZoneId())) {
                 final var offset = ZoneOffset.of(cachedInfo.getModifiedZoneId());
                 modified = OffsetDateTime.ofInstant(cachedInfo.getModifiedInstant(), offset);
             }
