@@ -40,6 +40,6 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: mvn deploy -DskipTests -s mySettings.xml
       - name: CodeCov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
 
 
