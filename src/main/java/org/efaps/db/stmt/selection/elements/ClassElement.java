@@ -40,17 +40,14 @@ public class ClassElement
     /** The type. */
     private Type type;
 
-    /** The added. */
-    private final boolean added = false;
-
     public Classification getClassification()
     {
         return classification;
     }
 
-    public ClassElement setClassification(final Classification _classification)
+    public ClassElement setClassification(final Classification classification)
     {
-        classification = _classification;
+        this.classification = classification;
         return this;
     }
 
@@ -59,41 +56,47 @@ public class ClassElement
         return type;
     }
 
-    public ClassElement setType(final Type _type)
+    public ClassElement setType(final Type type)
     {
-        type = _type;
+        this.type = type;
         setDBTable(type.getMainTable());
         return this;
     }
 
     @Override
-    public TableIdx getJoinTableIdx(final SQLSelect _sqlSelect)
+    public TableIdx getJoinTableIdx(final SQLSelect sqlSelect)
         throws EFapsException
     {
         final String tableName = ((SQLTable) getTable()).getSqlTable();
         final String joinTableName = classification.getMainTable().getSqlTable();
-        return _sqlSelect.getIndexer().getTableIdx(joinTableName, tableName, "ID");
+        TableIdx idx;
+        if (getClassification().getMainTable().getSqlColType() != null) {
+            idx = sqlSelect.getIndexer().getTableIdx(joinTableName, tableName, "ID", getClassification().getName());
+        } else {
+            idx = sqlSelect.getIndexer().getTableIdx(joinTableName, tableName, "ID");
+        }
+        return idx;
     }
 
     @Override
-    public void append2SQLSelect(final SQLSelect _sqlSelect)
+    public void append2SQLSelect(final SQLSelect sqlSelect)
         throws EFapsException
     {
         if (getTable() instanceof SQLTable) {
-            appendBaseTable(_sqlSelect, (SQLTable) getTable());
+            appendBaseTable(sqlSelect, (SQLTable) getTable());
 
-            final TableIdx joinTableidx = getJoinTableIdx(_sqlSelect);
+            final TableIdx joinTableidx = getJoinTableIdx(sqlSelect);
             if (joinTableidx.isCreated()) {
                 final TableIdx tableidx;
                 if (getPrevious() != null && getPrevious() instanceof IJoinTableIdx) {
-                    tableidx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(_sqlSelect);
+                    tableidx = ((IJoinTableIdx) getPrevious()).getJoinTableIdx(sqlSelect);
                 } else {
-                    tableidx = _sqlSelect.getIndexer().getTableIdx(((SQLTable) getTable()).getSqlTable());
+                    tableidx = sqlSelect.getIndexer().getTableIdx(((SQLTable) getTable()).getSqlTable());
                 }
                 final Attribute joinAttr = classification.getAttribute(classification.getLinkAttributeName());
                 final String joinTableName = joinAttr.getTable().getSqlTable();
                 final String linktoColName = type.getAttribute("ID").getSqlColNames().get(0);
-                _sqlSelect.leftJoin(joinTableName, joinTableidx.getIdx(), joinAttr.getSqlColNames().get(0),
+                sqlSelect.leftJoin(joinTableName, joinTableidx.getIdx(), joinAttr.getSqlColNames().get(0),
                                 tableidx.getIdx(), linktoColName);
             }
         }
@@ -102,24 +105,24 @@ public class ClassElement
     /**
      * Append base table if not added already from other element.
      *
-     * @param _sqlSelect the sql select
-     * @param _sqlTable the sql table
+     * @param sqlSelect the sql select
+     * @param sqlTable the sql table
      */
-    protected void appendBaseTable(final SQLSelect _sqlSelect, final SQLTable _sqlTable)
+    protected void appendBaseTable(final SQLSelect sqlSelect, final SQLTable sqlTable)
     {
-        if (_sqlSelect.getFromTables().isEmpty()) {
-            final TableIdx tableidx = _sqlSelect.getIndexer().getTableIdx(_sqlTable.getSqlTable());
+        if (sqlSelect.getFromTables().isEmpty()) {
+            final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(sqlTable.getSqlTable());
             if (tableidx.isCreated()) {
-                _sqlSelect.from(tableidx.getTable(), tableidx.getIdx());
+                sqlSelect.from(tableidx.getTable(), tableidx.getIdx());
             }
         }
     }
 
     @Override
-    public Object getObject(final Object[] _row)
+    public Object getObject(final Object[] row)
         throws EFapsException
     {
-        return getNext().getObject(_row);
+        return getNext().getObject(row);
     }
 
     @Override
