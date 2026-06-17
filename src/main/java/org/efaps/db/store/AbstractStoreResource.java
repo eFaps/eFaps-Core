@@ -540,6 +540,13 @@ public abstract class AbstractStoreResource
         return this.storeEvent;
     }
 
+    protected void cleanCache() {
+        if (getInstance() != null && getInstance().isValid()) {
+            final var cache = getCache();
+            cache.remove(getInstance().getOid());
+        }
+    }
+
     /**
      * Wraps the standard {@link InputStream} to get an input stream for the
      * needs of eFaps.

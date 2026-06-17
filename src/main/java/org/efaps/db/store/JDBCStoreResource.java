@@ -159,6 +159,7 @@ public class JDBCStoreResource
             throw new EFapsException(JDBCStoreResource.class, "write.SQLException", e);
         }
         setFileInfo(_fileName, size);
+        cleanCache();
         return size;
     }
 

@@ -324,6 +324,7 @@ public class VFSStoreResource
             }
             tmpFile.close();
             setFileInfo(_fileName, size);
+            cleanCache();
             return size;
         } catch (final IOException e) {
             VFSStoreResource.LOG.error("write of content failed", e);

@@ -152,6 +152,7 @@ public class S3StoreResource
         LOG.info("Uploaded {}, response: {}", getInstance().getOid(), response);
         setFileInfo(fileName, size);
         getExistsCache().put(getInstance().getOid(), true);
+        cleanCache();
         return size;
     }
 

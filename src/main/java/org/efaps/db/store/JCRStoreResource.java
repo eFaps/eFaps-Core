@@ -293,6 +293,7 @@ public class JCRStoreResource
         } catch (final IOException e) {
             throw new EFapsException(JCRStoreResource.class, "write.IOException", e);
         }
+        cleanCache();
         return size;
     }
 
