@@ -489,7 +489,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
-            <version>16.1.4</version>
+            <version>16.2.1</version>
             <exclusions>
                 <exclusion>
                     <artifactId>hibernate-jpa-2.0-api</artifactId>
@@ -504,7 +504,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <version>16.1.4</version>
+            <version>16.2.1</version>
         </dependency>
         <!--
         <dependency>
@@ -516,7 +516,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-remote</artifactId>
-            <version>16.1.4</version>
+            <version>16.2.1</version>
         </dependency>
         <!-- Infinispan needs jboss logging or it will fail -->
         <dependency>
