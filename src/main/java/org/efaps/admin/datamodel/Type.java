@@ -69,6 +69,7 @@ import org.efaps.db.QueryCache;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
+import org.efaps.util.IFormatedLog;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
@@ -82,6 +83,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Type
     extends AbstractDataModelObject
+    implements IFormatedLog
 {
 
     /**
@@ -1443,6 +1445,12 @@ public class Type
     }
 
     @Override
+    public String logInfo()
+    {
+        return new StringBuilder().append("Type[").append(getName()).append("]").toString();
+    }
+
+    @Override
     public boolean equals(final Object _obj)
     {
         final boolean ret;
@@ -1495,14 +1503,14 @@ public class Type
      * @return instance of class {@link Type}
      * @throws CacheReloadException on error
      */
-    public static Type get(final long _id)
+    public static Type get(final long id)
         throws CacheReloadException
     {
         final var cache = InfinispanCache.get().<Long, Type>getCache(Type.IDCACHE);
-        if (!cache.containsKey(_id)) {
-            Type.getTypeFromDB(Type.SQL_ID, _id);
+        if (!cache.containsKey(id)) {
+            Type.getTypeFromDB(Type.SQL_ID, id);
         }
-        return cache.get(_id);
+        return cache.get(id);
     }
 
     /**

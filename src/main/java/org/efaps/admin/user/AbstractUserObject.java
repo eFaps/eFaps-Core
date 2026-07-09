@@ -103,7 +103,7 @@ public abstract class AbstractUserObject
         try {
             ret = hasChildPerson(Context.getThreadContext().getPerson());
         } catch (final EFapsException e) {
-            AbstractUserObject.LOG.error("could not read Person ", e);
+            LOG.atError().setMessage("could not read Person") .log();
         }
         return ret;
     }

@@ -38,6 +38,10 @@ import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import jakarta.annotation.Generated;
+
 /**
  * This Class is the run level for eFaps. It provides the possibility to load
  * only the specified or needed parts into the Cache. It can be defined within
@@ -350,6 +354,7 @@ public final class RunLevel
      *     with the method</li>
      * </ul>
      */
+    @JsonDeserialize(builder = CacheMethod.Builder.class)
     public static final class CacheMethod
     {
         /**
@@ -366,6 +371,14 @@ public final class RunLevel
          * Parameter for the static method used to initialized the cache.
          */
         private final String parameter;
+
+        @Generated("SparkTools")
+        private CacheMethod(Builder builder)
+        {
+            this.className = builder.className;
+            this.methodName = builder.methodName;
+            this.parameter = builder.parameter;
+        }
 
         /**
          *  Constructor for the {@link CacheMethod} in the case that there are only
@@ -406,7 +419,10 @@ public final class RunLevel
         public void callMethod()
             throws EFapsException
         {
-            LOG.info("  Calling RunLevel: {} Method: {} ", className, methodName);
+            LOG.atInfo().setMessage("  Calling RunLevel: {} Method: {} ")
+                .addArgument(className)
+                .addArgument(methodName)
+                .log();
             try {
                 final Class<?> cls = Class.forName(className);
                 if (parameter != null) {
@@ -456,6 +472,48 @@ public final class RunLevel
                                              className,
                                              methodName);
                 }
+            }
+        }
+
+        @Generated("SparkTools")
+        public static Builder builder()
+        {
+            return new Builder();
+        }
+
+        @Generated("SparkTools")
+        public static final class Builder
+        {
+
+            private String className;
+            private String methodName;
+            private String parameter;
+
+            private Builder()
+            {
+            }
+
+            public Builder withClassName(String className)
+            {
+                this.className = className;
+                return this;
+            }
+
+            public Builder withMethodName(String methodName)
+            {
+                this.methodName = methodName;
+                return this;
+            }
+
+            public Builder withParameter(String parameter)
+            {
+                this.parameter = parameter;
+                return this;
+            }
+
+            public CacheMethod build()
+            {
+                return new CacheMethod(this);
             }
         }
     }

@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.util.EFapsException;
+import org.efaps.util.IFormatedLog;
 import org.efaps.util.OIDUtil;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public final class Instance
-    implements Serializable
+    implements Serializable, IFormatedLog
 {
     /**
      * Logging instance used in this class.
@@ -358,6 +359,15 @@ public final class Instance
                         .append("type", getType())
                         .append("id", getId())
                         .toString();
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return new StringBuilder().append("Instance[oid=").append(getOid())
+                        .append(", type=").append(getType().logInfo())
+                        .append(", id=").append(getId())
+                        .append("]").toString();
     }
 
     /**
