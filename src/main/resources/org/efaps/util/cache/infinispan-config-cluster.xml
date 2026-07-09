@@ -19,7 +19,7 @@
   xmlns="urn:infinispan:config:16.2">
 
   <remote-cache-containers
-    xmlns="urn:infinispan:config:store:remote:16.1">
+    xmlns="urn:infinispan:config:store:remote:16.2">
     <remote-cache-container name="remote-cache"
       uri="${hotrodUrl}?max-active=10&amp;exhausted-action=CREATE_NEW" />
   </remote-cache-containers>
@@ -55,7 +55,7 @@
       name="${prefix:}org.efaps.admin.common.Association.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.common.Association.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -66,7 +66,7 @@
       name="${prefix:}org.efaps.admin.common.Association.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.common.Association.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -77,7 +77,7 @@
       name="${prefix:}org.efaps.admin.common.Association.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.common.Association.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -88,7 +88,7 @@
       name="${prefix:}org.efaps.admin.common.Association.Key">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.common.Association.Key-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -123,7 +123,7 @@
       name="${prefix:}org.efaps.db.store.S3StoreResource.ExistsCache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.db.store.S3StoreResource.ExistsCache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -135,7 +135,7 @@
       name="${prefix:}org.efaps.db.store.AbstractStoreResource.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.db.store.AbstractStoreResource.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -148,7 +148,7 @@
       name="${prefix:}org.efaps.db.GeneralInstance.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.db.GeneralInstance.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -160,7 +160,7 @@
       name="${prefix:}org.efaps.admin.index.Queue.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.index.Queue.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -172,7 +172,7 @@
       name="${prefix:}org.efaps.admin.dbproperty.DBProperties">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.dbproperty.DBProperties-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -189,7 +189,7 @@
       name="${prefix:}org.efaps.admin.ui.Command.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Command.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -200,7 +200,7 @@
       name="${prefix:}org.efaps.admin.ui.Command.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Command.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -211,7 +211,7 @@
       name="${prefix:}org.efaps.admin.ui.Command.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Command.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -222,7 +222,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Menu.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Menu.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -232,7 +232,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Menu.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Menu.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -242,7 +242,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Menu.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Menu.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -253,7 +253,7 @@
       name="${prefix:}org.efaps.admin.ui.Table.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Table.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -263,7 +263,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Table.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Table.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -274,7 +274,7 @@
       name="${prefix:}org.efaps.admin.ui.Table.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Table.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -284,7 +284,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Form.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Form.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -294,7 +294,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Form.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Form.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -304,7 +304,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Form.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Form.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -315,7 +315,7 @@
       name="${prefix:}org.efaps.admin.ui.Module.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Module.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -325,7 +325,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Module.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Module.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -336,7 +336,7 @@
       name="${prefix:}org.efaps.admin.ui.Module.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Module.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -347,7 +347,7 @@
       name="${prefix:}org.efaps.admin.ui.Search.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Search.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -357,7 +357,7 @@
     <local-cache name="${prefix:}org.efaps.admin.ui.Search.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Search.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -368,7 +368,7 @@
       name="${prefix:}org.efaps.admin.ui.Search.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.ui.Search.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -391,7 +391,7 @@
       name="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SQLTable.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -402,7 +402,7 @@
       name="${prefix:}org.efaps.admin.datamodel.SQLTable.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SQLTable.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -413,7 +413,7 @@
       name="${prefix:}org.efaps.admin.datamodel.SQLTable.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SQLTable.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -432,7 +432,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Type.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Type.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -443,7 +443,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Type.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Type.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -454,7 +454,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Type.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Type.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -467,7 +467,7 @@
       name="${prefix:}org.efaps.admin.common.SystemConfiguration.UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -478,7 +478,7 @@
       name="${prefix:}org.efaps.admin.common.SystemConfiguration.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -489,7 +489,7 @@
       name="${prefix:}org.efaps.admin.common.SystemConfiguration.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.SystemConfiguration.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -501,7 +501,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Attribute.Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Attribute.Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -512,7 +512,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Attribute.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Attribute.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -524,7 +524,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Status.Group4UUID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Status.Group4UUID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -535,7 +535,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Status.Group4Name">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Status.Group4Name-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -546,7 +546,7 @@
       name="${prefix:}org.efaps.admin.datamodel.Status.ID">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.admin.datamodel.Status.ID-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -664,7 +664,7 @@
       name="${prefix:}org.efaps.backend.resources.ImageResource.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.backend.resources.ImageResource.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -676,7 +676,7 @@
       name="${prefix:}org.efaps.esjp.ui.util.FileUtil.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.esjp.ui.util.FileUtil.Cache.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -688,7 +688,7 @@
       name="${prefix:}org.efaps.esjp.ui.rest.TableController.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.esjp.ui.rest.TableController.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -699,7 +699,7 @@
       name="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
@@ -710,7 +710,7 @@
       name="${prefix:}org.efaps.esjp.pos.MonitoringService.ReqCache">
       <persistence passivation="false">
         <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.1"
+          xmlns="urn:infinispan:config:store:remote:16.2"
           cache="${prefix:}org.efaps.esjp.pos.MonitoringService.ReqCache-persistence"
           remote-cache-container="remote-cache" shared="true">
         </remote-store>
