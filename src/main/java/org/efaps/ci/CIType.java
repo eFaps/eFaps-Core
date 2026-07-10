@@ -15,6 +15,8 @@
  */
 package org.efaps.ci;
 
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
 //CHECKSTYLE:OFF
 public abstract class CIType
     extends CIObject
+    implements IFormatedLog
 {
 
     /**
@@ -59,9 +62,9 @@ public abstract class CIType
      * Constructor setting the uuid.
      * @param _uuid UUID of this type
      */
-    protected CIType(final String _uuid)
+    protected CIType(final String uuid)
     {
-        super(_uuid);
+        super(uuid);
     }
 
     /**
@@ -87,9 +90,9 @@ public abstract class CIType
      * @param _type type to test for parent
      * @return true if this type is a child, otherwise false
      */
-    public boolean isKindOf(final org.efaps.admin.datamodel.Type _type)
+    public boolean isKindOf(final org.efaps.admin.datamodel.Type type)
     {
-        return getType().isKindOf(_type);
+        return getType().isKindOf(type);
     }
 
     /**
@@ -98,8 +101,19 @@ public abstract class CIType
      * @param _type type to test
      * @return true if this type otherwise false
      */
-    public boolean isType(final org.efaps.admin.datamodel.Type _type)
+    public boolean isType(final org.efaps.admin.datamodel.Type type)
     {
-        return getType().equals(_type);
+        return getType().equals(type);
     }
+
+    @Override
+    public String logInfo()
+    {
+        final var type = getType();
+        return LogMsg.builder("CIType")
+                        .with("uuid", uuid)
+                        .with("type", type == null ? null : type)
+                        .build();
+    }
+
 }
