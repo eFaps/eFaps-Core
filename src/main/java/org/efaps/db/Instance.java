@@ -367,7 +367,7 @@ public final class Instance
     {
         return LogMsg.builder("Instance")
                         .with("oid", getOid())
-                        .with("type", getType().logInfo())
+                        .with("type", getType() == null ? null : getType().logInfo())
                         .with("id", getId())
                         .build();
     }
