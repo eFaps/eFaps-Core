@@ -22,6 +22,8 @@ import org.efaps.ci.CIAdminUserInterface;
 import org.efaps.db.Instance;
 import org.efaps.jaas.AppAccessHandler;
 import org.efaps.util.EFapsException;
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Menu
     extends AbstractMenu
+    implements IFormatedLog
 {
 
     /**
@@ -112,6 +115,15 @@ public class Menu
             ret = true;
         }
         return ret;
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("UIMenu")
+                        .with("id", getId())
+                        .with("name", getName())
+                        .build();
     }
 
     /**

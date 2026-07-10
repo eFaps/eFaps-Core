@@ -18,6 +18,8 @@ package org.efaps.admin.ui;
 import java.util.UUID;
 
 import org.efaps.ci.CIAdminUserInterface;
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Command
     extends AbstractCommand
+    implements IFormatedLog
 {
     /**
      * Logger for this class.
@@ -52,6 +55,15 @@ public class Command
                    final String _name)
     {
         super(_id, _uuid, _name);
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("UICmd")
+                        .with("id", getId())
+                        .with("name", getName())
+                        .build();
     }
 
     /**

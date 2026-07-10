@@ -33,7 +33,7 @@ public class LogMsg
                        final Object value)
     {
         if (first) {
-            first = true;
+            first = false;
         } else {
             bldr.append(", ");
         }

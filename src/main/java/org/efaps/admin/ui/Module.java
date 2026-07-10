@@ -18,12 +18,15 @@ package org.efaps.admin.ui;
 import java.util.UUID;
 
 import org.efaps.ci.CIAdminUserInterface;
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Module
     extends AbstractUserInterfaceObject
+    implements IFormatedLog
 {
     /**
      * Logging instance used in this class.
@@ -45,6 +48,15 @@ public class Module
                   final String name)
     {
         super(id, uuid, name);
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("UIModule")
+                        .with("id", getId())
+                        .with("name", getName())
+                        .build();
     }
 
     /**
