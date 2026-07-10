@@ -61,8 +61,8 @@ public class Form
     public String logInfo()
     {
         return LogMsg.builder("UIForm")
-                        .with("id", getId())
-                        .with("name", getName())
+                        .info("id", getId())
+                        .info("name", getName())
                         .build();
     }
 

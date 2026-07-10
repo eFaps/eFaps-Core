@@ -15,6 +15,8 @@
  */
 package org.efaps.ci;
 
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
 //CHECKSTYLE:OFF
 public abstract class CITable
     extends CICollection
+    implements IFormatedLog
 {
 //CHECKSTYLE:ON
 
@@ -63,5 +66,14 @@ public abstract class CITable
             CITable.LOG.error("Error on retrieving Type for CIType with uuid: {}", this.uuid);
         }
         return ret;
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("CITable")
+                        .info("uuid", uuid)
+                        .info("table", getType())
+                        .build();
     }
 }

@@ -121,8 +121,8 @@ public class Menu
     public String logInfo()
     {
         return LogMsg.builder("UIMenu")
-                        .with("id", getId())
-                        .with("name", getName())
+                        .info("id", getId())
+                        .info("name", getName())
                         .build();
     }
 

@@ -1449,7 +1449,7 @@ public class Type
     public String logInfo()
     {
         return LogMsg.builder("Type")
-                        .with("name", getName())
+                        .info("name", getName())
                         .build();
     }
 

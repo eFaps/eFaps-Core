@@ -61,8 +61,8 @@ public class Command
     public String logInfo()
     {
         return LogMsg.builder("UICmd")
-                        .with("id", getId())
-                        .with("name", getName())
+                        .info("id", getId())
+                        .info("name", getName())
                         .build();
     }
 

@@ -109,10 +109,9 @@ public abstract class CIType
     @Override
     public String logInfo()
     {
-        final var type = getType();
         return LogMsg.builder("CIType")
-                        .with("uuid", uuid)
-                        .with("type", type == null ? null : type)
+                        .info("uuid", uuid)
+                        .info("type", getType())
                         .build();
     }
 

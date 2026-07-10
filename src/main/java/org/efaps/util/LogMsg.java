@@ -29,13 +29,19 @@ public class LogMsg
         return logMsg;
     }
 
-    public LogMsg with(final String key,
-                       final Object value)
+    public LogMsg info(final String key,
+                       final Object object)
     {
         if (first) {
             first = false;
         } else {
             bldr.append(", ");
+        }
+        Object value;
+        if (object instanceof final IFormatedLog formatedLog) {
+            value = formatedLog.logInfo();
+        } else {
+            value = object;
         }
         bldr.append(key).append("=").append(value);
         return this;

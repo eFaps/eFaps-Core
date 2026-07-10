@@ -54,8 +54,8 @@ public class Module
     public String logInfo()
     {
         return LogMsg.builder("UIModule")
-                        .with("id", getId())
-                        .with("name", getName())
+                        .info("id", getId())
+                        .info("name", getName())
                         .build();
     }
 
