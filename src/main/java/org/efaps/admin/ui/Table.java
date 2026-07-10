@@ -18,6 +18,8 @@ package org.efaps.admin.ui;
 import java.util.UUID;
 
 import org.efaps.ci.CIAdminUserInterface;
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Table
     extends AbstractCollection
-    implements Cloneable
+    implements Cloneable, IFormatedLog
 {
 
     /**
@@ -70,6 +72,15 @@ public class Table
             e.printStackTrace();
         }
         return ret;
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("UITable")
+                        .with("id", getId())
+                        .with("name", getName())
+                        .build();
     }
 
     /**

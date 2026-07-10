@@ -20,6 +20,8 @@ import java.util.UUID;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.ci.CIAdminUserInterface;
 import org.efaps.util.EFapsException;
+import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Form
     extends AbstractCollection
+    implements IFormatedLog
 {
     /**
      * Logging instance used in this class.
@@ -52,6 +55,15 @@ public class Form
                 final String _name)
     {
         super(_id, _uuid, _name);
+    }
+
+    @Override
+    public String logInfo()
+    {
+        return LogMsg.builder("UIForm")
+                        .with("id", getId())
+                        .with("name", getName())
+                        .build();
     }
 
     /**

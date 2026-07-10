@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.util.EFapsException;
 import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.OIDUtil;
 import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
@@ -364,10 +365,11 @@ public final class Instance
     @Override
     public String logInfo()
     {
-        return new StringBuilder().append("Instance[oid=").append(getOid())
-                        .append(", type=").append(getType().logInfo())
-                        .append(", id=").append(getId())
-                        .append("]").toString();
+        return LogMsg.builder("Instance")
+                        .with("oid", getOid())
+                        .with("type", getType().logInfo())
+                        .with("id", getId())
+                        .build();
     }
 
     /**

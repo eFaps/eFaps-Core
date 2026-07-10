@@ -70,6 +70,7 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.IFormatedLog;
+import org.efaps.util.LogMsg;
 import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.slf4j.Logger;
@@ -1447,7 +1448,9 @@ public class Type
     @Override
     public String logInfo()
     {
-        return new StringBuilder().append("Type[").append(getName()).append("]").toString();
+        return LogMsg.builder("Type")
+                        .with("name", getName())
+                        .build();
     }
 
     @Override
