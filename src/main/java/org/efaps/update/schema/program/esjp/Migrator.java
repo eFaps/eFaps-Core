@@ -25,11 +25,12 @@ public class Migrator
     {
         final var replacementStr1 = Strings.CS.replace(orginalStr, "javax.ws", "jakarta.ws");
         final var replacementStr2 = Strings.CS.replace(replacementStr1, "javax.xml.soap", "jakarta.xml.soap");
-        final var replacementStr3 = Strings.CS.replace(replacementStr2,
+        final var replacementStr3 = Strings.CS.replace(replacementStr2, "javax.xml.bind", "jakarta.xml.bind");
+        final var replacementStr4 = Strings.CS.replace(replacementStr3,
                         "net.sf.jasperreports.engine.export.JRXlsExporter",
                         "net.sf.jasperreports.poi.export.JRXlsExporter");
 
-        final var replacementStr4 =  replacementStr3.replaceAll("EFAPSMIGRATE_DELSTART[\\w\\W]*EFAPSMIGRATE_DELSTOP", "");
-        return replacementStr4;
+        final var replacementStr5 =  replacementStr4.replaceAll("EFAPSMIGRATE_DELSTART[\\w\\W]*EFAPSMIGRATE_DELSTOP", "");
+        return replacementStr5;
     }
 }

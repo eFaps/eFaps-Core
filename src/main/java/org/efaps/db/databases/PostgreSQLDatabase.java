@@ -128,12 +128,10 @@ public class PostgreSQLDatabase
 
             for (int i = 0; i < cols; i++) {
                 switch (metaData.getColumnType(i + 1)) {
-                    case java.sql.Types.TIMESTAMP:
-                        result[i] = _rs.getTimestamp(i + 1);
-                        break;
-                    default:
-                        result[i] = _rs.getObject(i + 1);
+                    case java.sql.Types.TIMESTAMP -> result[i] = _rs.getTimestamp(i + 1);
+                    default -> result[i] = _rs.getObject(i + 1);
                 }
+                ;
             }
             return result;
         }
@@ -149,7 +147,7 @@ public class PostgreSQLDatabase
         addMapping(ColumnType.REAL,         "real",      "null", "float4");
         addMapping(ColumnType.STRING_SHORT, "char",      "null", "bpchar");
         addMapping(ColumnType.STRING_LONG,  "varchar",   "null", "varchar");
-        addMapping(ColumnType.DATETIME,     "timestamp", "null", "timestamp", "timestamp without time zone");
+        addMapping(ColumnType.DATETIME,     "timestamp", "null", "timestamp", "timestamp without time zone", "time");
         addMapping(ColumnType.BLOB,         "bytea",     "null", "bytea");
         addMapping(ColumnType.CLOB,         "text",      "null", "text");
         addMapping(ColumnType.BOOLEAN,      "boolean",   "null", "bool");
