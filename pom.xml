@@ -468,7 +468,11 @@
             <artifactId>quartz</artifactId>
             <version>2.5.2</version>
         </dependency>
-
+        <dependency>
+            <groupId>dev.failsafe</groupId>
+            <artifactId>failsafe</artifactId>
+            <version>3.3.2</version>
+        </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
