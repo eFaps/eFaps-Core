@@ -54,6 +54,7 @@ import acolyte.jdbc.CompositeHandler;
 import acolyte.jdbc.StatementHandler;
 import acolyte.jdbc.UpdateResult;
 import jakarta.transaction.TransactionManager;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 /**
  * The Class AbstractTest.
  *
@@ -155,6 +156,7 @@ public abstract class AbstractTest
             bind(20000).to(Integer.class).named("transactionManagerTimeOut");
             bind(MockDatabase.class).to(AbstractDatabase.class).in(jakarta.inject.Singleton.class);
             bind(TransactionManagerImple.class).to(TransactionManager.class);
+            bind(TransactionSynchronizationRegistryImple.class).to(TransactionSynchronizationRegistry.class);
             bindFactory(DatasourceProvider.class).to(DataSource.class);
         }
     }

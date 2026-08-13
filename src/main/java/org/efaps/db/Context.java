@@ -60,6 +60,7 @@ import jakarta.transaction.Status;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 
 /**
  * @author The eFaps Team
@@ -205,6 +206,9 @@ public final class Context
 
     @Inject
     private TransactionManager transactionManager;
+
+    @Inject
+    private TransactionSynchronizationRegistry synchronizationRegistry;
 
     @Inject
     @Named("transactionManagerTimeOut")
@@ -679,6 +683,11 @@ public final class Context
     public Transaction getTransaction()
     {
         return transaction;
+    }
+
+    public TransactionSynchronizationRegistry getSynchronizationRegistry()
+    {
+        return synchronizationRegistry;
     }
 
     /**
