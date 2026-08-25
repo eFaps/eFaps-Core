@@ -26,6 +26,7 @@ import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
 import org.efaps.db.stmt.AbstractFlagged;
 import org.efaps.db.wrapper.SQLSelect;
+import org.efaps.db.wrapper.SQLSelect.Column;
 import org.efaps.db.wrapper.SQLWhere.Criteria;
 import org.efaps.db.wrapper.SQLWhere.Section;
 import org.efaps.db.wrapper.TableIndexer.TableIdx;
@@ -64,7 +65,7 @@ public class NestedQuery
         final List<Type> types = TypeUtil.getTypes(nestedQuery.getTypes());
         final SQLSelect sqlSelect = new SQLSelect("N");
 
-        final Set<AbstractCriterion> typeCriteria = new HashSet<>();
+        final Set<AbstractCriterion> criterias = new HashSet<>();
         for (final Type type : types) {
             final String tableName = type.getMainTable().getSqlTable();
             final TableIdx tableIdx = sqlSelect.getIndexer().getTableIdx(tableName);
@@ -72,50 +73,7 @@ public class NestedQuery
                 sqlSelect.from(tableIdx.getTable(), tableIdx.getIdx());
             }
             if (type.getMainTable().getSqlColType() != null) {
-                typeCriteria.add(TypeCriterion.of(tableIdx, type.getMainTable().getSqlColType(), type.getId()));
-            }
-        }
-
-        boolean added = false;
-        if (nestedQuery.getSelection() != null) {
-            for (final ISelect select : nestedQuery.getSelection().getSelects()) {
-                for (final ISelectElement element : select.getElements()) {
-                    if (element instanceof IAttributeSelectElement) {
-                        for (final Type type : types) {
-                            final String attrName = ((IAttributeSelectElement) element).getName();
-                            final Attribute attr = type.getAttribute(attrName);
-                            if (attr != null) {
-                                final SQLTable table = attr.getTable();
-                                final String tableName = table.getSqlTable();
-                                final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
-                                sqlSelect.column(tableidx.getIdx(), attr.getSqlColNames().get(0));
-                                added = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!added) {
-            final SQLTable table = types.get(0).getMainTable();
-            final String tableName = table.getSqlTable();
-            final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
-            sqlSelect.column(tableidx.getIdx(), "ID");
-        }
-
-        final Filter filter = Filter.get(getFlags(), nestedQuery.getWhere(), types.toArray(new Type[types.size()]));
-        filter.append2SQLSelect(sqlSelect, typeCriteria);
-
-        // add if to the parent part
-        String attrName = null;
-        if (whereElement.getAttribute() != null) {
-            attrName = whereElement.getAttribute();
-        } else {
-            for (final ISelectElement ele : whereElement.getSelect().getElements()) {
-                if (ele instanceof IAttributeSelectElement) {
-                    attrName = ((IAttributeSelectElement) ele).getName();
-                }
+                criterias.add(TypeCriterion.of(tableIdx, type.getMainTable().getSqlColType(), type.getId()));
             }
         }
 
@@ -125,23 +83,134 @@ public class NestedQuery
         } else {
             comparision = Comparison.IN;
         }
-
-        for (final Type type : parentTypes) {
-            final Attribute attr = type.getAttribute(attrName);
-            if (attr != null) {
-                final SQLTable table = attr.getTable();
-                final String tableName = table.getSqlTable();
-                final TableIdx tableidx = parentSqlSelect.getIndexer().getTableIdx(tableName);
-                sections.add(new Criteria()
-                                .tableIndex(tableidx.getIdx())
-                                .colNames(attr.getSqlColNames())
-                                .comparison(comparision)
-                                .values(Set.of(sqlSelect.toString()))
-                                .escape(false)
-                                .connection(term.getConnection())
-                                .setMain(false));
+        if (Comparison.NOTIN.equals(comparision)) {
+            sqlSelect.exists(true);
+            RowCriterion rowCriterion = null;
+            if (nestedQuery.getSelection() != null) {
+                for (final ISelect select : nestedQuery.getSelection().getSelects()) {
+                    for (final ISelectElement element : select.getElements()) {
+                        if (element instanceof IAttributeSelectElement) {
+                            for (final Type type : types) {
+                                final String attrName = ((IAttributeSelectElement) element).getName();
+                                final Attribute attr = type.getAttribute(attrName);
+                                if (attr != null) {
+                                    final SQLTable table = attr.getTable();
+                                    final String tableName = table.getSqlTable();
+                                    final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
+                                    rowCriterion = new RowCriterion(tableidx, attr.getSqlColNames().get(0));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            break;
+            if (rowCriterion == null) {
+                final SQLTable table = types.get(0).getMainTable();
+                final String tableName = table.getSqlTable();
+                final var tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
+                rowCriterion = new RowCriterion(tableidx, table.getSqlColId());
+            }
+
+            String attrName = null;
+            if (whereElement.getAttribute() != null) {
+                attrName = whereElement.getAttribute();
+            } else {
+                for (final ISelectElement ele : whereElement.getSelect().getElements()) {
+                    if (ele instanceof IAttributeSelectElement) {
+                        attrName = ((IAttributeSelectElement) ele).getName();
+                    }
+                }
+            }
+
+            for (final Type type : parentTypes) {
+                final Attribute attr = type.getAttribute(attrName);
+                if (attr != null) {
+                    final SQLTable table = attr.getTable();
+                    final String tableName = table.getSqlTable();
+                    final TableIdx tableidx = parentSqlSelect.getIndexer().getTableIdx(tableName);
+                    final var rowCriteria = new StringBuilder();
+                    new Column(parentSqlSelect.getTablePrefix(), tableidx.getIdx(), attr.getSqlColNames().get(0))
+                                    .appendSQL(rowCriteria);
+                    rowCriterion.setRowColumnValue(rowCriteria.toString());
+
+                    criterias.add(rowCriterion);
+                    final Filter filter = Filter.get(getFlags(), nestedQuery.getWhere(),
+                                    types.toArray(new Type[types.size()]));
+                    filter.append2SQLSelect(sqlSelect, criterias);
+
+                    sections.add(new Criteria()
+                                    .tableIndex(tableidx.getIdx())
+                                    .comparison(comparision)
+                                    .values(Set.of(sqlSelect.toString()))
+                                    .escape(false)
+                                    .connection(term.getConnection())
+                                    .setMain(false));
+                }
+                break;
+            }
+
+        } else {
+            boolean added = false;
+            if (nestedQuery.getSelection() != null) {
+                for (final ISelect select : nestedQuery.getSelection().getSelects()) {
+                    for (final ISelectElement element : select.getElements()) {
+                        if (element instanceof IAttributeSelectElement) {
+                            for (final Type type : types) {
+                                final String attrName = ((IAttributeSelectElement) element).getName();
+                                final Attribute attr = type.getAttribute(attrName);
+                                if (attr != null) {
+                                    final SQLTable table = attr.getTable();
+                                    final String tableName = table.getSqlTable();
+                                    final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
+                                    sqlSelect.column(tableidx.getIdx(), attr.getSqlColNames().get(0));
+                                    added = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!added) {
+                final SQLTable table = types.get(0).getMainTable();
+                final String tableName = table.getSqlTable();
+                final TableIdx tableidx = sqlSelect.getIndexer().getTableIdx(tableName);
+                sqlSelect.column(tableidx.getIdx(), table.getSqlColId());
+            }
+
+            final Filter filter = Filter.get(getFlags(), nestedQuery.getWhere(), types.toArray(new Type[types.size()]));
+            filter.append2SQLSelect(sqlSelect, criterias);
+
+            // add if to the parent part
+            String attrName = null;
+            if (whereElement.getAttribute() != null) {
+                attrName = whereElement.getAttribute();
+            } else {
+                for (final ISelectElement ele : whereElement.getSelect().getElements()) {
+                    if (ele instanceof IAttributeSelectElement) {
+                        attrName = ((IAttributeSelectElement) ele).getName();
+                    }
+                }
+            }
+
+            for (final Type type : parentTypes) {
+                final Attribute attr = type.getAttribute(attrName);
+                if (attr != null) {
+                    final SQLTable table = attr.getTable();
+                    final String tableName = table.getSqlTable();
+                    final TableIdx tableidx = parentSqlSelect.getIndexer().getTableIdx(tableName);
+                    sections.add(new Criteria()
+                                    .tableIndex(tableidx.getIdx())
+                                    .colNames(attr.getSqlColNames())
+                                    .comparison(comparision)
+                                    .values(Set.of(sqlSelect.toString()))
+                                    .escape(false)
+                                    .connection(term.getConnection())
+                                    .setMain(false));
+                }
+                break;
+            }
         }
         return sections;
     }

@@ -41,6 +41,7 @@ public enum SQLPart
     DESC("desc"),
     /** Renders as default: "delete". */
     DELETE("delete"),
+    EXISTS("exists"),
     /** from. */
     FROM("from"),
     /** =. */

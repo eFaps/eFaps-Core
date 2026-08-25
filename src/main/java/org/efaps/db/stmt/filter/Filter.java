@@ -509,7 +509,14 @@ public class Filter
                                                     .sorted()
                                                     .forEach(value -> values.add(value));
 
-                                    if (nullable) {
+                                    if (groupedCriteria.get(0) instanceof final RowCriterion rowCriterion) {
+                                        where.addCriteria(index.intValue(),
+                                                        Collections.singletonList(rowCriterion.getSqlCol()),
+                                                        Comparison.EQUAL,
+                                                        Collections.singleton(rowCriterion.getRowColumnValue()),
+                                                        false, Connection.AND)
+                                                        .setMain(true);
+                                    } else if (nullable) {
                                         final Group group = new Group().setConnection(Connection.AND);
                                         group.add(new Criteria()
                                                         .tableIndex(index.intValue())

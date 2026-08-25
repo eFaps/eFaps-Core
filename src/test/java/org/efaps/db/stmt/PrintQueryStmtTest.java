@@ -443,6 +443,18 @@ public class PrintQueryStmtTest
         verify.verify();
     }
 
+    @Test(description = "Test for nested queries", dataProvider = "nestedQueryDataProvider")
+    public void testNested(final String stmtStr,
+                          final String sql)
+        throws EFapsException
+    {
+        final IPrintQueryStatement stmt = (IPrintQueryStatement) EQL2.parse(stmtStr);
+        final PrintStmt printStmt = PrintStmt.get(stmt);
+        final SQLVerify verify = SQLVerify.builder().withSql(sql).build();
+        printStmt.execute();
+        verify.verify();
+    }
+
     @DataProvider(name = "SpecificDataProvider")
     public static Iterator<Object[]> specificDataProvider(final ITestContext _context)
     {
@@ -860,6 +872,43 @@ public class PrintQueryStmtTest
                         Mocks.RelationTypeSQLTable.getSqlTableName(),
                         Mocks.RealtionFromLinkAttribute.getSQLColumnName(),
                         Mocks.AllAttrLongAttribute.getSQLColumnName()));
+
+        final List<Object[]> ret = new ArrayList<>();
+        final Iterator<String> sqlIter = sqls.iterator();
+        for (final String stmt : stmts) {
+            ret.add(new Object[] { stmt, sqlIter.next() });
+        }
+        return ret;
+    }
+
+    @DataProvider
+    public static Iterator<Object[]> nestedQueryDataProvider()
+    {
+        final List<Object[]> ret = new ArrayList<>();
+        ret.addAll(nestedQueryData());
+        return ret.iterator();
+    }
+
+    public static List<Object[]> nestedQueryData()
+    {
+        final List<String> stmts = new ArrayList<>();
+        final List<String> sqls = new ArrayList<>();
+
+        stmts.add(String.format("print query type %s where %s not in (query type %s) select attribute[%s] ",
+                        Mocks.SimpleType.getName(),  Mocks.IDAttribute.getName(),
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
+        sqls.add(String.format("select T0.%s,T0.ID from %s T0 where not exists ( select 1 from %s N0 where N0.ID = T0.ID_COL)",
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName()));
+
+        stmts.add(String.format("print query type %s where %s in (query type %s) select attribute[%s] ",
+                        Mocks.SimpleType.getName(),  Mocks.IDAttribute.getName(),
+                        Mocks.SimpleType.getName(), Mocks.TestAttribute.getName()));
+        sqls.add(String.format("select T0.%s,T0.ID from %s T0 where T0.ID_COL in ( select N0.ID from %s N0 )",
+                        Mocks.TestAttribute.getSQLColumnName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName(),
+                        Mocks.SimpleTypeSQLTable.getSqlTableName()));
 
         final List<Object[]> ret = new ArrayList<>();
         final Iterator<String> sqlIter = sqls.iterator();

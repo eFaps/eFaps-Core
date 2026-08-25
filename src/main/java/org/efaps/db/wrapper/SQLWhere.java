@@ -188,6 +188,18 @@ public class SQLWhere
                 new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_CLOSE).appendSQL(_cmd);
             } else {
                 final Criteria criteria = (Criteria) section;
+                if (criteria.colNames == null ) {
+                    // NOT EXISTS
+                    if (Comparison.NOTIN.equals(criteria.comparison)) {
+                        new SQLSelect.SQLSelectPart(SQLPart.NOT).appendSQL(_cmd);
+                        new SQLSelect.SQLSelectPart(SQLPart.SPACE).appendSQL(_cmd);
+                        new SQLSelect.SQLSelectPart(SQLPart.EXISTS).appendSQL(_cmd);
+                        new SQLSelect.SQLSelectPart(SQLPart.SPACE).appendSQL(_cmd);
+                        new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_OPEN).appendSQL(_cmd);
+                        new SQLSelect.Value(criteria.values.iterator().next()).appendSQL(_cmd);
+                        new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_CLOSE).appendSQL(_cmd);
+                    }
+                } else {
                 for (final String colName : criteria.colNames) {
                     new SQLSelect.Column(_tablePrefix, criteria.tableIndex, colName).appendSQL(_cmd);
                     new SQLSelect.SQLSelectPart(SQLPart.SPACE).appendSQL(_cmd);
@@ -273,6 +285,7 @@ public class SQLWhere
                             new SQLSelect.SQLSelectPart(SQLPart.PARENTHESIS_CLOSE).appendSQL(_cmd);
                         }
                     }
+                }
                 }
             }
         }

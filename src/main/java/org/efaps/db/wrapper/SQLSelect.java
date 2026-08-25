@@ -78,6 +78,8 @@ public class SQLSelect
 
     private boolean squash;
     private boolean count;
+    private boolean exists;
+
     /**
      * Instantiates a new SQL select.
      */
@@ -337,7 +339,7 @@ public class SQLSelect
      */
     public String getSQL()
     {
-        final StringBuilder cmd = new StringBuilder().append(" ")
+        final var cmd = new StringBuilder().append(" ")
                         .append(Context.getDbType().getSQLPart(SQLPart.SELECT)).append(" ");
         if (distinct) {
             cmd.append(Context.getDbType().getSQLPart(SQLPart.DISTINCT)).append(" ");
@@ -353,6 +355,9 @@ public class SQLSelect
         }
         if (count) {
             cmd.append(Context.getDbType().getSQLPart(SQLPart.COUNT));
+        }
+        if (exists) {
+            cmd.append("1");
         }
         cmd.append(" ").append(Context.getDbType().getSQLPart(SQLPart.FROM)).append(" ");
         first = true;
@@ -464,6 +469,12 @@ public class SQLSelect
     public SQLSelect count(final boolean count)
     {
         this.count = count;
+        return this;
+    }
+
+    public SQLSelect exists(final boolean exists)
+    {
+        this.exists = exists;
         return this;
     }
 
@@ -653,6 +664,11 @@ public class SQLSelect
     public void offset(final Integer offset)
     {
         this.offset = offset == null ? 0 : offset;
+    }
+
+    public String getTablePrefix()
+    {
+        return tablePrefix;
     }
 
     @Override
@@ -1178,9 +1194,9 @@ public class SQLSelect
          * @param _tableIndex related index of the table
          * @param _columnName SQL name of the column
          */
-        protected Column(final String _tablePrefix,
-                         final Integer _tableIndex,
-                         final String _columnName)
+        public Column(final String _tablePrefix,
+                      final Integer _tableIndex,
+                      final String _columnName)
         {
             tablePrefix = _tablePrefix;
             tableIndex = _tableIndex;
