@@ -717,6 +717,17 @@
       </persistence>
       <encoding media-type="application/x-protostream" />
     </local-cache>
+    <local-cache
+      name="${prefix:}org.efaps.esjp.graphql.GraphQLUtilCache">
+      <persistence passivation="false">
+        <remote-store
+          xmlns="urn:infinispan:config:store:remote:16.2"
+          cache="${prefix:}org.efaps.esjp.graphql.GraphQLUtilCache-persistence"
+          remote-cache-container="remote-cache" shared="true">
+        </remote-store>
+      </persistence>
+      <encoding media-type="application/x-protostream" />
+    </local-cache>
   </cache-container>
 </infinispan>
 
