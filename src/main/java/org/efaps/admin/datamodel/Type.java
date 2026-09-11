@@ -209,7 +209,7 @@ public class Type
     /**
      * Name of the Cache by Name.
      */
-    private static String NAMECACHE = Type.class.getName() + ".Name";
+    protected static String NAMECACHE = Type.class.getName() + ".Name";
 
     /**
      * Instance variable for the parent type from which this type is derived.

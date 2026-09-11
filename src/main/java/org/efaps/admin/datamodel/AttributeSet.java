@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
+import org.efaps.util.cache.InfinispanCache;
 
 /**
  * Basic class for AttributeSets.
@@ -31,6 +32,7 @@ import org.efaps.util.cache.CacheReloadException;
 public class AttributeSet
     extends Type
 {
+
     /**
      * Needed for serialization.
      */
@@ -52,17 +54,17 @@ public class AttributeSet
     private Set<String> setAttributes = new HashSet<>();
 
     /**
-     * @param _id               id of this set
-     * @param _type             type of his set
-     * @param _name             name of this set
-     * @param _attributeType    type of the attribute
-     * @param _sqlColNames      name of the sql column
-     * @param _tableId          id of the table
-     * @param _typeLinkId       id of the type link
-     * @param _uuid             UUID of this AttributeSet as String
+     * @param _id id of this set
+     * @param _type type of his set
+     * @param _name name of this set
+     * @param _attributeType type of the attribute
+     * @param _sqlColNames name of the sql column
+     * @param _tableId id of the table
+     * @param _typeLinkId id of the type link
+     * @param _uuid UUID of this AttributeSet as String
      * @throws EFapsException on error
      */
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     protected AttributeSet(final long _id,
                            final long _typeId,
                            final String typeName,
@@ -74,7 +76,7 @@ public class AttributeSet
                            final String _uuid)
         throws EFapsException
     {
-        //CHECKSTYLE:ON
+        // CHECKSTYLE:ON
         super(_id, _uuid, AttributeSet.evaluateName(typeName, _name));
 
         this.attributeName = _name == null ? null : _name.trim();
@@ -119,7 +121,8 @@ public class AttributeSet
         return null;
     }
 
-    protected long getAttributeTypeId() {
+    protected long getAttributeTypeId()
+    {
         return attributeTypeId;
     }
 
@@ -163,7 +166,8 @@ public class AttributeSet
         throws CacheReloadException
     {
         super.addAttributes(_inherited, _attributes);
-        // in the superconstructur this method is called, so the <code>Set<code> might not
+        // in the superconstructur this method is called, so the <code>Set<code>
+        // might not
         // be initialised
         if (this.setAttributes != null) {
             for (final Attribute attribute : _attributes) {
@@ -226,14 +230,19 @@ public class AttributeSet
      * @return AttributeSet
      * @throws CacheReloadException on error
      */
-    public static AttributeSet find(final String _typeName,
-                                    final String _name)
+    public static AttributeSet find(final String typeName,
+                                    final String name)
         throws CacheReloadException
     {
-        AttributeSet ret = (AttributeSet) Type.get(AttributeSet.evaluateName(_typeName, _name));
+        final var attrSetName = AttributeSet.evaluateName(typeName, name);
+        AttributeSet ret = (AttributeSet) Type.get(attrSetName);
         if (ret == null) {
-            if (Type.get(_typeName).getParentType() != null) {
-                ret = AttributeSet.find(Type.get(_typeName).getParentType().getName(), _name);
+            if (Type.get(typeName).getParentType() != null) {
+                ret = AttributeSet.find(Type.get(typeName).getParentType().getName(), name);
+            }
+            if (ret != null) {
+                final var nameCache = InfinispanCache.get().<String, Type>getCache(Type.NAMECACHE);
+                nameCache.put(attrSetName, ret);
             }
         }
         return ret;
