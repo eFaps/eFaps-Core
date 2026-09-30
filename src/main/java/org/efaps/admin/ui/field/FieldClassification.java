@@ -126,7 +126,7 @@ public class FieldClassification
             } else {
                 sysConf = SystemConfiguration.get(config);
             }
-            final var attrValue = sysConf.getAttributeValue(attr);
+            final var attrValue = sysConf.getAttributeValue(attr, true);
             if (StringUtils.isNotEmpty(attrValue)) {
                 classificationNames = attrValue.split("\\r?\\n");
             } else {

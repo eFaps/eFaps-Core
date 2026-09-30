@@ -18,6 +18,8 @@ package org.efaps.admin.common;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.security.Provider;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -33,7 +36,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.efaps.admin.datamodel.Type;
+import org.efaps.admin.program.esjp.EsjpScanner;
 import org.efaps.admin.user.Company;
+import org.efaps.api.IEFapsSysConfAttribute;
+import org.efaps.api.annotation.EFapsSysConfAttribute;
+import org.efaps.api.annotation.EFapsSysConfLink;
+import org.efaps.api.annotation.EFapsSystemConfiguration;
 import org.efaps.ci.CIAdminCommon;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
@@ -388,6 +396,13 @@ public final class SystemConfiguration
         return getValue(_key, ConfType.ATTRIBUTE);
     }
 
+    public String getAttributeValue(final String key,
+                                    final boolean lookupDefault)
+        throws EFapsException
+    {
+        return getValue(key, ConfType.ATTRIBUTE, lookupDefault);
+    }
+
     /**
      * Returns for given <code>_key</code> the related boolean attribute value.
      * If no attribute value is found <i>false</i> is returned.
@@ -521,6 +536,13 @@ public final class SystemConfiguration
         return ret;
     }
 
+    private String getValue(final String key,
+                            final ConfType type)
+        throws EFapsException
+    {
+        return getValue(key, type, false);
+    }
+
     /**
      * Gets the value.
      *
@@ -529,25 +551,75 @@ public final class SystemConfiguration
      * @return the value
      * @throws EFapsException on error
      */
-    private String getValue(final String _key,
-                            final ConfType _type)
+    private String getValue(final String key,
+                            final ConfType type,
+                            final boolean lookupDefault)
         throws EFapsException
     {
         final List<Value> fv = values.stream()
-                        .filter(p -> p.type.equals(_type))
-                        .filter(p -> p.key.equals(_key))
+                        .filter(p -> p.type.equals(type))
+                        .filter(p -> p.key.equals(key))
                         .filter(p -> priority(p) > 0)
                         .sorted((_o1,
                                  _o2) -> Integer.compare(priority(_o2), priority(_o1)))
                         .collect(Collectors.toList());
-        SystemConfiguration.LOG.debug("Analyzed for key {}: {}", _key, fv);
+        SystemConfiguration.LOG.debug("Analyzed for key {}: {}", key, fv);
         final String ret;
         if (fv.isEmpty()) {
-            ret = null;
+            if (lookupDefault) {
+                final var defaultValue = scanForDefault(key);
+                values.add(new Value(type, key, defaultValue, 0, null));
+                ret = defaultValue;
+            } else {
+                ret = null;
+            }
         } else {
             ret = fv.get(0).value;
         }
         return ret;
+    }
+
+    private String scanForDefault(String key)
+    {
+        String ret = null;
+        LOG.debug("scanning for default value for: {}", key);
+        try {
+            for (final var clazz : new EsjpScanner().scan(EFapsSystemConfiguration.class)) {
+                final EFapsSystemConfiguration sysConfAn = clazz.getAnnotation(EFapsSystemConfiguration.class);
+                if (uuid.toString().equals(sysConfAn.value())) {
+                    LOG.debug("found EFapsSystemConfiguration class for this sysconf");
+                    for (final Field field : clazz.getDeclaredFields()) {
+                        if (field.isAnnotationPresent(EFapsSysConfAttribute.class)
+                                        || field.isAnnotationPresent(EFapsSysConfLink.class)) {
+                            if (Modifier.isStatic(field.getModifiers())) {
+
+                                final var attr = (IEFapsSysConfAttribute) field.get(null);
+                                if (key.equals(attr.getKey())) {
+                                    LOG.info("    Found Attribute: {} - defaultvalue: {}", attr,
+                                                    attr.getDefaultValue());
+                                    ret = toStringValue(attr.getDefaultValue());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch (final EFapsException | IllegalArgumentException | IllegalAccessException e) {
+            LOG.error("Catched an error while scanning for default values", e);
+        }
+        return ret;
+    }
+
+    private String toStringValue(Object defaultValue)
+    {
+        if (defaultValue instanceof final List<?> listValue) {
+            return (String) listValue.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining("\n"));
+        }
+        return Objects.toString(defaultValue);
     }
 
     /**
