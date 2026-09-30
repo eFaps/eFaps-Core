@@ -129,6 +129,8 @@ public class FieldClassification
             final var attrValue = sysConf.getAttributeValue(attr);
             if (StringUtils.isNotEmpty(attrValue)) {
                 classificationNames = attrValue.split("\\r?\\n");
+            } else {
+                LOG.warn("FieldClassification {} has a missing ClassificationAttribute value: {}", getName(), attr);
             }
         } else if (getClassificationName() != null) {
             classificationNames = getClassificationName().split(";");
