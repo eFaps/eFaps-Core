@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.IJaxb;
+import org.efaps.admin.datamodel.attributetype.xmladapter.LocalDateTimeXmlAdapter;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.db.wrapper.AbstractSQLInsertUpdate;
 import org.efaps.util.EFapsException;
@@ -134,6 +135,7 @@ public class JaxbType
                     JAXBCONTEXTSTORE.put(_attribute.getId(), jc);
                 }
                 final Unmarshaller unmarshaller = jc.createUnmarshaller();
+                unmarshaller.setAdapter(new LocalDateTimeXmlAdapter());
                 final StringReader reader = new StringReader(_str);
                 ret = unmarshaller.unmarshal(reader);
             }
@@ -164,6 +166,7 @@ public class JaxbType
                 }
                 final Marshaller marshaller = jc.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+                marshaller.setAdapter(new LocalDateTimeXmlAdapter());
                 final StringWriter writer = new StringWriter();
                 marshaller.marshal(value, writer);
                 ret = writer.toString();
