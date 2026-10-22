@@ -81,10 +81,10 @@ public class UpdateStmt
      * @param _printStmt the print stmt
      * @return the prints the stmt
      */
-    public static UpdateStmt get(final IUpdateStatement<?> _updateStmt)
+    public static UpdateStmt get(final IUpdateStatement<?> updateStmt)
     {
-        final UpdateStmt ret = new UpdateStmt();
-        ret.setEQLStmt(_updateStmt);
+        final UpdateStmt ret = new UpdateStmt(updateStmt.getFlags());
+        ret.setEQLStmt(updateStmt);
         return ret;
     }
 }

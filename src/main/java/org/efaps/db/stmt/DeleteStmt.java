@@ -70,10 +70,10 @@ public class DeleteStmt
      * @param _printStmt the print stmt
      * @return the prints the stmt
      */
-    public static DeleteStmt get(final IDeleteStatement<?> _deleteStmt)
+    public static DeleteStmt get(final IDeleteStatement<?> deleteStmt)
     {
-        final DeleteStmt ret = new DeleteStmt();
-        ret.setEQLStmt(_deleteStmt);
+        final DeleteStmt ret = new DeleteStmt(deleteStmt.getFlags());
+        ret.setEQLStmt(deleteStmt);
         return ret;
     }
 }

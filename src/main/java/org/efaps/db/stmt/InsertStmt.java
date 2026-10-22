@@ -70,10 +70,10 @@ public class InsertStmt
      * @param _printStmt the print stmt
      * @return the prints the stmt
      */
-    public static InsertStmt get(final IInsertStatement _insertStmt)
+    public static InsertStmt get(final IInsertStatement insertStmt)
     {
-        final InsertStmt ret = new InsertStmt(_insertStmt.getFlags());
-        ret.setEQLStmt(_insertStmt);
+        final InsertStmt ret = new InsertStmt(insertStmt.getFlags());
+        ret.setEQLStmt(insertStmt);
         return ret;
     }
 }

@@ -16,7 +16,6 @@
 package org.efaps.eql;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import org.efaps.admin.datamodel.Type;
@@ -199,6 +198,6 @@ public class DeleteTest
             .delete(inst)
             .stmt()
             .execute();
-        assertFalse(TriggerEvent.RESULTS.isEmpty());
+        assertTrue(TriggerEvent.RESULTS.isEmpty());
     }
 }
