@@ -26,11 +26,14 @@ import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ProtoAdapter(Type.class)
 public class TypeAdapter
     extends AbstractAdminObjectAdapter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(TypeAdapter.class);
 
     @ProtoFactory
     Type create(final long id,
@@ -61,7 +64,8 @@ public class TypeAdapter
                 Set<Long> attributeIds,
                 final Map<String, String> propertyMap,
                 List<EventDefinition> events,
-                boolean eventChecked)
+                boolean eventChecked,
+                Set<Long> attributeSetIds)
     {
         Type type = null;
         try {
@@ -89,11 +93,11 @@ public class TypeAdapter
             type.setTypeFormChecked(typeFormChecked);
             type.setStoreId(storeId);
             type.setAttributeIds(attributeIds);
+            type.setAttributeSetIds(attributeSetIds);
             setPropertiesMap(type, propertyMap);
             setEvents(type, events, eventChecked);
         } catch (final CacheReloadException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
         return type;
     }
@@ -236,4 +240,9 @@ public class TypeAdapter
         return type.isAccessSetChecked();
     }
 
+    @ProtoField(number = 127)
+    Set<Long> getAttributeSetIds(Type type)
+    {
+        return type.getAttributeSetIds();
+    }
 }

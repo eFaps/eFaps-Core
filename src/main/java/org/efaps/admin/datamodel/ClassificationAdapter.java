@@ -25,11 +25,14 @@ import org.efaps.util.cache.ProtoUtils;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ProtoAdapter(Classification.class)
 public class ClassificationAdapter
     extends TypeAdapter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ClassificationAdapter.class);
 
     @ProtoFactory
     Classification create(long id,
@@ -69,7 +72,8 @@ public class ClassificationAdapter
                           String linkAttributeName,
                           String relLinkAttributeName,
                           String relTypeAttributeName,
-                          Set<Long> companyIds)
+                          Set<Long> companyIds,
+                          Set<Long> attributeSetIds)
     {
         Classification classification = null;
         try {
@@ -104,9 +108,9 @@ public class ClassificationAdapter
             classification.setRelLinkAttributeName(ProtoUtils.toNullString(relLinkAttributeName));
             classification.setRelTypeAttributeName(ProtoUtils.toNullString(relTypeAttributeName));
             classification.setCompanyIds(companyIds);
+            classification.setAttributeSetIds(attributeSetIds);
         } catch (final EFapsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
         return classification;
     }

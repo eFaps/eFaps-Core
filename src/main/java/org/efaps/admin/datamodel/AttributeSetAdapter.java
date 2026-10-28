@@ -25,11 +25,14 @@ import org.efaps.util.EFapsException;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ProtoAdapter(AttributeSet.class)
 public class AttributeSetAdapter
     extends TypeAdapter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ClassificationAdapter.class);
 
     @ProtoFactory
     AttributeSet create(long id,
@@ -63,7 +66,8 @@ public class AttributeSetAdapter
                         boolean typeMenuChecked,
                         boolean typeFormChecked,
                         boolean classifiedByTypeChecked,
-                        boolean accessSetChecked)
+                        boolean accessSetChecked,
+                        Set<Long> attributeSetIds)
     {
         AttributeSet attributeSet = null;
         try {
@@ -94,8 +98,7 @@ public class AttributeSetAdapter
             setPropertiesMap(attributeSet, propertyMap);
             setEvents(attributeSet, events, eventChecked);
         } catch (final EFapsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
         return attributeSet;
     }

@@ -51,6 +51,8 @@ public class DeleteStmt
         } else if (getEQLStmt() instanceof IDeleteListStatement) {
             delete = new ListDelete((IDeleteListStatement) getEQLStmt());
         }
+        delete.deleteDependents();
+
         if (has(StmtFlag.TRIGGEROFF)) {
             StmtRunner.get().execute(delete);
         } else {

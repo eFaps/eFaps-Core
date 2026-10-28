@@ -383,6 +383,8 @@ public class Type
 
     private boolean typeFormChecked = false;
 
+    private Set<Long> attributeSetIds = new HashSet<>();
+
     /**
      * This is the constructor for class Type. Every instance of class Type must
      * have a name (parameter <i>_name</i>).
@@ -1411,6 +1413,31 @@ public class Type
     protected void setAttributeIds(final Set<Long> attributeIds)
     {
         this.attributeIds = attributeIds;
+    }
+
+    protected Set<Long> getAttributeSetIds()
+    {
+        return attributeSetIds;
+    }
+
+    protected void setAttributeSetIds(final Set<Long> attributeSetIds)
+    {
+        this.attributeSetIds = attributeSetIds;
+    }
+
+    protected void addAttributeSet(Long attributeSetId)
+    {
+        this.attributeSetIds.add(attributeSetId);
+    }
+
+    public Set<AttributeSet> getAttributeSets()
+        throws CacheReloadException
+    {
+        final Set<AttributeSet> ret = new HashSet<>();
+        for (final var setId : this.attributeSetIds) {
+            ret.add((AttributeSet) AttributeSet.get(setId));
+        }
+        return Collections.unmodifiableSet(ret);
     }
 
     @Override

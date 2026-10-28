@@ -534,8 +534,7 @@ public class Attribute
         try {
             return parentSetId == null ? null : (AttributeSet) Type.get(parentSetId);
         } catch (final CacheReloadException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
         return null;
     }
@@ -1092,6 +1091,7 @@ public class Attribute
                 Attribute.cacheAttribute(childAttr, parentset);
             }
             for (final AttributeSet set : id2Set.values()) {
+                type.addAttributeSet(set.getId());
                 Type.cacheType(set);
             }
 

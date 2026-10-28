@@ -21,6 +21,7 @@ import java.util.Arrays;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.admin.common.MsgPhrase;
+import org.efaps.admin.datamodel.Type;
 import org.efaps.beans.ValueList;
 import org.efaps.beans.ValueList.Token;
 import org.efaps.beans.valueparser.ParseException;
@@ -98,12 +99,8 @@ public class Print
     {
         for (final ISelectable select : _selects) {
             switch (select.getKey()) {
-                case "CIAttribute":
-                    attribute(((CIAttribute) select).name);
-                    break;
-                default:
-                    super.select(select);
-                    break;
+                case "CIAttribute" -> attribute(((CIAttribute) select).name);
+                default -> super.select(select);
             }
         }
         return getThis();
@@ -258,6 +255,13 @@ public class Print
     {
         return query(Arrays.stream(_types)
                         .map(ciType -> String.valueOf(ciType.uuid))
+                        .toArray(String[]::new));
+    }
+
+    public Query query(final Type... types)
+    {
+        return query(Arrays.stream(types)
+                        .map(type -> String.valueOf(type.getUUID()))
                         .toArray(String[]::new));
     }
 

@@ -18,6 +18,7 @@ package org.efaps.eql.builder;
 import org.efaps.db.stmt.DeleteStmt;
 import org.efaps.eql2.IDeleteStatement;
 import org.efaps.eql2.bldr.AbstractDeleteEQLBuilder;
+import org.efaps.util.EFapsException;
 
 public class Delete
     extends AbstractDeleteEQLBuilder<Delete>
@@ -30,6 +31,13 @@ public class Delete
     public DeleteStmt stmt()
     {
         return DeleteStmt.get((IDeleteStatement<?>) getStmt());
+    }
+
+    public Delete execute()
+        throws EFapsException
+    {
+        stmt().execute();
+        return getThis();
     }
 
     @Override

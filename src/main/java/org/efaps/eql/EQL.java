@@ -16,6 +16,7 @@
 package org.efaps.eql;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 
 import org.efaps.admin.datamodel.Type;
 import org.efaps.ci.CIType;
@@ -44,6 +45,7 @@ import org.efaps.eql2.IInsertStatement;
 import org.efaps.eql2.IPrintStatement;
 import org.efaps.eql2.IStatement;
 import org.efaps.eql2.IUpdateStatement;
+import org.efaps.eql2.StmtFlag;
 import org.efaps.eql2.bldr.AbstractCountEQLBuilder;
 import org.efaps.eql2.bldr.AbstractDeleteEQLBuilder;
 import org.efaps.eql2.bldr.AbstractInsertEQLBuilder;
@@ -147,6 +149,14 @@ public final class EQL
         extends EQL2Builder<EQLBuilder>
     {
 
+        public EQLBuilder with(final EnumSet<StmtFlag> flags)
+        {
+            if (flags != null) {
+                with(flags.stream().toArray(StmtFlag[]::new));
+            }
+            return this;
+        }
+
         public EQLBuilder(final EQL2 _eql2)
         {
             super(_eql2);
@@ -222,6 +232,13 @@ public final class EQL
         {
             return query(Arrays.stream(_ciTypes)
                             .map(ciType -> ciType.getType().getName())
+                            .toArray(String[]::new));
+        }
+
+        public Query query(final Type... types)
+        {
+            return query(Arrays.stream(types)
+                            .map(Type::getName)
                             .toArray(String[]::new));
         }
 

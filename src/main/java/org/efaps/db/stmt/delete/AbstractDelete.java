@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.efaps.admin.access.AccessTypeEnums;
+import org.efaps.admin.datamodel.Classification;
+import org.efaps.admin.datamodel.Type;
 import org.efaps.admin.datamodel.attributetype.IStatusChangeListener;
 import org.efaps.admin.event.EventDefinition;
 import org.efaps.admin.event.EventType;
@@ -28,6 +30,7 @@ import org.efaps.admin.program.esjp.Listener;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.stmt.runner.AbstractRunnable;
+import org.efaps.eql.EQL;
 import org.efaps.eql2.IDeleteStatement;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -77,6 +80,7 @@ public class AbstractDelete
         return instances;
     }
 
+    @Override
     public boolean executeEvents(final EventType _eventType)
         throws EFapsException
     {
@@ -103,6 +107,59 @@ public class AbstractDelete
                 for (final IStatusChangeListener listener : Listener.get()
                                 .<IStatusChangeListener>invoke(IStatusChangeListener.class)) {
                     listener.onDelete(instance);
+                }
+            }
+        }
+    }
+
+    public void deleteDependents()
+        throws EFapsException
+    {
+        for (final var instance : getInstances()) {
+            for (final var attrSet : instance.getType().getAttributeSets()) {
+                LOG.info("found attributeSet: {}", attrSet);
+                final var attrSetEval = EQL.builder().print()
+                                .query(attrSet)
+                                .where()
+                                .attribute(attrSet.getAttributeName()).eq(instance)
+                                .select()
+                                .instance()
+                                .evaluate();
+                while (attrSetEval.next()) {
+                    final var attrSetInst = attrSetEval.inst();
+                    LOG.info("Deleting dependend attrSet instances: {}, {}", attrSetInst);
+                    EQL.builder().with(getFlags()).delete(attrSetInst).execute();
+                }
+            }
+
+            // remove classifications for the instance
+            for (final var classification : instance.getType().getClassifiedByTypes()) {
+                final var relEval = EQL.builder().print()
+                                .query(classification.getClassifyRelationType())
+                                .where()
+                                .attribute(classification.getRelLinkAttributeName()).eq(instance)
+                                .select()
+                                .attribute("ID")
+                                .attribute(classification.getRelTypeAttributeName()).as("classTypeId")
+                                .orderBy("ID", true)
+                                .evaluate();
+                while (relEval.next()) {
+                    final Long classTypeId = relEval.get("classTypeId");
+                    final Classification classType = (Classification) Type.get(classTypeId);
+                    final var classEval = EQL.builder().print()
+                                    .query(classType)
+                                    .where()
+                                    .attribute(classType.getLinkAttributeName()).eq(instance)
+                                    .select()
+                                    .instance()
+                                    .evaluate();
+                    while (classEval.next()) {
+                        final var classInst = classEval.inst();
+                        final var relInst = relEval.inst();
+                        LOG.info("Deleting dependend classfication instances: {}, {}", classInst, relInst);
+                        EQL.builder().with(getFlags()).delete(classInst).execute();
+                        EQL.builder().with(getFlags()).delete(relInst).execute();
+                    }
                 }
             }
         }

@@ -204,6 +204,13 @@ public interface IDataModel
                     .withParentTypeId(Admin_Abstract.getId())
                     .build();
 
+    SQLTable Admin_Common_AbstractSQLTable = SQLTable.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(UUID.fromString("e76ff99d-0d3d-4154-b2ef-d65633d357c3"))
+                    .withName("Admin_Common_AbstractSQLTable")
+                    .withSqlTableName("T_CMABSTRACT")
+                    .build();
+
     Type Admin_DataModel_AttributeSet = Type.builder()
                     .withId(AbstractTest.nextLong())
                     .withUuid(CIAdminDataModel.AttributeSet.uuid)
@@ -214,6 +221,48 @@ public interface IDataModel
                     .withId(AbstractTest.nextLong())
                     .withUuid(CIAdminDataModel.Attribute.uuid)
                     .withName("Admin_DataModel_Attribute")
+                    .build();
+
+    Type Admin_DataModel_Type = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("Admin_DataModel_Type")
+                    .withUuid(CIAdminDataModel.Type.uuid)
+                    .withParentTypeId(Admin_Abstract.getId())
+                    .build();
+
+    Attribute Admin_DataModel_Type_ID = Attribute.builder()
+                    .withName(CIAdminDataModel.Type.ID.name)
+                    .withDataModelTypeId(Admin_DataModel_Type.getId())
+                    .withSqlTableId(Admin_Common_AbstractSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Type Admin_DataModel_TypeClassifies = Type.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withName("Admin_DataModel_TypeClassifies")
+                    .withUuid(CIAdminDataModel.TypeClassifies.uuid)
+                    .withParentTypeId(Admin_Abstract.getId())
+                    .build();
+
+    SQLTable Admin_Common_Abstract2AbstractSQLTable = SQLTable.builder()
+                    .withId(AbstractTest.nextLong())
+                    .withUuid(UUID.fromString("b4fea59a-4711-4e0a-87ec-154542237473"))
+                    .withName("Admin_Common_Abstract2AbstractSQLTable")
+                    .withSqlTableName("T_CMABSTRACT2ABSTRACT")
+                    .build();
+
+    Attribute Admin_DataModel_TypeClassifies_To = Attribute.builder()
+                    .withName(CIAdminDataModel.TypeClassifies.To.name)
+                    .withDataModelTypeId(Admin_DataModel_TypeClassifies.getId())
+                    .withSqlTableId(Admin_Common_Abstract2AbstractSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
+                    .build();
+
+    Attribute Admin_DataModel_TypeClassifies_From = Attribute.builder()
+                    .withName(CIAdminDataModel.TypeClassifies.From.name)
+                    .withDataModelTypeId(Admin_DataModel_TypeClassifies.getId())
+                    .withSqlTableId(Admin_Common_Abstract2AbstractSQLTable.getId())
+                    .withAttributeTypeId(IDataModel.LongType.getId())
                     .build();
 
     Type Admin_Program_Abstract = Type.builder()
