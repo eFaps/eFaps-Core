@@ -72,8 +72,6 @@ import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 /**
  * The Class Filter.
  */
@@ -164,7 +162,8 @@ public class Filter
                             if (ele instanceof IBaseSelectElement) {
                                 switch (((IBaseSelectElement) ele).getElement()) {
                                     case STATUS:
-                                        sections.add(status(sqlSelect, term.getConnection(), element));
+                                        sections.add(status(sqlSelect, term.getConnection(), element, linktoElements));
+                                        linktoElements.clear();
                                         break;
                                     default:
                                         break;
@@ -306,12 +305,38 @@ public class Filter
 
     protected Section status(final SQLSelect sqlSelect,
                              final Connection connection,
-                             final IWhereElement element)
+                             final IWhereElement element,
+                             final List<ILinktoSelectElement> linktoElementStmts)
         throws EFapsException
     {
 
         Section ret = null;
-        if (types.isEmpty() && type2tableIdx != null) {
+        if (CollectionUtils.isNotEmpty(linktoElementStmts)) {
+            final var linktoElements = new ArrayList<LinktoElement>();
+            for (final var linktoElementStmt : linktoElementStmts) {
+                final var linktoElement = new LinktoElement();
+                if (linktoElements.isEmpty()) {
+                    for (final Type type : types) {
+                        final Attribute linktoAttr = type.getAttribute(linktoElementStmt.getName());
+                        if (linktoAttr != null) {
+                            linktoElement.setAttribute(linktoAttr);
+                        }
+                    }
+                    linktoElements.add(linktoElement);
+                }
+            }
+            for (final var linktoElement : linktoElements) {
+                linktoElement.append2SQLSelect(sqlSelect);
+            }
+            final var last = linktoElements.get(linktoElements.size() - 1);
+            final var tableIdx = last.getJoinTableIdx(sqlSelect);
+            final Type currentType = last.getAttribute().getLink();
+            final Attribute attr = currentType.getStatusAttribute();
+            if (attr == null) {
+                LOG.error("No status attribute for type {}", currentType);
+            }
+            ret = attribute(sqlSelect, attr, connection, element, tableIdx, false);
+        } else if (types.isEmpty() && type2tableIdx != null) {
             for (final var entry : type2tableIdx.entrySet()) {
                 final Attribute attr = entry.getKey().getStatusAttribute();
                 if (attr != null) {
