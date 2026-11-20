@@ -39,9 +39,9 @@ public class Where
         return this;
     }
 
-    public Where in(final Collection<Instance> _instances)
+    public Where in(final Collection<Instance> instances)
     {
-        in(_instances.stream().map(inst -> inst.getId()).toArray(Long[]::new));
+        in(instances.stream().map(Instance::getId).toArray(Long[]::new));
         return getThis();
     }
 
@@ -84,18 +84,14 @@ public class Where
         return in(ids);
     }
 
-    public Where in(final Status... _status)
+    public Where in(final Status... status)
     {
-        return in(Stream.of(_status).map(status -> {
-            return status.getId();
-        }).toArray(Long[]::new));
+        return in(Stream.of(status).map(Status::getId).toArray(Long[]::new));
     }
 
-    public Where in(final Instance... _instances)
+    public Where in(final Instance... instances)
     {
-        return in(Stream.of(_instances).map(instance -> {
-            return instance.getId();
-        }).toArray(Long[]::new));
+        return in(Stream.of(instances).map(Instance::getId).toArray(Long[]::new));
     }
 
     /**
