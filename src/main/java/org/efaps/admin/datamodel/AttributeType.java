@@ -387,6 +387,7 @@ public class AttributeType
                     stmt.close();
                 }
             }
+            con.commit();
             con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);

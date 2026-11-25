@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 public final class Group
     extends AbstractUserObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -53,7 +54,8 @@ public final class Group
     private static final Logger LOG = LoggerFactory.getLogger(Group.class);
 
     /**
-     * This is the SQL select statement to select a Group from the database by ID.
+     * This is the SQL select statement to select a Group from the database by
+     * ID.
      */
     private static final String SQL_ID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -63,7 +65,8 @@ public final class Group
                     .addPart(SQLPart.WHERE).addColumnPart(0, "ID").addPart(SQLPart.EQUAL).addValuePart("?").toString();
 
     /**
-     * This is the SQL select statement to select a Group from the database by Name.
+     * This is the SQL select statement to select a Group from the database by
+     * Name.
      */
     private static final String SQL_NAME = new SQLSelect().column("ID")
                     .column("UUID")
@@ -74,7 +77,8 @@ public final class Group
                     .toString();
 
     /**
-     * This is the SQL select statement to select a Group from the database by UUID.
+     * This is the SQL select statement to select a Group from the database by
+     * UUID.
      */
     private static final String SQL_UUID = new SQLSelect().column("ID")
                     .column("UUID")
@@ -85,7 +89,8 @@ public final class Group
                     .toString();
 
     /**
-     * This is the SQL select statement to select a Group from the database using the JAAS key..
+     * This is the SQL select statement to select a Group from the database
+     * using the JAAS key..
      */
     private static final String SQL_JAASKEY = new SQLSelect().column("ID")
                     .from("V_USERGROUPJASSKEY", 0)
@@ -108,7 +113,6 @@ public final class Group
      */
     private static final String UUIDCACHE = Group.class.getName() + ".UUID";
 
-
     /**
      * Use to mark not found and return <code>null</code>.
      */
@@ -118,10 +122,10 @@ public final class Group
      * Create a new group instance. The method is used from the static method
      * {@link #initialize()} to read all groups from the database.
      *
-     * @param _id       id of the group
-     * @param _uuid     UUID of the group
-     * @param _name     name of the group
-     * @param _status   status of the group
+     * @param _id id of the group
+     * @param _uuid UUID of the group
+     * @param _name name of the group
+     * @param _status status of the group
      */
     private Group(final long _id,
                   final String _uuid,
@@ -135,7 +139,7 @@ public final class Group
      * Returns the viewable name of the group. The method {@link #getName} is
      * used for the viewing name.
      *
-     * @param _context  context for this request
+     * @param _context context for this request
      * @return name of the group
      * @see #getName
      */
@@ -147,7 +151,7 @@ public final class Group
     /**
      * Checks, if the given person is assigned to this group.
      *
-     * @param _person   person to test
+     * @param _person person to test
      * @return <i>true</i> if the person is assigned to this group, otherwise
      *         <i>false</i>
      * @see Person#isAssigned(Group)
@@ -165,7 +169,8 @@ public final class Group
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cacheGroup(this);
     }
@@ -185,7 +190,7 @@ public final class Group
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 
     /**
@@ -262,13 +267,13 @@ public final class Group
      * {@link Group}. The parameter <i>_jaasKey</i> is the name of the group
      * used in the given JAAS system for the group.
      *
-     * @param _jaasSystem   JAAS system for which the JAAS key is named
-     * @param _jaasKey      key in the foreign JAAS system for which the group
-     *                      is searched
-     * @return instance of class {@link Group}, or <code>null</code> if group
-     *         is not found
+     * @param _jaasSystem JAAS system for which the JAAS key is named
+     * @param _jaasKey key in the foreign JAAS system for which the group is
+     *            searched
+     * @return instance of class {@link Group}, or <code>null</code> if group is
+     *         not found
      * @throws EFapsException if group with JAAS key could not be fetched from
-     *                        eFaps
+     *             eFaps
      * @see #get(long)
      */
     public static Group getWithJAASKey(final JAASSystem _jaasSystem,
@@ -290,11 +295,12 @@ public final class Group
                     groupId = rs.getLong(1);
                 }
                 rs.close();
+                con.commit();
             } catch (final SQLException e) {
                 Group.LOG.error("search for group for JAAS system '" + _jaasSystem.getName() + "' "
-                        + "with key '" + _jaasKey + "' is not possible", e);
+                                + "with key '" + _jaasKey + "' is not possible", e);
                 throw new EFapsException(Group.class, "getWithJAASKey.SQLException", e,
-                                         _jaasSystem.getName(), _jaasKey);
+                                _jaasSystem.getName(), _jaasKey);
             } finally {
                 try {
                     stmt.close();
@@ -331,7 +337,7 @@ public final class Group
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @return true if successful
      * @throws CacheReloadException on error

@@ -311,6 +311,7 @@ public class LinkFromSelect
                 }
                 ret = true;
             }
+            con.commit();
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
         }finally {

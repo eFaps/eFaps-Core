@@ -215,6 +215,7 @@ public class JDBCStoreResource
             }
             resultSet.close();
             stmt.close();
+            con.commit();
         } catch (final IOException e) {
             JDBCStoreResource.LOG.error("read of content failed", e);
             throw new EFapsException(JDBCStoreResource.class, "read.SQLException", e);

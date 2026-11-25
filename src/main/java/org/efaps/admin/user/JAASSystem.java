@@ -505,6 +505,7 @@ public final class JAASSystem
                     }
                 }
                 rs.close();
+                con.commit();
             } finally {
                 if (stmt != null) {
                     stmt.close();

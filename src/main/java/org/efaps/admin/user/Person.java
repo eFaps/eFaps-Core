@@ -906,6 +906,7 @@ public final class Person
                     }
                 }
                 resultset.close();
+                con.commit();
             } catch (final SQLException e) {
                 Person.LOG.error("read attributes for person with SQL statement is not " + "possible", e);
                 throw new EFapsException(Person.class, "readFromDBAttributes.SQLException", e, getName(), getId());
@@ -972,7 +973,7 @@ public final class Person
                     associationIds.add(resultset.getLong(1));
                 }
                 resultset.close();
-
+                con.commit();
             } catch (final SQLException e) {
                 throw new EFapsException(getClass(), "getAssociationsFromDB.SQLException", e, getName());
             } finally {
@@ -1441,6 +1442,7 @@ public final class Person
                                     + "' to update last login information for person '" + toString() + "'");
                     throw new EFapsException(getClass(), "updateLastLogin.NotUpdated", cmd.toString(), getName());
                 }
+                con.commit();
             } catch (final SQLException e) {
                 Person.LOG.error("could not execute '" + cmd.toString()
                                 + "' to update last login information for person '" + toString() + "'", e);
@@ -1703,6 +1705,7 @@ public final class Person
                     Person.LOG.debug("read from DB Person:{} ", ret);
                 }
                 rs.close();
+                con.commit();
             } catch (final SQLException e) {
                 Person.LOG.error("search for person with SQL statement '" + _sql + "' is not possible", e);
                 throw new EFapsException(Person.class, "getFromDB.SQLException", e, _sql);
@@ -1765,6 +1768,7 @@ public final class Person
                     personId = rs.getLong(1);
                 }
                 rs.close();
+                con.commit();
             } catch (final SQLException e) {
                 Person.LOG.error("search for person for JAAS system '" + _jaasSystem.getName() + "' with key '"
                                 + _jaasKey + "' is not possible", e);

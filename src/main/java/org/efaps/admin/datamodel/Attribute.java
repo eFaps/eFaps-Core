@@ -983,39 +983,33 @@ public class Attribute
     protected static void add4Type(final Type type)
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
-            Context.getThreadContext();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            final List<Object[]> values = new ArrayList<>();
-            try {
-                stmt = con.prepareStatement(Attribute.SQL_TYPE);
-                stmt.setObject(1, type.getId());
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(new Object[] {
-                                    rs.getLong(1),
-                                    rs.getString(2).trim(),
-                                    rs.getLong(3),
-                                    rs.getLong(4),
-                                    rs.getLong(5),
-                                    rs.getLong(6),
-                                    rs.getLong(7),
-                                    rs.getString(8),
-                                    rs.getString(9),
-                                    rs.getString(10),
-                                    rs.getString(11)
-                    });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            }
-            con.close();
+        final List<Object[]> values = new ArrayList<>();
 
+        try (var con = Context.readOnlyConnection();
+                        var stmt = con.prepareStatement(Attribute.SQL_TYPE)) {
+            stmt.setObject(1, type.getId());
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(new Object[] {
+                                rs.getLong(1),
+                                rs.getString(2).trim(),
+                                rs.getLong(3),
+                                rs.getLong(4),
+                                rs.getLong(5),
+                                rs.getLong(6),
+                                rs.getLong(7),
+                                rs.getString(8),
+                                rs.getString(9),
+                                rs.getString(10),
+                                rs.getString(11)
+                });
+            }
+            rs.close();
+            con.commit();
+        } catch (final SQLException | EFapsException e) {
+            throw new CacheReloadException("Cannot read attributes.", e);
+        }
+        try {
             final Map<Long, AttributeSet> id2Set = new HashMap<>();
             final Map<Attribute, Long> attribute2setId = new HashMap<>();
             final List<Attribute> attributes = new ArrayList<>();
@@ -1095,16 +1089,9 @@ public class Attribute
             }
 
             type.addAttributes(false, attributes.toArray(new Attribute[attributes.size()]));
-        } catch (final SQLException | EFapsException e) {
+        } catch (final EFapsException e) {
             throw new CacheReloadException("Cannot read attributes.", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read attributes.", e);
-            }
         }
+
     }
 }

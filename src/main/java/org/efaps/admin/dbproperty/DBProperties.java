@@ -344,6 +344,7 @@ public final class DBProperties
             }
             resultset.close();
             stmt.close();
+            con.commit();
             con.close();
             if (closeContext) {
                 Context.rollback();
@@ -361,15 +362,14 @@ public final class DBProperties
      */
     private static void cacheOnStart()
     {
-        try {
+        try (final var con = Context.readOnlyConnection();
+                        final var stmtLang = con.prepareStatement(DBProperties.SQLLANG);
+                        final var stmt = con.prepareStatement(DBProperties.SQLSELECTONSTART);) {
             boolean closeContext = false;
             if (!Context.isThreadActive()) {
                 Context.begin();
                 closeContext = true;
             }
-            Context.getThreadContext();
-            final Connection con = Context.readOnlyConnection();
-            final PreparedStatement stmtLang = con.prepareStatement(DBProperties.SQLLANG);
             final ResultSet rsLang = stmtLang.executeQuery();
             final Set<String> languages = new HashSet<>();
             while (rsLang.next()) {
@@ -378,7 +378,7 @@ public final class DBProperties
             rsLang.close();
             stmtLang.close();
             final var cache = InfinispanCache.get().<String, String>getCache(DBProperties.CACHENAME);
-            final PreparedStatement stmt = con.prepareStatement(DBProperties.SQLSELECTONSTART);
+
             final ResultSet resultset = stmt.executeQuery();
             while (resultset.next()) {
                 final String propKey = resultset.getString(1).trim();
@@ -401,7 +401,7 @@ public final class DBProperties
             }
             resultset.close();
             stmt.close();
-            con.close();
+            con.commit();
             if (closeContext) {
                 Context.rollback();
             }

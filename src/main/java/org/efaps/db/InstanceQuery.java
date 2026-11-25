@@ -150,6 +150,7 @@ public class InstanceQuery
             }
             rs.close();
             stmt.close();
+            con.commit();
             con.close();
             for (final Object[] row: values) {
                 final Long id = (Long) row[0];

@@ -16,7 +16,6 @@
 package org.efaps.db;
 
 import java.io.StringReader;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -44,7 +43,6 @@ import org.efaps.db.print.Phrase;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -926,85 +924,76 @@ public abstract class AbstractPrintQuery
         throws EFapsException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            AbstractPrintQuery.LOG.debug("Executing SQL: {}", _complStmt);
 
-            List<Object[]> rows = null;
-            boolean cached = false;
-            if (isCacheEnabled()) {
-                final QueryKey querykey = QueryKey.get(getKey(), _complStmt);
-                AbstractPrintQuery.LOG.debug("Searching for QueryKey: {}", querykey);
-                final var cache = QueryCache.get();
-                if (cache.containsKey(querykey)) {
-                    final var queryValue = cache.get(querykey);
-                    if (queryValue.getContent() instanceof List) {
-                        rows = (List<Object[]>) queryValue.getContent();
-                    }
-                    cached = true;
-                    AbstractPrintQuery.LOG.debug("Using cached information");
+        AbstractPrintQuery.LOG.debug("Executing SQL: {}", _complStmt);
+
+        List<Object[]> rows = null;
+        boolean cached = false;
+        if (isCacheEnabled()) {
+            final QueryKey querykey = QueryKey.get(getKey(), _complStmt);
+            AbstractPrintQuery.LOG.debug("Searching for QueryKey: {}", querykey);
+            final var cache = QueryCache.get();
+            if (cache.containsKey(querykey)) {
+                final var queryValue = cache.get(querykey);
+                if (queryValue.getContent() instanceof List) {
+                    rows = (List<Object[]>) queryValue.getContent();
                 }
+                cached = true;
+                AbstractPrintQuery.LOG.debug("Using cached information");
             }
+        }
 
-            if (!cached) {
+        if (!cached) {
+            try (var con = Context.readOnlyConnection()) {
                 AbstractPrintQuery.LOG.debug("Executing against database");
-                con = Context.readOnlyConnection();
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery(_complStmt);
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
                 rows = handler.handle(rs);
                 rs.close();
                 stmt.close();
-                con.close();
+                con.commit();
                 if (isCacheEnabled()) {
                     final var querykey = QueryKey.get(getKey(), _complStmt);
                     final var queryValue = QueryValue.get(getKey(), rows);
                     AbstractPrintQuery.LOG.debug("Caching with QueryKey: {}", querykey);
                     QueryCache.put((ICacheDefinition) this, querykey, queryValue);
                 }
-            }
-
-            for (final Object[] row : rows) {
-                for (final OneSelect onesel : _oneSelects) {
-                    onesel.addObject(row);
-                }
-                ret = true;
-            }
-
-            final List<Instance> tmpList = new ArrayList<>();
-            final Map<Instance, Integer> sortMap = new HashMap<>();
-            int i = 0;
-            for (final Object[] row : rows) {
-                final Instance instance;
-                if (getMainType().getMainTable().getSqlColType() != null) {
-                    instance = Instance.get(Type.get((Long) row[this.typeColumnIndex - 1]), (Long) row[0]);
-                } else {
-                    instance = Instance.get(getMainType(), (Long) row[0]);
-                }
-                sortMap.put(instance, i);
-                tmpList.add(instance);
-                i++;
-            }
-
-            if (this.enforceSorted) {
-                for (final OneSelect onesel : _oneSelects) {
-                    onesel.sortByInstanceList(getInstanceList(), sortMap);
-                }
-            } else {
-                getInstanceList().clear();
-                getInstanceList().addAll(tmpList);
-            }
-        } catch (final SQLException e) {
-            throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
+                for (final Object[] row : rows) {
+                    for (final OneSelect onesel : _oneSelects) {
+                        onesel.addObject(row);
+                    }
+                    ret = true;
                 }
             } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read attributes.", e);
+                throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
             }
         }
+
+        final List<Instance> tmpList = new ArrayList<>();
+        final Map<Instance, Integer> sortMap = new HashMap<>();
+        int i = 0;
+        for (final Object[] row : rows) {
+            final Instance instance;
+            if (getMainType().getMainTable().getSqlColType() != null) {
+                instance = Instance.get(Type.get((Long) row[this.typeColumnIndex - 1]), (Long) row[0]);
+            } else {
+                instance = Instance.get(getMainType(), (Long) row[0]);
+            }
+            sortMap.put(instance, i);
+            tmpList.add(instance);
+            i++;
+        }
+
+        if (this.enforceSorted) {
+            for (final OneSelect onesel : _oneSelects) {
+                onesel.sortByInstanceList(getInstanceList(), sortMap);
+            }
+        } else {
+            getInstanceList().clear();
+            getInstanceList().addAll(tmpList);
+        }
+
         return ret;
     }
 

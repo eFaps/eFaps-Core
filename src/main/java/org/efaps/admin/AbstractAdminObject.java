@@ -376,6 +376,7 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
+            con.commit();
             con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read properties for " + "'" + getName() + "'", e);
@@ -432,6 +433,7 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
+            con.commit();
             con.close();
             for (final Object[] row : values) {
                 final UUID conTypeUUID = Type.getUUID4Id((Long) row[0]);

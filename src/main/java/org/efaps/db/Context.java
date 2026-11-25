@@ -226,8 +226,6 @@ public final class Context
     @Named("readOnly")
     private DataSource readOnlyDs;
 
-    private Connection readOnlyConnection;
-
     /**
      * Static variable storing the database type.
      */
@@ -827,6 +825,7 @@ public final class Context
             }
             con = Context.getThreadContext().readOnlyDs.getConnection();
             con.setAutoCommit(false);
+            con.setReadOnly(true);
         } catch (SystemException | SQLException e) {
             LOG.error("Catched error on getting readOnlyConnection", e);
             throw new EFapsException(Context.class, "getReadOnlyConnection", e);

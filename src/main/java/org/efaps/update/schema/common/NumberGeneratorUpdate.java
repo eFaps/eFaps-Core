@@ -112,6 +112,7 @@ public class NumberGeneratorUpdate
                 if (!Context.getDbType().existsSequence(con, name)) {
                     Context.getDbType().createSequence(con, name, this.startvalue);
                 }
+                con.commit();
             } catch (final SQLException e) {
                 throw new InstallationException("Sequence '" + name + "' could not be created", e);
             } finally {

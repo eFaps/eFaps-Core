@@ -496,6 +496,7 @@ public final class SQLTable
                     stmt.close();
                 }
             }
+            con.commit();
             con.close();
             if (table != null) {
                 table.readFromDB4Properties();

@@ -155,6 +155,7 @@ public abstract class AbstractUserObject
                     throw new EFapsException(getClass(), "assignToJAASSystem.NotInserted", _jaasSystem.getName(),
                                     _jaasKey, toString());
                 }
+                con.commit();
             } catch (final SQLException e) {
                 AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
                         + "' to assign user object '" + toString()
@@ -233,6 +234,7 @@ public abstract class AbstractUserObject
                     throw new EFapsException(getClass(), "assignInDb.NotInserted", _jaasSystem.getName(), _object
                                     .getName(), getName());
                 }
+                con.commit();
             } catch (final SQLException e) {
                 AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
                         + "' to assign user object '" + toString()

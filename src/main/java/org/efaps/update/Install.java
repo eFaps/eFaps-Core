@@ -305,6 +305,7 @@ public class Install
                     }
                 }
             }
+            con.commit();
         } catch (final EFapsException e) {
             throw new InstallationException("Latest version could not be found", e);
         } catch (final SQLException e) {

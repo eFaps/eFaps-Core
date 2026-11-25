@@ -1428,6 +1428,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
                 AbstractDatabase.this.initTableInfoColumns(con, null, _cache4Name);
                 AbstractDatabase.this.initTableInfoUniqueKeys(con, null, _cache4Name);
                 AbstractDatabase.this.initTableInfoForeignKeys(con, null, _cache4Name);
+                con.commit();
                 con.close();
             } catch (final SQLException e) {
                 throw new CacheReloadException("cache for table information could not be read", e);

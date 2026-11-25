@@ -216,6 +216,7 @@ public class AttributeQuery
             }
             rs.close();
             stmt.close();
+            con.commit();
         } catch (final SQLException e) {
             throw new EFapsException(AttributeQuery.class, "executeOneCompleteStmt", e);
         } finally {
