@@ -190,7 +190,7 @@ public class Association
         boolean ret = false;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

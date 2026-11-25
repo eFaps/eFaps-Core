@@ -349,7 +349,7 @@ public class AttributeType
         boolean ret = false;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -387,7 +387,6 @@ public class AttributeType
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);

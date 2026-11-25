@@ -15,13 +15,13 @@
  */
 package org.efaps.db.wrapper;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.efaps.db.Context;
-import org.efaps.db.transaction.ConnectionResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,14 +79,14 @@ public class SQLInsert
      *         generated id is returned
      * @throws SQLException if insert failed
      */
-    public Long execute(final ConnectionResource _con)
+    public Long execute(final Connection con)
         throws SQLException
     {
         final boolean supGenKey = Context.getDbType().supportsGetGeneratedKeys();
 
         Long ret = null;
         if (this.newId && !supGenKey)  {
-            ret = Context.getDbType().getNewId(_con, getTableName(), getIdColumn());
+            ret = Context.getDbType().getNewId(con, getTableName(), getIdColumn());
             this.column(getIdColumn(), ret);
         }
 
@@ -142,12 +142,12 @@ public class SQLInsert
         final PreparedStatement stmt;
         if (this.newId && supGenKey) {
             if (Context.getDbType().supportsMultiGeneratedKeys()) {
-                stmt = _con.prepareStatement(cmd.toString(), new String[]{ getIdColumn() });
+                stmt = con.prepareStatement(cmd.toString(), new String[]{ getIdColumn() });
             } else {
-                stmt = _con.prepareStatement(cmd.toString(), Statement.RETURN_GENERATED_KEYS);
+                stmt = con.prepareStatement(cmd.toString(), Statement.RETURN_GENERATED_KEYS);
             }
         } else {
-            stmt = _con.prepareStatement(cmd.toString());
+            stmt = con.prepareStatement(cmd.toString());
         }
 
         int index = 1;

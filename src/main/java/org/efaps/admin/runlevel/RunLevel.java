@@ -191,8 +191,8 @@ public final class RunLevel
         throws EFapsException
     {
         try {
-            final Connection con = Context.getConnection();
-            final boolean ret = Context.getDbType().existsTable(Context.getConnection(), RunLevel.TABLE_TESTS);
+            final Connection con = Context.readOnlyConnection();
+            final boolean ret = Context.getDbType().existsTable(Context.readOnlyConnection(), RunLevel.TABLE_TESTS);
             con.close();
             return ret;
         } catch (final SQLException e) {
@@ -261,25 +261,25 @@ public final class RunLevel
      * this run level are loaded. If a parent id is defined, the parent is
      * initialized.
      *
-     * @param _sql  SQL statement to get the id and parent id for this run
+     * @param sql  SQL statement to get the id and parent id for this run
      *              level
      * @see #parent
      * @see #cacheMethods
      * @throws EFapsException on error
      */
-    protected void initialize(final String _sql)
+    protected void initialize(final String sql)
         throws EFapsException
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             Statement stmt = null;
             long parentId = 0;
 
             try {
                 stmt = con.createStatement();
                 // read run level itself
-                ResultSet rs = stmt.executeQuery(_sql);
+                ResultSet rs = stmt.executeQuery(sql);
                 if (rs.next()) {
                     id = rs.getLong(1);
                     parentId = rs.getLong(2);
@@ -318,7 +318,6 @@ public final class RunLevel
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
             RunLevel.ALL_RUNLEVELS.put(id, this);
             if (parentId != 0) {
@@ -454,17 +453,7 @@ public final class RunLevel
             } catch (final InvocationTargetException e) {
                 RunLevel.LOG.error("could not execute class '" + className + "' method '"
                         + methodName + "' because an exception was thrown.", e);
-                if (e.getCause() != null) {
-                    if (e.getCause() instanceof EFapsException) {
-                        throw (EFapsException) e.getCause();
-                    } else {
-                        throw new EFapsException(getClass(), "callMethod.InvocationTargetException",
-                                             null,
-                                             e.getCause(),
-                                             className,
-                                             methodName);
-                    }
-                } else {
+                if (e.getCause() == null) {
                     throw new EFapsException(getClass(),
                                              "callMethod.InvocationTargetException",
                                              null,
@@ -472,6 +461,14 @@ public final class RunLevel
                                              className,
                                              methodName);
                 }
+                if (e.getCause() instanceof EFapsException) {
+                    throw (EFapsException) e.getCause();
+                }
+                throw new EFapsException(getClass(), "callMethod.InvocationTargetException",
+                                     null,
+                                     e.getCause(),
+                                     className,
+                                     methodName);
             }
         }
 

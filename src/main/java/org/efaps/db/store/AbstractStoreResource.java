@@ -18,6 +18,7 @@ package org.efaps.db.store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,13 +40,13 @@ import org.efaps.db.Instance;
 import org.efaps.db.InstanceQuery;
 import org.efaps.db.databases.AbstractDatabase;
 import org.efaps.db.transaction.AbstractResource;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLDelete;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
@@ -289,11 +290,10 @@ public abstract class AbstractStoreResource
     public void clean()
         throws EFapsException
     {
-        final ConnectionResource res = Context.getThreadContext().getConnectionResource();
-        try {
+        try(var con = Context.readWriteConnection()) {
             final var del = new DeleteDefintion(AbstractStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(res);
+            delete.execute(con);
             getCache().remove(instance.getOid());
         } catch (final SQLException e) {
             throw new EFapsException("clean", e);
@@ -309,14 +309,13 @@ public abstract class AbstractStoreResource
         throws EFapsException
     {
         if (!getExist()[0] && getGeneralID() != null) {
-            try {
-                final ConnectionResource res = Context.getThreadContext().getConnectionResource();
+            try (var con = Context.readWriteConnection()){
                 Context.getDbType().newInsert(AbstractStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
                                 .column(AbstractStoreResource.COLNAME_FILENAME, "TMP")
                                 .column(AbstractStoreResource.COLNAME_FILELENGTH, 0)
                                 .column(AbstractStoreResource.COLNAME_MODIFIED, getTimestamp())
-                                .execute(res);
+                                .execute(con);
                 this.fileName = "TMP";
                 this.fileLength = 0L;
                 getCache().remove(instance.getOid());
@@ -338,9 +337,8 @@ public abstract class AbstractStoreResource
         throws EFapsException
     {
         if (!_filename.equals(this.fileName) || _fileLength != this.fileLength) {
-            ConnectionResource res = null;
-            try {
-                res = Context.getThreadContext().getConnectionResource();
+
+            try(var con = Context.readWriteConnection()) {
                 final AbstractDatabase<?> db = Context.getDbType();
                 final StringBuilder cmd = new StringBuilder().append(db.getSQLPart(SQLPart.UPDATE)).append(" ")
                                 .append(db.getTableQuote()).append(AbstractStoreResource.TABLENAME_STORE)
@@ -361,7 +359,7 @@ public abstract class AbstractStoreResource
                                 .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
                                 .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
 
-                final PreparedStatement stmt = res.prepareStatement(cmd.toString());
+                final PreparedStatement stmt = con.prepareStatement(cmd.toString());
                 try {
                     stmt.setString(1, _filename);
                     stmt.setLong(2, _fileLength);
@@ -402,9 +400,9 @@ public abstract class AbstractStoreResource
     private void getGeneralID(final String complStmt)
         throws EFapsException
     {
-        ConnectionResource con = null;
+        Connection con = null;
         try {
-            con = Context.getThreadContext().getConnectionResource();
+            con = Context.readOnlyConnection();
 
             final Statement stmt = con.createStatement();
 
@@ -428,8 +426,17 @@ public abstract class AbstractStoreResource
             }
             rs.close();
             stmt.close();
+            con.close();
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
     }
 
@@ -540,7 +547,8 @@ public abstract class AbstractStoreResource
         return this.storeEvent;
     }
 
-    protected void cleanCache() {
+    protected void cleanCache()
+    {
         if (getInstance() != null && getInstance().isValid()) {
             final var cache = getCache();
             cache.remove(getInstance().getOid());

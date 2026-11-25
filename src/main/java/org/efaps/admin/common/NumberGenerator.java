@@ -191,9 +191,8 @@ public final class NumberGenerator
         throws EFapsException
     {
         final Object[] args = new Object[_args.length + 1];
-        try {
-            final long val = Context.getDbType().nextSequence(Context.getThreadContext().getConnectionResource(),
-                            getDBName());
+        try (var con = Context.readWriteConnection()){
+            final long val = Context.getDbType().nextSequence(con, getDBName());
             args[0] = val;
         } catch (final SQLException e) {
             throw new EFapsException(NumberGenerator.class, " getNextVal()", e);
@@ -220,9 +219,8 @@ public final class NumberGenerator
         throws EFapsException
     {
         long ret = 0;
-        try {
-            ret = Context.getDbType().nextSequence(Context.getThreadContext().getConnectionResource(),
-                            getDBName());
+        try (var con = Context.readWriteConnection()) {
+            ret = Context.getDbType().nextSequence(con, getDBName());
         } catch (final SQLException e) {
             throw new EFapsException(NumberGenerator.class, " getNextValAsLong()", e);
         }
@@ -242,7 +240,7 @@ public final class NumberGenerator
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
             Context.getDbType().setSequence(con, getDBName(), Long.parseLong(_value));
             con.commit();
         } catch (final SQLException e) {
@@ -391,7 +389,7 @@ public final class NumberGenerator
         boolean ret = false;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

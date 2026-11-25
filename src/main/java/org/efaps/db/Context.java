@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.sql.DataSource;
+import javax.sql.XADataSource;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.efaps.admin.user.Company;
@@ -218,7 +219,14 @@ public final class Context
      * SQL data source to the database.
      */
     @Inject
-    private DataSource datasource;
+    @Named("readWrite")
+    private XADataSource readWriteDs;
+
+    @Inject
+    @Named("readOnly")
+    private DataSource readOnlyDs;
+
+    private Connection readOnlyConnection;
 
     /**
      * Static variable storing the database type.
@@ -247,7 +255,7 @@ public final class Context
         throws EFapsException
     {
         inherit = _inherit;
-        requestId = RandomStringUtils.randomAlphanumeric(8);
+        requestId = RandomStringUtils.secure().nextAlphanumeric(8);
         parameters = _parameters == null ? new HashMap<>() : _parameters;
         fileParameters = _fileParameters == null ? new HashMap<>() : _fileParameters;
         sessionAttributes = _sessionAttributes == null ? new HashMap<>() : _sessionAttributes;
@@ -317,12 +325,13 @@ public final class Context
      * @return opened connection resource
      * @throws EFapsException if connection resource cannot be created
      */
+
     public ConnectionResource getConnectionResource()
         throws EFapsException
     {
         try {
             if (connectionResource == null) {
-                connectionResource = new ConnectionResource(datasource.getConnection());
+                connectionResource = new ConnectionResource(getReadWriteConnection());
             }
         } catch (final SQLException e) {
             throw new EFapsException(getClass(), "getConnectionResource.SQLException", e);
@@ -576,9 +585,8 @@ public final class Context
     {
         if (containsSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)) {
             return ((UserAttributesSet) getSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)).getString(_key);
-        } else {
-            throw new EFapsException(Context.class, "getUserAttribute.NoSessionAttribute");
         }
+        throw new EFapsException(Context.class, "getUserAttribute.NoSessionAttribute");
     }
 
     /**
@@ -643,11 +651,10 @@ public final class Context
                                  final UserAttributesDefinition _definition)
         throws EFapsException
     {
-        if (containsSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)) {
-            ((UserAttributesSet) getSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)).set(_key, _value, _definition);
-        } else {
+        if (!containsSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)) {
             throw new EFapsException(Context.class, "getUserAttributes.NoSessionAttribute");
         }
+        ((UserAttributesSet) getSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)).set(_key, _value, _definition);
     }
 
     /**
@@ -661,9 +668,8 @@ public final class Context
     {
         if (containsSessionAttribute(UserAttributesSet.CONTEXTMAPKEY)) {
             return (UserAttributesSet) getSessionAttribute(UserAttributesSet.CONTEXTMAPKEY);
-        } else {
-            throw new EFapsException(Context.class, "getUserAttributes.NoSessionAttribute");
         }
+        throw new EFapsException(Context.class, "getUserAttributes.NoSessionAttribute");
     }
 
     /**
@@ -811,25 +817,57 @@ public final class Context
         return fileParameters;
     }
 
-    /**
-     * Returns a opened connection resource. If a previous close connection
-     * resource already exists, this already existing connection resource is
-     * returned.
-     *
-     * @return opened connection resource
-     * @throws EFapsException if connection resource cannot be created
-     */
-    public static Connection getConnection()
+    private Connection getReadOnlyConnection()
         throws EFapsException
     {
         Connection con = null;
         try {
-            con = Context.getThreadContext().datasource.getConnection();
+            if (hasTransaction()) {
+                return getReadWriteConnection();
+            }
+            con = Context.getThreadContext().readOnlyDs.getConnection();
             con.setAutoCommit(false);
-        } catch (final SQLException e) {
-            throw new EFapsException(Context.class, "getConnection.SQLException", e);
+        } catch (SystemException | SQLException e) {
+            LOG.error("Catched error on getting readOnlyConnection", e);
+            throw new EFapsException(Context.class, "getReadOnlyConnection", e);
         }
         return con;
+    }
+
+    private Connection getReadWriteConnection()
+        throws EFapsException
+    {
+        Connection con = null;
+        try {
+            if (!hasTransaction()) {
+                transactionManager.begin();
+            }
+            final var xaCon = readWriteDs.getXAConnection();
+            transactionManager.getTransaction().enlistResource(xaCon.getXAResource());
+            con = xaCon.getConnection();
+        } catch (SystemException | NotSupportedException | SQLException | IllegalStateException | RollbackException e) {
+            LOG.error("Catched error on getting readWriteConnection", e);
+            throw new EFapsException(Context.class, "getReadWriteConnection", e);
+        }
+        return con;
+    }
+
+    private boolean hasTransaction()
+        throws SystemException
+    {
+        return transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION;
+    }
+
+    public static Connection readOnlyConnection()
+        throws EFapsException
+    {
+        return Context.getThreadContext().getReadOnlyConnection();
+    }
+
+    public static Connection readWriteConnection()
+        throws EFapsException
+    {
+        return Context.getThreadContext().getReadWriteConnection();
     }
 
     /**
@@ -947,9 +985,9 @@ public final class Context
                 LOG.warn("TransactionManager Status was STATUS_MARKED_ROLLBACK --> rolling back");
                 context.transactionManager.rollback();
             }
-            context.transactionManager.begin();
-            context.setTransaction(context.transactionManager.getTransaction());
-        } catch (final SystemException | NotSupportedException e) {
+            // context.transactionManager.begin();
+            // context.setTransaction(context.transactionManager.getTransaction());
+        } catch (final SystemException e) {
             LOG.error("Catched", e);
         }
         switch (_inheritance) {
@@ -1013,27 +1051,7 @@ public final class Context
     public static void save()
         throws EFapsException
     {
-        try {
-            final Context context = Context.getThreadContext();
-            context.transactionManager.commit();
-            context.transactionManager.begin();
-            context.connectionResource = null;
-            context.setTransaction(context.transactionManager.getTransaction());
-        } catch (final SecurityException e) {
-            throw new EFapsException(Context.class, "save.SecurityException", e);
-        } catch (final IllegalStateException e) {
-            throw new EFapsException(Context.class, "save.IllegalStateException", e);
-        } catch (final RollbackException e) {
-            throw new EFapsException(Context.class, "save.RollbackException", e);
-        } catch (final HeuristicMixedException e) {
-            throw new EFapsException(Context.class, "save.HeuristicMixedException", e);
-        } catch (final HeuristicRollbackException e) {
-            throw new EFapsException(Context.class, "save.HeuristicRollbackException", e);
-        } catch (final SystemException e) {
-            throw new EFapsException(Context.class, "save.SystemException", e);
-        } catch (final NotSupportedException e) {
-            throw new EFapsException(Context.class, "save.NotSupportedException", e);
-        }
+        Context.commit(false);
     }
 
     /**
@@ -1129,7 +1147,7 @@ public final class Context
         throws EFapsException
     {
         try {
-            return Context.getThreadContext().transactionManager.getStatus() == Status.STATUS_NO_TRANSACTION;
+            return !Context.getThreadContext().hasTransaction();
         } catch (final SystemException e) {
             throw new EFapsException(Context.class, "isTMNoTransaction.SystemException", e);
         }

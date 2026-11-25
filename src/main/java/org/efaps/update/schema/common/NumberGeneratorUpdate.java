@@ -103,11 +103,11 @@ public class NumberGeneratorUpdate
             super.createInDB(_insert);
             final Connection con;
             try {
-                con = Context.getConnection();
+                con = Context.readWriteConnection();
             } catch (final EFapsException e) {
                 throw new InstallationException("Connection resource could not be fetched", e);
             }
-            final String name = "numgen_" + ((Long) getInstance().getId()).toString() + "_seq";
+            final String name = "numgen_" + Long.toString(getInstance().getId()) + "_seq";
             try {
                 if (!Context.getDbType().existsSequence(con, name)) {
                     Context.getDbType().createSequence(con, name, this.startvalue);

@@ -23,7 +23,6 @@ import java.util.List;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.attributevalue.PasswordStore;
 import org.efaps.db.Context;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.AbstractSQLInsertUpdate;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
@@ -79,10 +78,7 @@ public class PasswordType
                 .addPart(SQLPart.EQUAL)
                 .addValuePart(id);
 
-            ConnectionResource con = null;
-            try {
-                con = Context.getThreadContext().getConnectionResource();
-
+            try (var con = Context.readWriteConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery(sel.getSQL());
                 if (rs.next()) {

@@ -471,7 +471,7 @@ public final class SQLTable
         try {
             SQLTable table = null;
             long tableMainId = 0;
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -496,7 +496,6 @@ public final class SQLTable
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
             if (table != null) {
                 table.readFromDB4Properties();

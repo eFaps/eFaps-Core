@@ -17,6 +17,7 @@ package org.efaps.admin.ui;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -148,9 +149,8 @@ public abstract class AbstractUserInterfaceObject
     private void readFromDB4Access()
         throws CacheReloadException
     {
-        Statement stmt = null;
-        try {
-            stmt = Context.getThreadContext().getConnectionResource().createStatement();
+        try (Connection con  = Context.readOnlyConnection();
+             Statement stmt = con.createStatement()) {
             final ResultSet resultset = stmt.executeQuery("select "
                             + "T_UIACCESS.USERABSTRACT "
                             + "from T_UIACCESS "
@@ -164,14 +164,6 @@ public abstract class AbstractUserInterfaceObject
             throw new CacheReloadException("could not read access for " + "'" + getName() + "'", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read access for " + "'" + getName() + "'", e);
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (final SQLException e) {
-                    throw new CacheReloadException("could not read access for " + "'" + getName() + "'", e);
-                }
-            }
         }
     }
 
@@ -275,9 +267,8 @@ public abstract class AbstractUserInterfaceObject
                 if (retIn.get(ReturnValues.TRUE) == null) {
                     ret = false;
                     break;
-                } else {
-                    ret = true;
                 }
+                ret = true;
             }
         }
         return ret;

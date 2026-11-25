@@ -34,7 +34,6 @@ import org.apache.commons.dbutils.RowProcessor;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.db.Context;
 import org.efaps.db.databases.information.TableInformation;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLDelete;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLInsert;
@@ -580,8 +579,8 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return next value in sequence
      * @throws SQLException on error
      */
-    public abstract long nextSequence(ConnectionResource _con,
-                                      String _name)
+    public abstract long nextSequence(Connection con,
+                                      String name)
         throws SQLException;
 
     /**
@@ -1040,7 +1039,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @throws SQLException always, because method itself is not implemented not
      *             not allowed to call
      */
-    public long getNewId(final ConnectionResource _con,
+    public long getNewId(final Connection con,
                          final String _table,
                          final String _column)
         throws SQLException
@@ -1424,7 +1423,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
             throws CacheReloadException
         {
             try {
-                final Connection con = Context.getConnection();
+                final Connection con = Context.readOnlyConnection();
                 AbstractDatabase.this.initTableInfo(con, null, _cache4Name);
                 AbstractDatabase.this.initTableInfoColumns(con, null, _cache4Name);
                 AbstractDatabase.this.initTableInfoUniqueKeys(con, null, _cache4Name);

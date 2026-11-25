@@ -337,7 +337,7 @@ public class Dimension
         try {
             final List<Object[]> values = new ArrayList<>();
 
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -429,7 +429,7 @@ public class Dimension
         Connection con = null;
         try {
             Dimension dim = null;
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

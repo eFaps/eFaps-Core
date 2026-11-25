@@ -944,7 +944,7 @@ public class Attribute
         long ret = 0;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(Attribute.SQL_ATTR);
@@ -986,7 +986,7 @@ public class Attribute
         Connection con = null;
         try {
             Context.getThreadContext();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             final List<Object[]> values = new ArrayList<>();
             try {
@@ -1014,7 +1014,6 @@ public class Attribute
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
 
             final Map<Long, AttributeSet> id2Set = new HashMap<>();

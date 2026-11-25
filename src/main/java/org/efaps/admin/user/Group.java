@@ -278,7 +278,7 @@ public final class Group
         long groupId = 0;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             PreparedStatement stmt = null;
             try {
@@ -343,7 +343,7 @@ public final class Group
         boolean ret = false;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

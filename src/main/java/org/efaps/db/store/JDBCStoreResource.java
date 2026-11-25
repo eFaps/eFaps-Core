@@ -18,6 +18,7 @@ package org.efaps.db.store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,6 +36,7 @@ import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory;
 public class JDBCStoreResource
     extends AbstractStoreResource
 {
+
     /**
      * Name of the table the content is stored in.
      */
@@ -65,9 +68,8 @@ public class JDBCStoreResource
     /**
      * Method called to initialize this StoreResource.
      *
-     * @param _instance     instance of the object this StoreResource is wanted
-     *                      for
-     * @param _store        Store this resource belongs to
+     * @param _instance instance of the object this StoreResource is wanted for
+     * @param _store Store this resource belongs to
      * @throws EFapsException on error
      * @see org.efaps.db.store.Resource#initialize(Instance, Map, Compress)
      */
@@ -98,11 +100,10 @@ public class JDBCStoreResource
     {
         super.insertDefaults();
         if (!getExist()[1] && getGeneralID() != null) {
-            try {
-                final ConnectionResource res = Context.getThreadContext().getConnectionResource();
+            try (var con = Context.readWriteConnection()) {
                 Context.getDbType().newInsert(JDBCStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
-                                .execute(res);
+                                .execute(con);
             } catch (final SQLException e) {
                 throw new EFapsException(JDBCStoreResource.class, "insertDefaults", e);
             }
@@ -112,11 +113,11 @@ public class JDBCStoreResource
     /**
      * The method writes the context (from the input stream) into a SQL blob.
      *
-     * @param _in   input stream defined the content of the file
+     * @param _in input stream defined the content of the file
      * @param _size length of the content (or negative meaning that the length
-     *              is not known; then the content gets the length of readable
-     *              bytes from the input stream) return size of the created
-     *              temporary file object
+     *            is not known; then the content gets the length of readable
+     *            bytes from the input stream) return size of the created
+     *            temporary file object
      * @param _fileName name of the file
      * @return size of the file
      * @throws EFapsException on error
@@ -128,23 +129,20 @@ public class JDBCStoreResource
         throws EFapsException
     {
         long size = 0;
-        ConnectionResource res = null;
-        try {
-            res = Context.getThreadContext().getConnectionResource();
-
+        try(var con = Context.readWriteConnection()) {
             final AbstractDatabase<?> db = Context.getDbType();
             final StringBuilder cmd = new StringBuilder().append(db.getSQLPart(SQLPart.UPDATE)).append(" ")
-                    .append(db.getTableQuote()).append(JDBCStoreResource.TABLENAME_STORE)
-                    .append(db.getTableQuote())
-                    .append(" ").append(db.getSQLPart(SQLPart.SET)).append(" ")
-                    .append(db.getColumnQuote())
-                    .append(JDBCStoreResource.COLNAME_FILECONTENT)
-                    .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
-                    .append(db.getSQLPart(SQLPart.WHERE)).append(" ")
-                    .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
-                    .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
+                            .append(db.getTableQuote()).append(JDBCStoreResource.TABLENAME_STORE)
+                            .append(db.getTableQuote())
+                            .append(" ").append(db.getSQLPart(SQLPart.SET)).append(" ")
+                            .append(db.getColumnQuote())
+                            .append(JDBCStoreResource.COLNAME_FILECONTENT)
+                            .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
+                            .append(db.getSQLPart(SQLPart.WHERE)).append(" ")
+                            .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
+                            .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
 
-            final PreparedStatement stmt = res.prepareStatement(cmd.toString());
+            final PreparedStatement stmt = con.prepareStatement(cmd.toString());
             try {
                 stmt.setBinaryStream(1, _in, ((Long) _size).intValue());
                 stmt.execute();
@@ -176,13 +174,12 @@ public class JDBCStoreResource
     public void clean()
         throws EFapsException
     {
-        final ConnectionResource res = Context.getThreadContext().getConnectionResource();
-        try {
+        try (var con = Context.readWriteConnection()) {
             final var del = new DeleteDefintion(JDBCStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(res);
+            delete.execute(con);
         } catch (final SQLException e) {
-            throw new EFapsException( "clean", e);
+            throw new EFapsException("clean", e);
         }
     }
 
@@ -197,25 +194,23 @@ public class JDBCStoreResource
         throws EFapsException
     {
         StoreResourceInputStream in = null;
-        ConnectionResource res = null;
+        Connection con = null;
         try {
-            res = Context.getThreadContext().getConnectionResource();
+            con = Context.readOnlyConnection();
 
-            final Statement stmt = res.createStatement();
+            final Statement stmt = con.createStatement();
             final StringBuffer cmd = new StringBuffer()
-                .append("select ").append(JDBCStoreResource.COLNAME_FILECONTENT).append(" ")
-                .append("from ").append(JDBCStoreResource.TABLENAME_STORE).append(" ")
-                .append("where ID =").append(getGeneralID());
+                            .append("select ").append(JDBCStoreResource.COLNAME_FILECONTENT).append(" ")
+                            .append("from ").append(JDBCStoreResource.TABLENAME_STORE).append(" ")
+                            .append("where ID =").append(getGeneralID());
             final ResultSet resultSet = stmt.executeQuery(cmd.toString());
             if (resultSet.next()) {
-                if (Context.getDbType().supportsBinaryInputStream())  {
+                if (Context.getDbType().supportsBinaryInputStream()) {
                     in = new JDBCStoreResourceInputStream(this,
-                                                          res,
-                                                          resultSet.getBinaryStream(1));
-                } else  {
+                                    resultSet.getBinaryStream(1));
+                } else {
                     in = new JDBCStoreResourceInputStream(this,
-                                                          res,
-                                                          resultSet.getBlob(1));
+                                    resultSet.getBlob(1));
                 }
             }
             resultSet.close();
@@ -226,6 +221,14 @@ public class JDBCStoreResource
         } catch (final SQLException e) {
             JDBCStoreResource.LOG.error("read of content failed", e);
             throw new EFapsException(JDBCStoreResource.class, "read.SQLException", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
         return in;
     }
@@ -233,8 +236,9 @@ public class JDBCStoreResource
     /**
      * Ask the resource manager to prepare for a transaction commit of the
      * transaction specified in xid. (used for 2-phase commits).
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     *
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @return always 0
      */
     @Override
@@ -248,13 +252,14 @@ public class JDBCStoreResource
 
     /**
      * The method is called from the transaction manager if the complete
-     * transaction is completed.<br/> Nothing is to do here, because the
-     * commitment is done by the {@link ConnectionResource} instance.
+     * transaction is completed.<br/>
+     * Nothing is to do here, because the commitment is done by the
+     * {@link ConnectionResource} instance.
      *
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      * @param _onePhase <i>true</i> if it is a one phase commitment transaction
-     *                  (not used)
+     *            (not used)
      */
     @Override
     public void commit(final Xid _xid,
@@ -270,8 +275,8 @@ public class JDBCStoreResource
      * the created temporary file (created from method {@link #write}) is
      * deleted.
      *
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      */
     @Override
     public void rollback(final Xid _xid)
@@ -285,8 +290,8 @@ public class JDBCStoreResource
      * Tells the resource manager to forget about a heuristically completed
      * transaction branch.
      *
-     * @param _xid  global transaction identifier (not used, because each file
-     *              with the file id gets a new VFS store resource instance)
+     * @param _xid global transaction identifier (not used, because each file
+     *            with the file id gets a new VFS store resource instance)
      */
     @Override
     public void forget(final Xid _xid)
@@ -347,11 +352,12 @@ public class JDBCStoreResource
      * support the available method (and returns e.g. always 0 like the Oracle
      * JDBC driver).
      *
-     * TODO:  avaible must be long! (because of max integer value!)
+     * TODO: avaible must be long! (because of max integer value!)
      */
     private static class BlobInputStream
         extends InputStream
     {
+
         /**
          * Stores the blob for this input stream.
          */
@@ -403,13 +409,13 @@ public class JDBCStoreResource
             throws IOException
         {
             int length = _bytes.length;
-            if (this.available > 0)  {
-                if (this.available < length)  {
+            if (this.available > 0) {
+                if (this.available < length) {
                     length = this.available;
                 }
                 this.available = this.available - length;
                 this.in.read(_bytes);
-            } else  {
+            } else {
                 length = -1;
             }
             return length;
@@ -435,31 +441,30 @@ public class JDBCStoreResource
     private class JDBCStoreResourceInputStream
         extends StoreResourceInputStream
     {
+
         /**
-         * @param _storeRe  store resource itself
-         * @param _res      connection resource
-         * @param _blob     blob with the input stream
+         * @param _storeRe store resource itself
+         * @param _res connection resource
+         * @param _blob blob with the input stream
          * @throws SQLException on error with blob
          * @throws IOException on error with inputstream
          */
         protected JDBCStoreResourceInputStream(final AbstractStoreResource _storeRe,
-                                               final ConnectionResource _res,
                                                final Blob _blob)
             throws IOException, SQLException
         {
             super(_storeRe, Context.getDbType().supportsBlobInputStreamAvailable()
-                          ? _blob.getBinaryStream()
-                          : new BlobInputStream(_blob));
+                            ? _blob.getBinaryStream()
+                            : new BlobInputStream(_blob));
         }
 
         /**
          * @param _storeRes store resource itself
-         * @param _res      connection resource
-         * @param _in       binary input stream (from the blob)
+         * @param _res connection resource
+         * @param _in binary input stream (from the blob)
          * @throws IOException on error
          */
         protected JDBCStoreResourceInputStream(final AbstractStoreResource _storeRes,
-                                               final ConnectionResource _res,
                                                final InputStream _in)
             throws IOException
         {

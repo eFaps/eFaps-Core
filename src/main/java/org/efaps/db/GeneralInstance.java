@@ -15,6 +15,7 @@
  */
 package org.efaps.db;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +29,6 @@ import org.efaps.admin.KernelSettings;
 import org.efaps.db.store.AbstractStoreResource;
 import org.efaps.db.store.JCRStoreResource;
 import org.efaps.db.store.JDBCStoreResource;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLInsert;
 import org.efaps.db.wrapper.SQLPart;
@@ -113,7 +113,7 @@ public final class GeneralInstance
      * @throws EFapsException on error
      */
     public static long insert(final Instance instance,
-                              final ConnectionResource connection)
+                              final Connection connection)
         throws EFapsException
     {
         long ret = 0;
@@ -150,8 +150,12 @@ public final class GeneralInstance
             final var cache = getCache();
             final var cachedInfo = cache.get(instance.getOid());
             if (cachedInfo == null) {
-                final Context context = Context.getThreadContext();
-                GeneralInstance.generaliseInstance(instance, context.getConnectionResource());
+                try (var con = Context.readOnlyConnection()) {
+                    GeneralInstance.generaliseInstance(instance, con);
+                } catch (final SQLException e) {
+                    LOG.error("generaliseInstance", e);
+                    throw new EFapsException(GeneralInstance.class, "create", e);
+                }
                 if (instance.isGeneralised()) {
                     final var info = new GenInstInfo();
                     info.setGeneralId(instance.getGeneralId());
@@ -180,7 +184,7 @@ public final class GeneralInstance
      * @throws EFapsException on error
      */
     private static void generaliseInstance(final Instance instance,
-                                           final ConnectionResource connection)
+                                           final Connection connection)
         throws EFapsException
     {
         if (instance.isValid() && instance.getType().isGeneralInstance()) {
@@ -224,7 +228,7 @@ public final class GeneralInstance
      * @throws EFapsException on error
      */
     public static Collection<? extends DeleteDefintion> getDeleteDefintion(final Instance instance,
-                                                                           final ConnectionResource connection)
+                                                                           final Connection connection)
         throws EFapsException
     {
         final List<DeleteDefintion> ret = new ArrayList<>();

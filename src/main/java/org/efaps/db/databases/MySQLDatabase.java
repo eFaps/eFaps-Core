@@ -25,7 +25,6 @@ import java.util.Map;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.RowProcessor;
 import org.efaps.db.databases.information.TableInformation;
-import org.efaps.db.transaction.ConnectionResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,19 +61,20 @@ public class MySQLDatabase
      *
      * @see #initTableInfoUniqueKeys(Connection, String, Map)
      */
-    private static final String SQL_UNIQUE_KEYS = "select "
-            + "a.constraint_name as INDEX_NAME, "
-            + "a.table_name as TABLE_NAME, "
-            + "b.column_name as COLUMN_NAME, "
-            + "b.ordinal_position as ORDINAL_POSITION "
-        + "from "
-            + "information_schema.table_constraints a,"
-            + "information_schema.key_column_usage b "
-        + "where "
-            + "a.constraint_type='UNIQUE' "
-            + "and a.table_schema=b.table_schema "
-            + "and a.table_name=b.table_name "
-            + "and a.constraint_name=b.constraint_name";
+    private static final String SQL_UNIQUE_KEYS = """
+        select \
+        a.constraint_name as INDEX_NAME, \
+        a.table_name as TABLE_NAME, \
+        b.column_name as COLUMN_NAME, \
+        b.ordinal_position as ORDINAL_POSITION \
+        from \
+        information_schema.table_constraints a,\
+        information_schema.key_column_usage b \
+        where \
+        a.constraint_type='UNIQUE' \
+        and a.table_schema=b.table_schema \
+        and a.table_name=b.table_name \
+        and a.constraint_name=b.constraint_name""";
 
     /**
      * Select statement for all foreign keys for current logged in MySQL
@@ -82,20 +82,21 @@ public class MySQLDatabase
      *
      * @see #initTableInfoForeignKeys(Connection, String, Map)
      */
-    private static final String SQL_FOREIGN_KEYS = "select "
-            + "a.TABLE_NAME as TABLE_NAME, "
-            + "a.CONSTRAINT_NAME as FK_NAME, "
-            + "b.COLUMN_NAME as FKCOLUMN_NAME, "
-            + "'' as DELETE_RULE, "
-            + "b.REFERENCED_TABLE_NAME as PKTABLE_NAME, "
-            + "b.REFERENCED_COLUMN_NAME as PKCOLUMN_NAME "
-        + "from "
-            + "information_schema.table_constraints a, "
-            + "information_schema.key_column_usage b "
-        + "where "
-            + "a.constraint_type='FOREIGN KEY' "
-            + "and a.CONSTRAINT_SCHEMA=b.CONSTRAINT_SCHEMA "
-            + "and a.CONSTRAINT_NAME=b.CONSTRAINT_NAME ";
+    private static final String SQL_FOREIGN_KEYS = """
+        select \
+        a.TABLE_NAME as TABLE_NAME, \
+        a.CONSTRAINT_NAME as FK_NAME, \
+        b.COLUMN_NAME as FKCOLUMN_NAME, \
+        '' as DELETE_RULE, \
+        b.REFERENCED_TABLE_NAME as PKTABLE_NAME, \
+        b.REFERENCED_COLUMN_NAME as PKCOLUMN_NAME \
+        from \
+        information_schema.table_constraints a, \
+        information_schema.key_column_usage b \
+        where \
+        a.constraint_type='FOREIGN KEY' \
+        and a.CONSTRAINT_SCHEMA=b.CONSTRAINT_SCHEMA \
+        and a.CONSTRAINT_NAME=b.CONSTRAINT_NAME\s""";
 
 
 
@@ -458,7 +459,7 @@ public class MySQLDatabase
      * @see #PREFIX_SEQUENCE
      */
     @Override
-    public long nextSequence(final ConnectionResource _con,
+    public long nextSequence(final Connection _con,
                              final String _name)
         throws SQLException
     {
@@ -477,11 +478,10 @@ public class MySQLDatabase
 
             // fetch new number
             final ResultSet resultset = stmt.getGeneratedKeys();
-            if (resultset.next()) {
-                ret = resultset.getLong(1);
-            } else  {
+            if (!resultset.next()) {
                 throw new SQLException("no sequence found for '" + _name + "'");
             }
+            ret = resultset.getLong(1);
         } finally {
             stmt.close();
         }

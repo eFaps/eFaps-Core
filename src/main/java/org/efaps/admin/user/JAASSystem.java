@@ -425,7 +425,7 @@ public final class JAASSystem
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             PreparedStatement stmt = null;
             try {
@@ -510,7 +510,6 @@ public final class JAASSystem
                     stmt.close();
                 }
             }
-            con.commit();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {

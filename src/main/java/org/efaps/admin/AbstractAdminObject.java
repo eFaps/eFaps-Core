@@ -363,7 +363,7 @@ public abstract class AbstractAdminObject
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             final PreparedStatement stmt = con.prepareStatement(AbstractAdminObject.SELECT);
             stmt.setObject(1, getId());
             final ResultSet rs = stmt.executeQuery();
@@ -376,7 +376,6 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
-            con.commit();
             con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read properties for " + "'" + getName() + "'", e);
@@ -405,7 +404,7 @@ public abstract class AbstractAdminObject
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             final SQLSelect select = new SQLSelect()
                             .column(0, "TYPEID")
                             .column(0, "TOID")
@@ -433,7 +432,6 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
-            con.commit();
             con.close();
             for (final Object[] row : values) {
                 final UUID conTypeUUID = Type.getUUID4Id((Long) row[0]);

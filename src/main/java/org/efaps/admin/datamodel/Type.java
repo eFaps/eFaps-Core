@@ -1607,7 +1607,7 @@ public class Type
         final List<Object[]> ret = new ArrayList<>();
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_statement);
@@ -1622,7 +1622,6 @@ public class Type
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read child type ids", e);
@@ -1654,7 +1653,7 @@ public class Type
         Type ret = null;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             final PreparedStatement stmt = con.prepareStatement(_sql);
             stmt.setObject(1, _criteria);
             final ResultSet rs = stmt.executeQuery();
@@ -1695,7 +1694,6 @@ public class Type
             }
             rs.close();
             stmt.close();
-            con.commit();
             con.close();
             if (ret != null) {
                 if (!ret.checked4Children) {
@@ -1760,7 +1758,7 @@ public class Type
             Connection con = null;
             String uuidTmp = "";
             try {
-                con = Context.getConnection();
+                con = Context.readOnlyConnection();
                 PreparedStatement stmt = null;
                 try {
                     stmt = con.prepareStatement(Type.SQL_ID);
@@ -1775,7 +1773,6 @@ public class Type
                         stmt.close();
                     }
                 }
-                con.commit();
                 con.close();
             } catch (final SQLException e) {
                 throw new CacheReloadException("could not read child type ids", e);
@@ -1813,7 +1810,7 @@ public class Type
         } else {
             Connection con = null;
             try {
-                con = Context.getConnection();
+                con = Context.readOnlyConnection();
                 PreparedStatement stmt = null;
                 try {
                     stmt = con.prepareStatement(Type.SQL_UUID);
@@ -1864,7 +1861,7 @@ public class Type
         } else {
             Connection con = null;
             try {
-                con = Context.getConnection();
+                con = Context.readOnlyConnection();
                 PreparedStatement stmt = null;
                 try {
                     stmt = con.prepareStatement(Type.SQL_ID);
@@ -1879,7 +1876,6 @@ public class Type
                         stmt.close();
                     }
                 }
-                con.commit();
             } catch (final SQLException e) {
                 throw new CacheReloadException("could not read child type ids", e);
             } catch (final EFapsException e) {

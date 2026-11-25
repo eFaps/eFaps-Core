@@ -29,7 +29,6 @@ import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
 import org.efaps.util.cache.CacheReloadException;
@@ -125,7 +124,7 @@ public abstract class AbstractUserObject
         Connection con = null;
         try {
             final Context context = Context.getThreadContext();
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
             final Type keyType = CIAdminUser.JAASKey.getType();
 
             PreparedStatement stmt = null;
@@ -137,9 +136,7 @@ public abstract class AbstractUserObject
                         .append("(JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,").append("USERABSTRACT,USERJAASSYSTEM) ")
                                     .append("values (");
                 } else {
-                    keyId = Context.getDbType().getNewId(new ConnectionResource(con),
-                                    keyType.getMainTable().getSqlTable(),
-                                    "ID");
+                    keyId = Context.getDbType().getNewId(con, keyType.getMainTable().getSqlTable(), "ID");
                     cmd.append("insert into ").append(keyType.getMainTable().getSqlTable()).append(
                                     "(ID,JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
                                     "USERABSTRACT,USERJAASSYSTEM) ").append("values (").append(keyId).append(",");
@@ -204,7 +201,7 @@ public abstract class AbstractUserObject
         Connection con = null;
         try {
             final Context context = Context.getThreadContext();
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
 
             Statement stmt = null;
             final StringBuilder cmd = new StringBuilder();
@@ -213,8 +210,7 @@ public abstract class AbstractUserObject
                 cmd.append("insert into ").append(_assignType.getMainTable().getSqlTable()).append("(");
                 long keyId = 0;
                 if (!Context.getDbType().supportsGetGeneratedKeys()) {
-                    keyId = Context.getDbType().getNewId(new ConnectionResource(con),
-                                    _assignType.getMainTable().getSqlTable(), "ID");
+                    keyId = Context.getDbType().getNewId(con, _assignType.getMainTable().getSqlTable(), "ID");
                     cmd.append("ID,");
                 }
                 cmd.append("TYPEID,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
@@ -282,7 +278,7 @@ public abstract class AbstractUserObject
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
             Statement stmt = null;
             final StringBuilder cmd = new StringBuilder();
             try {
@@ -382,7 +378,7 @@ public abstract class AbstractUserObject
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
 
             PreparedStatement stmt = null;
             final StringBuilder cmd = new StringBuilder();

@@ -48,7 +48,6 @@ import javax.transaction.xa.Xid;
 
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLDelete;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLSelect;
@@ -208,12 +207,11 @@ public class JCRStoreResource
     {
         super.insertDefaults();
         if (!getExist()[1] && getGeneralID() != null) {
-            try {
-                final ConnectionResource res = Context.getThreadContext().getConnectionResource();
+            try (var con = Context.readWriteConnection()) {
                 Context.getDbType().newInsert(JCRStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
                                 .column(JCRStoreResource.COLNAME_IDENTIFIER, "NEW")
-                                .execute(res);
+                                .execute(con);
             } catch (final SQLException e) {
                 throw new EFapsException(JCRStoreResource.class, "insertDefaults", e);
             }
@@ -334,17 +332,14 @@ public class JCRStoreResource
         throws EFapsException
     {
         if (!_identifier.equals(identifier)) {
-
-            ConnectionResource res = null;
-            try {
-                res = Context.getThreadContext().getConnectionResource();
+            try (var con = Context.readWriteConnection()) {
 
                 final StringBuffer cmd = new StringBuffer().append("update ")
                                 .append(JCRStoreResource.TABLENAME_STORE).append(" set ")
                                 .append(JCRStoreResource.COLNAME_IDENTIFIER).append("=? ")
                                 .append("where ID =").append(getGeneralID());
 
-                final PreparedStatement stmt = res.prepareStatement(cmd.toString());
+                final PreparedStatement stmt = con.prepareStatement(cmd.toString());
                 try {
                     stmt.setString(1, _identifier);
                     stmt.execute();
@@ -418,16 +413,14 @@ public class JCRStoreResource
     public void clean()
         throws EFapsException
     {
-        final ConnectionResource res = Context.getThreadContext().getConnectionResource();
-        try {
+        try (var con = Context.readWriteConnection()) {
             final var del = new DeleteDefintion(JCRStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(res);
+            delete.execute(con);
         } catch (final SQLException e) {
-            throw new EFapsException( "clean", e);
+            throw new EFapsException("clean", e);
         }
     }
-
 
     /**
      * The method is called from the transaction manager if the complete

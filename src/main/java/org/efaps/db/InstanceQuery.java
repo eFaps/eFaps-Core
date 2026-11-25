@@ -15,6 +15,7 @@
  */
 package org.efaps.db;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,7 +26,6 @@ import java.util.UUID;
 
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
@@ -130,9 +130,9 @@ public class InstanceQuery
         throws EFapsException
     {
         final boolean ret = false;
-        ConnectionResource con = null;
+        Connection con = null;
         try {
-            con = Context.getThreadContext().getConnectionResource();
+            con = Context.readOnlyConnection();
 
             AbstractObjectQuery.LOG.debug("Executing SQL: {}", _complStmt);
 
@@ -150,6 +150,7 @@ public class InstanceQuery
             }
             rs.close();
             stmt.close();
+            con.close();
             for (final Object[] row: values) {
                 final Long id = (Long) row[0];
                 final Long typeId = (Long) row[1];
@@ -157,6 +158,14 @@ public class InstanceQuery
             }
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
         return ret;
     }

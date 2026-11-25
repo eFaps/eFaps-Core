@@ -34,7 +34,6 @@ import java.util.Date;
 import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.admin.KernelSettings;
 import org.efaps.db.Context;
-import org.efaps.db.transaction.ConnectionResource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.chrono.ISOChronology;
@@ -85,10 +84,9 @@ public final class DateTimeUtil
         throws EFapsException
     {
         Timestamp now = null;
-        final ConnectionResource rsrc = Context.getThreadContext().getConnectionResource();
         final Statement stmt;
-        try {
-            stmt = rsrc.createStatement();
+        try (var con = Context.readWriteConnection()) {
+            stmt = con.createStatement();
             final ResultSet resultset = stmt.executeQuery("SELECT " + Context.getDbType().getCurrentTimeStamp());
             resultset.next();
             now = resultset.getTimestamp(1);
@@ -201,9 +199,8 @@ public final class DateTimeUtil
             final var withOffset = dateTime.withOffsetSameInstant(offset);
             LOG.debug("with Offset: {} ", withOffset);
             return withOffset;
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -225,9 +222,8 @@ public final class DateTimeUtil
             final var withOffset = ret.withOffsetSameInstant(offset);
             LOG.debug("with Offset: {} ", withOffset);
             return withOffset;
-        } else {
-            return null;
         }
+        return null;
     }
 
     static OffsetDateTime toDateTime(final Object value,

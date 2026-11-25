@@ -23,6 +23,7 @@ import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -242,8 +243,7 @@ public final class Application
                 appl.install.addFile(installFile.setURL(new URL(_rootUrl, installFile.getName())));
             }
             appl.tmpElements = null;
-            Collections.sort(appl.dependencies, (_dependency0,
-             _dependency1) -> _dependency0.getOrder().compareTo(_dependency1.getOrder()));
+            Collections.sort(appl.dependencies, Comparator.comparing(Dependency::getOrder));
             for (final ApplicationVersion applVers : appl.getVersions()) {
                 applVers.setApplication(appl);
                 appl.setMaxVersion(applVers.getNumber());
@@ -252,10 +252,8 @@ public final class Application
         } catch (final IOException e) {
             if (e.getCause() instanceof InstallationException) {
                 throw (InstallationException) e.getCause();
-            } else {
-                throw new InstallationException("Could not open / read version file '" + _versionUrl + "'");
             }
-          //CHECKSTYLE:OFF
+            throw new InstallationException("Could not open / read version file '" + _versionUrl + "'");
         } catch (final Exception e) {
           //CHECKSTYLE:ON
             throw new InstallationException("Error while parsing file '" + _versionUrl + "'", e);
@@ -657,7 +655,7 @@ public final class Application
     {
         try {
             Context.begin();
-            if (Context.getDbType().existsView(Context.getConnection(), "V_ADMINTYPE")
+            if (Context.getDbType().existsView(Context.readWriteConnection(), "V_ADMINTYPE")
                             && CIAdminCommon.ApplicationVersion.getType() != null
                             && CIAdminCommon.Application.getType() != null
                             && CIAdminCommon.Application.getType().getAttributes().size() > 4) {

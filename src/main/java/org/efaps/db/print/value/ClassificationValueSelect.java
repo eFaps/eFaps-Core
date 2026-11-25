@@ -15,6 +15,7 @@
  */
 package org.efaps.db.print.value;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -32,7 +33,6 @@ import org.efaps.admin.datamodel.Type;
 import org.efaps.db.Context;
 import org.efaps.db.Instance;
 import org.efaps.db.print.OneSelect;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
@@ -47,6 +47,7 @@ import org.efaps.util.cache.CacheReloadException;
 public class ClassificationValueSelect
     extends OIDValueSelect
 {
+
     /**
      * Mapping of the instances to classIds. Used as temporary cache.
      */
@@ -92,16 +93,15 @@ public class ClassificationValueSelect
 
         if (getChildValueSelect() == null) {
             throw new EFapsException(ClassificationValueSelect.class, "notyet");
-        } else {
-            if (oid != null) {
-                if ("type".equals(getChildValueSelect().getValueType())) {
-                    final Instance instance = Instance.get(oid);
-                    final Set<Classification> clazzes = getClassification(this.instances2classId.get(instance));
-                    for (final Classification clazz : clazzes) {
-                        final Object tmp = ((TypeValueSelect) getChildValueSelect())
-                                        .analyzeChildValue(getChildValueSelect(), clazz);
-                        ret.add(tmp);
-                    }
+        }
+        if (oid != null) {
+            if ("type".equals(getChildValueSelect().getValueType())) {
+                final Instance instance = Instance.get(oid);
+                final Set<Classification> clazzes = getClassification(this.instances2classId.get(instance));
+                for (final Classification clazz : clazzes) {
+                    final Object tmp = ((TypeValueSelect) getChildValueSelect())
+                                    .analyzeChildValue(getChildValueSelect(), clazz);
+                    ret.add(tmp);
                 }
             }
         }
@@ -171,7 +171,7 @@ public class ClassificationValueSelect
             instances.addAll(getOneSelect().getQuery().getInstanceList());
         } else {
             for (final Object object : getOneSelect().getObjectList()) {
-                final String oid =  (String) super.getValue(object);
+                final String oid = (String) super.getValue(object);
                 instances.add(Instance.get(oid));
             }
         }
@@ -214,12 +214,12 @@ public class ClassificationValueSelect
                     union = true;
                 }
                 select.column(0, "ID")
-                    .column(0, linkAttr.getSqlColNames().get(0))
-                    .column(0, typeAttr.getSqlColNames().get(0))
-                    .from(clazz.getClassifyRelationType().getMainTable().getSqlTable(), 0)
-                    .addPart(SQLPart.WHERE)
-                    .addColumnPart(0, linkAttr.getSqlColNames().get(0))
-                    .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
+                                .column(0, linkAttr.getSqlColNames().get(0))
+                                .column(0, typeAttr.getSqlColNames().get(0))
+                                .from(clazz.getClassifyRelationType().getMainTable().getSqlTable(), 0)
+                                .addPart(SQLPart.WHERE)
+                                .addColumnPart(0, linkAttr.getSqlColNames().get(0))
+                                .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
 
                 boolean first = true;
                 for (final Instance instance : entry.getValue()) {
@@ -233,8 +233,8 @@ public class ClassificationValueSelect
                 select.addPart(SQLPart.PARENTHESIS_CLOSE);
                 if (clazz.getClassifyRelationType().getMainTable().getSqlColType() != null) {
                     select.addPart(SQLPart.AND)
-                        .addColumnPart(0, clazz.getClassifyRelationType().getMainTable().getSqlColType())
-                        .addPart(SQLPart.EQUAL).addValuePart(clazz.getClassifyRelationType().getId());
+                                    .addColumnPart(0, clazz.getClassifyRelationType().getMainTable().getSqlColType())
+                                    .addPart(SQLPart.EQUAL).addValuePart(clazz.getClassifyRelationType().getId());
                 }
                 if (union && !select.equals(unionSelect)) {
                     unionSelect.addNestedSelectPart(select.getSQL());
@@ -259,9 +259,9 @@ public class ClassificationValueSelect
         throws EFapsException
     {
         final boolean ret = false;
-        ConnectionResource con = null;
+        Connection con = null;
         try {
-            con = Context.getThreadContext().getConnectionResource();
+            con = Context.readOnlyConnection();
 
             final Statement stmt = con.createStatement();
 
@@ -284,8 +284,17 @@ public class ClassificationValueSelect
             }
             rs.close();
             stmt.close();
+            con.close();
         } catch (final SQLException e) {
             throw new EFapsException(ClassificationValueSelect.class, "executeOneCompleteStmt", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
         return ret;
     }

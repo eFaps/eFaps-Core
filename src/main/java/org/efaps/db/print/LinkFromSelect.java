@@ -15,6 +15,7 @@
  */
 package org.efaps.db.print;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -36,7 +37,6 @@ import org.efaps.db.QueryValue;
 import org.efaps.db.search.AbstractQPart;
 import org.efaps.db.search.QAnd;
 import org.efaps.db.search.section.QWhereSection;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.eql.InvokerUtil;
@@ -273,7 +273,7 @@ public class LinkFromSelect
         throws EFapsException
     {
         boolean ret = false;
-        ConnectionResource con = null;
+        Connection con = null;
         try {
             LinkFromSelect.LOG.debug("Executing SQLL: {}", _complStmt);
             List<Object[]> rows = null;
@@ -290,7 +290,7 @@ public class LinkFromSelect
                 }
             }
             if (!cached) {
-                con = Context.getThreadContext().getConnectionResource();
+                con = Context.readOnlyConnection();
                 final Statement stmt = con.createStatement();
 
                 final ResultSet rs = stmt.executeQuery(_complStmt.toString());
@@ -313,6 +313,14 @@ public class LinkFromSelect
             }
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
+        }finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
         return ret;
     }

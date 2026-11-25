@@ -31,7 +31,6 @@ import org.efaps.admin.event.Parameter.ParameterValues;
 import org.efaps.admin.index.Queue;
 import org.efaps.admin.program.esjp.Listener;
 import org.efaps.db.store.Resource;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLDelete;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.util.EFapsException;
@@ -151,7 +150,7 @@ public class Delete
         throws EFapsException
     {
         final Context context = Context.getThreadContext();
-        final ConnectionResource con = context.getConnectionResource();
+
         // first remove the storeresource, because the information needed from the general
         // instance to actually delete will be removed in the second step
         Resource storeRsrc = null;
@@ -164,7 +163,7 @@ public class Delete
             if (storeRsrc != null && storeRsrc.isOpened()) {
             }
         }
-        try {
+        try(var con  = Context.readWriteConnection()) {
             if (getInstance().getType().isCheckStatus()) {
                 for (final IStatusChangeListener listener : Listener.get()
                                 .<IStatusChangeListener>invoke(IStatusChangeListener.class)) {

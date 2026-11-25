@@ -517,20 +517,18 @@ public final class SystemConfiguration
                 final String keyTmp = _key + String.format("%02d", i);
                 final String valueTmp = getAttributeValue(keyTmp);
                 final Properties propsTmp = new Properties();
-                if (valueTmp != null) {
-                    try {
-                        propsTmp.load(new StringReader(valueTmp));
-                    } catch (final IOException e) {
-                        throw new EFapsException(SystemConfiguration.class, "getAttributeValueAsPropertiesConcat", e);
-                    }
-                } else {
+                if (valueTmp == null) {
                     break;
+                }
+                try {
+                    propsTmp.load(new StringReader(valueTmp));
+                } catch (final IOException e) {
+                    throw new EFapsException(SystemConfiguration.class, "getAttributeValueAsPropertiesConcat", e);
                 }
                 if (propsTmp.isEmpty()) {
                     break;
-                } else {
-                    ret.putAll(propsTmp);
                 }
+                ret.putAll(propsTmp);
             }
         }
         return ret;
@@ -686,7 +684,7 @@ public final class SystemConfiguration
                 closeContext = true;
             }
             final List<Object[]> dbValues = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(SystemConfiguration.SQL_CONFIG);
@@ -814,7 +812,7 @@ public final class SystemConfiguration
                 closeContext = true;
             }
             SystemConfiguration sysConfig = null;
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -834,7 +832,6 @@ public final class SystemConfiguration
                     stmt.close();
                 }
             }
-            con.commit();
             con.close();
             if (closeContext) {
                 Context.rollback();

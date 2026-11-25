@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.RowProcessor;
 import org.efaps.db.databases.information.TableInformation;
-import org.efaps.db.transaction.ConnectionResource;
 import org.joda.time.ReadableDateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.jvnet.hk2.annotations.Service;
@@ -395,7 +394,7 @@ public class PostgreSQLDatabase
      * @return new id for the sequence
      */
     @Override
-    public long getNewId(final ConnectionResource _con,
+    public long getNewId(final Connection _con,
                          final String _table,
                          final String _column)
         throws SQLException
@@ -528,7 +527,7 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    public long nextSequence(final ConnectionResource _con,
+    public long nextSequence(final Connection _con,
                              final String _name)
         throws SQLException
     {
@@ -539,11 +538,10 @@ public class PostgreSQLDatabase
         final Statement stmt = _con.createStatement();
         try {
             final ResultSet resultset = stmt.executeQuery(cmd);
-            if (resultset.next()) {
-                ret = resultset.getLong(1);
-            } else  {
+            if (!resultset.next()) {
                 throw new SQLException("fetching new value from sequence '" + _name + "' failed");
             }
+            ret = resultset.getLong(1);
             resultset.close();
         } finally {
             stmt.close();

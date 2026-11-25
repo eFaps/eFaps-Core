@@ -316,7 +316,7 @@ public final class DBProperties
                 Context.begin();
                 closeContext = true;
             }
-            final Connection con = Context.getConnection();
+            final Connection con = Context.readOnlyConnection();
             final PreparedStatement stmt = con.prepareStatement(DBProperties.SQLSELECT);
             stmt.setString(1, _key);
             stmt.setString(2, _language);
@@ -344,7 +344,6 @@ public final class DBProperties
             }
             resultset.close();
             stmt.close();
-            con.commit();
             con.close();
             if (closeContext) {
                 Context.rollback();
@@ -369,7 +368,7 @@ public final class DBProperties
                 closeContext = true;
             }
             Context.getThreadContext();
-            final Connection con = Context.getConnection();
+            final Connection con = Context.readOnlyConnection();
             final PreparedStatement stmtLang = con.prepareStatement(DBProperties.SQLLANG);
             final ResultSet rsLang = stmtLang.executeQuery();
             final Set<String> languages = new HashSet<>();
@@ -402,7 +401,6 @@ public final class DBProperties
             }
             resultset.close();
             stmt.close();
-            con.commit();
             con.close();
             if (closeContext) {
                 Context.rollback();

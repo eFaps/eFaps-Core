@@ -15,7 +15,6 @@
  */
 package org.efaps.db.transaction;
 
-
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -41,6 +40,7 @@ import jakarta.transaction.SystemException;
 public abstract class AbstractResource
     implements XAResource
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -68,8 +68,10 @@ public abstract class AbstractResource
             throw new EFapsException(AbstractResource.class, "open.AlreadyOpened");
         }
         try {
-            final Context context = Context.getThreadContext();
-            context.getTransaction().enlistResource(this);
+            final var context = Context.getThreadContext();
+            if (context.getTransaction() != null) {
+                context.getTransaction().enlistResource(this);
+            }
         } catch (final RollbackException e) {
             AbstractResource.LOG.error("exception occurs while delisting in transaction, " + "commit not possible", e);
             throw new EFapsException(AbstractResource.class, "open.RollbackException", e);
@@ -114,11 +116,11 @@ public abstract class AbstractResource
     /**
      * The method starts work on behalf of a transaction branch specified in
      * parameter <code>_xid</code>. Normally nothing must be done, because the
-     * pre-work is already done in the contructor (and an instance of a
-     * resource is only defined for one transaction).
+     * pre-work is already done in the contructor (and an instance of a resource
+     * is only defined for one transaction).
      *
-     * @param _xid      global transaction identifier
-     * @param _flags    flags
+     * @param _xid global transaction identifier
+     * @param _flags flags
      */
     @Override
     public void start(final Xid _xid,
@@ -132,8 +134,8 @@ public abstract class AbstractResource
      * Normally nothing must be done, because an instance of a resource is only
      * defined for one transaction.
      *
-     * @param _xid      global transaction identifier
-     * @param _flags    flags
+     * @param _xid global transaction identifier
+     * @param _flags flags
      */
     @Override
     public void end(final Xid _xid,
@@ -145,12 +147,11 @@ public abstract class AbstractResource
     /**
      * The method is called from the transaction (manager) to check if the XA
      * resource is the same as the given XA resource in the parameter
-     * <code>_xaras</code>. This is done with a string compare
-     * (method {@link String#equals(Object)}) off the
-     * {@link Object#toString()} methods of this and the XA resource in
-     * <code>_xaras</code>.
+     * <code>_xaras</code>. This is done with a string compare (method
+     * {@link String#equals(Object)}) off the {@link Object#toString()} methods
+     * of this and the XA resource in <code>_xaras</code>.
      *
-     * @param _xares    XA resource used to test if same resource
+     * @param _xares XA resource used to test if same resource
      * @return <code>true</code> if the string compare returns that they are
      *         equal, otherwise <code>false</code> is returned
      * @see XAResource#isSameRM(XAResource)

@@ -196,7 +196,8 @@ public final class Role
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cacheRole(this);
     }
@@ -311,51 +312,34 @@ public final class Role
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getRoleFromDB(final String _sql,
-                                         final Object _criteria)
+    private static boolean getRoleFromDB(final String sql,
+                                         final Object criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.getConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
 
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3).trim();
-                    final boolean status = rs.getBoolean(4);
-                    final long typeId = rs.getLong(5);
+        try (Connection con = Context.readOnlyConnection();
+                        PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setObject(1, criteria);
+            final ResultSet rs = stmt.executeQuery();
 
-                    Role.LOG.debug("read role '{}' (id = {}, type = {})", name, id, typeId);
-                    final Role role = new Role(id, uuid, name, status, typeId);
-                    Role.cacheRole(role);
-                    ret = true;
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3).trim();
+                final boolean status = rs.getBoolean(4);
+                final long typeId = rs.getLong(5);
+
+                Role.LOG.debug("read role '{}' (id = {}, type = {})", name, id, typeId);
+                final Role role = new Role(id, uuid, name, status, typeId);
+                Role.cacheRole(role);
+                ret = true;
             }
-            con.commit();
+            rs.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }
@@ -380,7 +364,7 @@ public final class Role
         long roleId = 0;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             PreparedStatement stmt = null;
             try {

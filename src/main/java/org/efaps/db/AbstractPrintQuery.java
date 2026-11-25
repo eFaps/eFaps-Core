@@ -16,6 +16,7 @@
 package org.efaps.db;
 
 import java.io.StringReader;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -40,10 +41,10 @@ import org.efaps.ci.CIAttribute;
 import org.efaps.ci.CIMsgPhrase;
 import org.efaps.db.print.OneSelect;
 import org.efaps.db.print.Phrase;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
+import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -463,7 +464,6 @@ public abstract class AbstractPrintQuery
         }
         return addMsgPhrase(_selectBldr, msgPhrases.toArray(new MsgPhrase[msgPhrases.size()]));
     }
-
 
     /**
      * @param _msgPhrase phrase to add
@@ -926,7 +926,7 @@ public abstract class AbstractPrintQuery
         throws EFapsException
     {
         boolean ret = false;
-        ConnectionResource con = null;
+        Connection con = null;
         try {
             AbstractPrintQuery.LOG.debug("Executing SQL: {}", _complStmt);
 
@@ -948,13 +948,14 @@ public abstract class AbstractPrintQuery
 
             if (!cached) {
                 AbstractPrintQuery.LOG.debug("Executing against database");
-                con = Context.getThreadContext().getConnectionResource();
+                con = Context.readOnlyConnection();
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery(_complStmt);
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
                 rows = handler.handle(rs);
                 rs.close();
                 stmt.close();
+                con.close();
                 if (isCacheEnabled()) {
                     final var querykey = QueryKey.get(getKey(), _complStmt);
                     final var queryValue = QueryValue.get(getKey(), rows);
@@ -995,6 +996,14 @@ public abstract class AbstractPrintQuery
             }
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Cannot read attributes.", e);
+            }
         }
         return ret;
     }

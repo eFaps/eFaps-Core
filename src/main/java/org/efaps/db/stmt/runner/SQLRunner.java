@@ -67,7 +67,6 @@ import org.efaps.db.stmt.update.Insert;
 import org.efaps.db.stmt.update.ListUpdate;
 import org.efaps.db.stmt.update.ObjectUpdate;
 import org.efaps.db.store.Resource;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.AbstractSQLInsertUpdate;
 import org.efaps.db.wrapper.SQLDelete;
 import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
@@ -425,7 +424,8 @@ public class SQLRunner
      * @param _print the print
      * @throws EFapsException the e faps exception
      */
-    private void addBaseAssociationCriteria(final AbstractPrint print, final Set<AbstractCriterion> criteria)
+    private void addBaseAssociationCriteria(final AbstractPrint print,
+                                            final Set<AbstractCriterion> criteria)
         throws EFapsException
     {
         final List<Type> types = print.getTypes().stream().sorted(Comparator.comparing(Type::getId))
@@ -433,7 +433,8 @@ public class SQLRunner
         for (final Type type : types) {
             if (type.hasAssociation()) {
                 final TableIdx tableIdx = evalTableIdx(type.getAssociationAttribute());
-                criteria.addAll(AssociationCriterion.eval(tableIdx, type.getAssociationAttribute(), print.has(StmtFlag.COMPANYINDEPENDENT)));
+                criteria.addAll(AssociationCriterion.eval(tableIdx, type.getAssociationAttribute(),
+                                print.has(StmtFlag.COMPANYINDEPENDENT)));
             }
         }
     }
@@ -550,22 +551,16 @@ public class SQLRunner
     {
         final AbstractDelete delete = (AbstractDelete) runnable;
         for (final Instance instance : delete.getInstances()) {
-            final Context context = Context.getThreadContext();
-            final ConnectionResource con = context.getConnectionResource();
+            try (var con = Context.readWriteConnection();) {
             // first remove the storeresource, because the information needed
             // from the general
             // instance to actually delete will be removed in the second step
-            Resource storeRsrc = null;
-            try {
+
                 if (instance.getType().hasStore()) {
-                    storeRsrc = context.getStoreResource(instance, Resource.StoreEvent.DELETE);
+                    final var storeRsrc = Context.getThreadContext().getStoreResource(instance, Resource.StoreEvent.DELETE);
                     storeRsrc.delete();
                 }
-            } finally {
-                if (storeRsrc != null && storeRsrc.isOpened()) {
-                }
-            }
-            try {
+
                 delete.triggerListeners();
 
                 final List<DeleteDefintion> defs = new ArrayList<>();
@@ -596,10 +591,7 @@ public class SQLRunner
     private void executeUpdates()
         throws EFapsException
     {
-        ConnectionResource con = null;
-        try {
-
-            con = Context.getThreadContext().getConnectionResource();
+        try (var con = Context.readWriteConnection()) {
             for (final Entry<SQLTable, AbstractSQLInsertUpdate<?>> entry : updatemap.entrySet()) {
                 ((SQLUpdate) entry.getValue()).execute(con);
             }
@@ -612,6 +604,7 @@ public class SQLRunner
                     Queue.registerUpdate(instance);
                 });
             }
+            con.commit();
         } catch (final SQLException e) {
             throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
         }
@@ -625,10 +618,8 @@ public class SQLRunner
     private void executeInserts()
         throws EFapsException
     {
-        ConnectionResource con = null;
-        try {
+        try(var con  = Context.readWriteConnection()) {
             final Insert insert = (Insert) runnable;
-            con = Context.getThreadContext().getConnectionResource();
             long id = 0;
             for (final Entry<SQLTable, AbstractSQLInsertUpdate<?>> entry : updatemap.entrySet()) {
                 if (id != 0) {
@@ -655,23 +646,23 @@ public class SQLRunner
      * Execute SQL stmt.
      *
      * @param _sqlProvider the sql provider
-     * @param _complStmt the compl stmt
+     * @param complStmt the compl stmt
      * @return true, if successful
      * @throws EFapsException the e faps exception
      */
     @SuppressWarnings("unchecked")
     protected boolean executeSQLStmt(final ISelectionProvider _sqlProvider,
-                                     final String _complStmt)
+                                     final String complStmt)
         throws EFapsException
     {
-        SQLRunner.LOG.debug("SQL-Statement: {}", _complStmt);
+        SQLRunner.LOG.debug("SQL-Statement: {}", complStmt);
 
         boolean ret = false;
         List<Object[]> rows = new ArrayList<>();
 
         boolean cached = false;
         if (runnable.has(StmtFlag.REQCACHED)) {
-            final QueryKey querykey = QueryKey.get(Context.getThreadContext().getRequestId(), _complStmt);
+            final QueryKey querykey = QueryKey.get(Context.getThreadContext().getRequestId(), complStmt);
             final var cache = QueryCache.get();
             if (cache.containsKey(querykey)) {
                 final var queryValue = cache.get(querykey);
@@ -682,17 +673,15 @@ public class SQLRunner
             }
         }
         if (!cached) {
-            ConnectionResource con = null;
-            try {
-                con = Context.getThreadContext().getConnectionResource();
-                final Statement stmt = con.createStatement();
-                final ResultSet rs = stmt.executeQuery(_complStmt);
+            try (final var con = isPrint() ? Context.readOnlyConnection() : Context.readWriteConnection();
+                 final Statement stmt = con.createStatement()) {
+
+                final ResultSet rs = stmt.executeQuery(complStmt);
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
                 rows = handler.handle(rs);
                 rs.close();
-                stmt.close();
             } catch (final SQLException e) {
-                LOG.error("SQL Statment threw error: {}", _complStmt);
+                LOG.error("SQL Statment threw error: {}", complStmt);
                 throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
             }
             if (runnable.has(StmtFlag.REQCACHED)) {
@@ -711,7 +700,7 @@ public class SQLRunner
                         return TimeUnit.MINUTES;
                     }
                 };
-                QueryCache.put(cacheDefinition, QueryKey.get(Context.getThreadContext().getRequestId(), _complStmt),
+                QueryCache.put(cacheDefinition, QueryKey.get(Context.getThreadContext().getRequestId(), complStmt),
                                 QueryValue.get(Context.getThreadContext().getRequestId(), rows));
             }
         }

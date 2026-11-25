@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.sql.DataSource;
+import javax.sql.XADataSource;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.efaps.db.Context;
@@ -157,7 +158,8 @@ public abstract class AbstractTest
             bind(MockDatabase.class).to(AbstractDatabase.class).in(jakarta.inject.Singleton.class);
             bind(TransactionManagerImple.class).to(TransactionManager.class);
             bind(TransactionSynchronizationRegistryImple.class).to(TransactionSynchronizationRegistry.class);
-            bindFactory(DatasourceProvider.class).to(DataSource.class);
+            bindFactory(XADatasourceProvider.class).named("readWrite").to(XADataSource.class);
+            bindFactory(DatasourceProvider.class).named("readOnly").to(DataSource.class);
         }
     }
 

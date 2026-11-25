@@ -16,6 +16,7 @@
 package org.efaps.db.wrapper;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +29,6 @@ import java.util.Set;
 
 import org.apache.commons.dbutils.handlers.ArrayListHandler;
 import org.efaps.db.Context;
-import org.efaps.db.transaction.ConnectionResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,11 +90,11 @@ public class SQLUpdate
      * @throws SQLException if update failed or the row for given {@link #id}
      *             does not exists
      */
-    public Set<String> execute(final ConnectionResource _con)
+    public Set<String> execute(final Connection con)
         throws SQLException
     {
         final Set<String> ret = new HashSet<>();
-        if (getIds().length > 1 || checkUpdateRequired(_con)) {
+        if (getIds().length > 1 || checkUpdateRequired(con)) {
             final StringBuilder cmd = new StringBuilder()
                             .append(Context.getDbType().getSQLPart(SQLPart.UPDATE)).append(" ")
                             .append(Context.getDbType().getTableQuote())
@@ -160,7 +160,7 @@ public class SQLUpdate
                 SQLUpdate.LOG.debug(cmd.toString());
             }
 
-            final PreparedStatement stmt = _con.prepareStatement(cmd.toString());
+            final PreparedStatement stmt = con.prepareStatement(cmd.toString());
             int index = 1;
             for (final AbstractColumnWithValue<?> col : getColumnWithValues()) {
                 if (SQLUpdate.LOG.isDebugEnabled()) {
@@ -195,7 +195,7 @@ public class SQLUpdate
      * @return true if the execution of the update is necessary
      * @throws SQLException on error
      */
-    private boolean checkUpdateRequired(final ConnectionResource _con)
+    private boolean checkUpdateRequired(final Connection _con)
         throws SQLException
     {
         final SQLSelect select = new SQLSelect();

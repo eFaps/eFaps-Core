@@ -260,7 +260,7 @@ public final class AccessSet
         Connection con = null;
         try {
             final List<Long> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(AccessSet.SQL_SET2TYPE);
@@ -313,7 +313,7 @@ public final class AccessSet
         Connection con = null;
         try {
             final List<Long> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(AccessSet.SQL_SET2DMTYPE);
@@ -367,7 +367,7 @@ public final class AccessSet
         Connection con = null;
         try {
             final List<Long> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(AccessSet.SQL_SET2STATUS);
@@ -425,7 +425,7 @@ public final class AccessSet
         Connection con = null;
         try {
             final List<Long> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(AccessSet.SQL_SET2PERSON);
@@ -558,7 +558,7 @@ public final class AccessSet
         Connection con = null;
         try {
             AccessSet accessSet = null;
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

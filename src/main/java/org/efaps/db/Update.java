@@ -43,7 +43,6 @@ import org.efaps.admin.event.Return;
 import org.efaps.admin.event.Return.ReturnValues;
 import org.efaps.admin.index.Queue;
 import org.efaps.ci.CIAttribute;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLUpdate;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -391,18 +390,16 @@ public class Update
     public void executeWithoutAccessCheck()
         throws EFapsException
     {
-        if (Update.STATUSOK.getStati().isEmpty()) {
-
-            executeEvents(EventType.UPDATE_PRE);
-
-            if (!executeEvents(EventType.UPDATE_OVERRIDE)) {
-                executeWithoutTrigger();
-            }
-
-            executeEvents(EventType.UPDATE_POST);
-        } else {
+        if (!Update.STATUSOK.getStati().isEmpty()) {
             throw new EFapsException(getClass(), "executeWithout.StatusInvalid", Update.STATUSOK.getStati());
         }
+        executeEvents(EventType.UPDATE_PRE);
+
+        if (!executeEvents(EventType.UPDATE_OVERRIDE)) {
+            executeWithoutTrigger();
+        }
+
+        executeEvents(EventType.UPDATE_POST);
     }
 
     /**
@@ -414,55 +411,52 @@ public class Update
     public void executeWithoutTrigger()
         throws EFapsException
     {
-        if (Update.STATUSOK.getStati().isEmpty()) {
-            final Context context = Context.getThreadContext();
-            ConnectionResource con = null;
-            try {
-                con = context.getConnectionResource();
-                for (final Entry<SQLTable, List<Value>> entry : table2values.entrySet()) {
-                    final SQLUpdate update = Context.getDbType().newUpdate(entry.getKey().getSqlTable(),
-                                    entry.getKey().getSqlColId(),
-                                    getInstance().getId());
-                    // iterate in reverse order and only execute the ones that are not added yet, permitting
-                    // to overwrite the value for attributes by adding them later
-                    final ReverseListIterator<Value> iterator = new ReverseListIterator<>(entry.getValue());
+        if (!Update.STATUSOK.getStati().isEmpty()) {
+            throw new EFapsException(getClass(), "executeWithout.StatusInvalid", Update.STATUSOK.getStati());
+        }
+        try (var con = Context.readWriteConnection())  {
 
-                    final Set<String> added = new HashSet<>();
-                    while (iterator.hasNext()) {
-                        final Value value = iterator.next();
-                        final String colKey = value.getAttribute().getSqlColNames().toString();
-                        if (!added.contains(colKey)) {
-                            value.getAttribute().prepareDBUpdate(update, value.getValues());
-                            added.add(colKey);
-                        }
+            for (final Entry<SQLTable, List<Value>> entry : table2values.entrySet()) {
+                final SQLUpdate update = Context.getDbType().newUpdate(entry.getKey().getSqlTable(),
+                                entry.getKey().getSqlColId(),
+                                getInstance().getId());
+                // iterate in reverse order and only execute the ones that are not added yet, permitting
+                // to overwrite the value for attributes by adding them later
+                final ReverseListIterator<Value> iterator = new ReverseListIterator<>(entry.getValue());
+
+                final Set<String> added = new HashSet<>();
+                while (iterator.hasNext()) {
+                    final Value value = iterator.next();
+                    final String colKey = value.getAttribute().getSqlColNames().toString();
+                    if (!added.contains(colKey)) {
+                        value.getAttribute().prepareDBUpdate(update, value.getValues());
+                        added.add(colKey);
                     }
-                    final Set<String> updatedColumns = update.execute(con);
-                    final Iterator<Entry<Attribute, Value>> attrIter = trigRelevantAttr2values.entrySet()
-                                    .iterator();
-                    while (attrIter.hasNext()) {
-                        final Entry<Attribute, Value> trigRelEntry = attrIter.next();
-                        if (trigRelEntry.getKey().getTable().equals(entry.getKey())) {
-                            boolean updated = false;
-                            for (final String colName : trigRelEntry.getKey().getSqlColNames()) {
-                                if (updatedColumns.contains(colName)) {
-                                    updated = true;
-                                    break;
-                                }
+                }
+                final Set<String> updatedColumns = update.execute(con);
+                final Iterator<Entry<Attribute, Value>> attrIter = trigRelevantAttr2values.entrySet()
+                                .iterator();
+                while (attrIter.hasNext()) {
+                    final Entry<Attribute, Value> trigRelEntry = attrIter.next();
+                    if (trigRelEntry.getKey().getTable().equals(entry.getKey())) {
+                        boolean updated = false;
+                        for (final String colName : trigRelEntry.getKey().getSqlColNames()) {
+                            if (updatedColumns.contains(colName)) {
+                                updated = true;
+                                break;
                             }
-                            if (!updated) {
-                                attrIter.remove();
-                            }
+                        }
+                        if (!updated) {
+                            attrIter.remove();
                         }
                     }
                 }
-                AccessCache.registerUpdate(getInstance());
-                Queue.registerUpdate(getInstance());
-            } catch (final SQLException e) {
-                Update.LOG.error("Update of '" + instance + "' not possible", e);
-                throw new EFapsException(getClass(), "executeWithoutTrigger.SQLException", e, instance);
             }
-        } else {
-            throw new EFapsException(getClass(), "executeWithout.StatusInvalid", Update.STATUSOK.getStati());
+            AccessCache.registerUpdate(getInstance());
+            Queue.registerUpdate(getInstance());
+        } catch (final SQLException e) {
+            Update.LOG.error("Update of '" + instance + "' not possible", e);
+            throw new EFapsException(getClass(), "executeWithoutTrigger.SQLException", e, instance);
         }
     }
 

@@ -15,6 +15,7 @@
  */
 package org.efaps.db;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,7 +39,6 @@ import org.efaps.admin.event.EventType;
 import org.efaps.admin.index.Queue;
 import org.efaps.admin.program.esjp.Listener;
 import org.efaps.ci.CIType;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLInsert;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -118,7 +118,7 @@ public class Insert
     {
         for (final SQLTable table : getType().getTables()) {
             if (!getTable2values().containsKey(table)) {
-                getTable2values().put(table, new ArrayList<Value>());
+                getTable2values().put(table, new ArrayList<>());
             }
         }
     }
@@ -212,11 +212,9 @@ public class Insert
     public void executeWithoutTrigger()
         throws EFapsException
     {
-        final Context context = Context.getThreadContext();
-        ConnectionResource con = null;
-        try {
+        Context.getThreadContext();
 
-            con = context.getConnectionResource();
+        try(var con = Context.readWriteConnection()) {
 
             final SQLTable mainTable = getType().getMainTable();
 
@@ -236,8 +234,8 @@ public class Insert
                 }
             }
             Queue.registerUpdate(getInstance());
-        } finally {
-
+        } catch (final SQLException e) {
+            LOG.error("Catched", e);
         }
 
         if (getType().isCheckStatus()) {
@@ -294,7 +292,7 @@ public class Insert
      * @see #createOneStatement
      * @throws EFapsException on error
      */
-    private long executeOneStatement(final ConnectionResource _con,
+    private long executeOneStatement(final Connection _con,
                                      final SQLTable _table,
                                      final List<Value> _values,
                                      final long _id)

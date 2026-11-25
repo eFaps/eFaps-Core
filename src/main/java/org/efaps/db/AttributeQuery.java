@@ -15,6 +15,7 @@
  */
 package org.efaps.db;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -26,7 +27,6 @@ import java.util.UUID;
 import org.efaps.admin.datamodel.Attribute;
 import org.efaps.admin.datamodel.SQLTable;
 import org.efaps.admin.datamodel.Type;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
@@ -200,9 +200,9 @@ public class AttributeQuery
         throws EFapsException
     {
         final boolean ret = false;
-        ConnectionResource con = null;
+        Connection con = null;
         try {
-            con = Context.getThreadContext().getConnectionResource();
+            con = Context.readOnlyConnection();
             if (AbstractObjectQuery.LOG.isDebugEnabled()) {
                 AbstractObjectQuery.LOG.debug(_complStmt.toString());
             }
@@ -218,6 +218,14 @@ public class AttributeQuery
             stmt.close();
         } catch (final SQLException e) {
             throw new EFapsException(AttributeQuery.class, "executeOneCompleteStmt", e);
+        } finally {
+            try {
+                if (con != null && !con.isClosed()) {
+                    con.close();
+                }
+            } catch (final SQLException e) {
+                throw new CacheReloadException("Could not close connection.", e);
+            }
         }
         return ret;
     }

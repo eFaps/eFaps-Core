@@ -576,7 +576,7 @@ public class SQLTableUpdate
                 }
                 Connection con = null;
                 try {
-                    con = Context.getConnection();
+                    con = Context.readWriteConnection();
                     if (this.view) {
                         final String tableName = getValue("SQLTable");
                         if (Context.getDbType().existsView(con, tableName)) {
@@ -621,7 +621,7 @@ public class SQLTableUpdate
             Connection con = null;
             final String tableName = getValue("SQLTable");
             try {
-                con = Context.getConnection();
+                con = Context.readWriteConnection();
 
                 if (!Context.getDbType().existsTable(con, tableName)
                         && !Context.getDbType().existsView(con, tableName))  {
@@ -671,7 +671,7 @@ public class SQLTableUpdate
                     }
                 }
                 try {
-                    con = Context.getConnection();
+                    con = Context.readWriteConnection();
 
                     if (this.parentSQLTableName != null)  {
                         Context.getDbType().defineTableParent(con, tableName, this.parentSQLTableName);
@@ -707,7 +707,7 @@ public class SQLTableUpdate
             final String tableName = getValue("SQLTable");
             SQLTableUpdate.LOG.info("    Update DB SQL Table '{}'", tableName);
             try {
-                con = Context.getConnection();
+                con = Context.readWriteConnection();
                 final TableInformation tableInfo = Context.getDbType().getRealTableInformation(con, tableName);
 
                 for (final Column column : this.columns)  {

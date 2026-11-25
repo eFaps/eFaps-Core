@@ -24,7 +24,6 @@ import java.util.Map;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.RowProcessor;
 import org.efaps.db.databases.information.TableInformation;
-import org.efaps.db.transaction.ConnectionResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +49,13 @@ public class DerbyDatabase
      * @see #deleteAll(Connection)
      */
     private static final String SELECT_ALL_KEYS
-        = "select t.TABLENAME, c.CONSTRAINTNAME "
-              + "from SYS.SYSSCHEMAS s, SYS.SYSTABLES t, SYS.SYSCONSTRAINTS c "
-              + "where s.AUTHORIZATIONID<>'DBA' "
-                    + "and s.SCHEMAID=t.SCHEMAID "
-                    + "and t.TABLEID=c.TABLEID "
-                    + "and c.TYPE='F'";
+        = """
+        select t.TABLENAME, c.CONSTRAINTNAME \
+        from SYS.SYSSCHEMAS s, SYS.SYSTABLES t, SYS.SYSCONSTRAINTS c \
+        where s.AUTHORIZATIONID<>'DBA' \
+        and s.SCHEMAID=t.SCHEMAID \
+        and t.TABLEID=c.TABLEID \
+        and c.TYPE='F'""";
 
     /**
      * SQL Select statement for all views.
@@ -63,11 +63,12 @@ public class DerbyDatabase
      * @see #deleteAll(Connection)
      */
     private static final String SELECT_ALL_VIEWS
-        = "select t.TABLENAME "
-              + "from SYS.SYSSCHEMAS s, SYS.SYSTABLES t "
-              + "where s.AUTHORIZATIONID<>'DBA' "
-                    + "and s.SCHEMAID=t.SCHEMAID "
-                    + "and t.TABLETYPE='V'";
+        = """
+        select t.TABLENAME \
+        from SYS.SYSSCHEMAS s, SYS.SYSTABLES t \
+        where s.AUTHORIZATIONID<>'DBA' \
+        and s.SCHEMAID=t.SCHEMAID \
+        and t.TABLETYPE='V'""";
 
     /**
      * SQL Select statement for all tables.
@@ -75,11 +76,12 @@ public class DerbyDatabase
      * @see #deleteAll(Connection)
      */
     private static final String SELECT_ALL_TABLES
-        = "select t.TABLENAME "
-              + "from SYS.SYSSCHEMAS s, SYS.SYSTABLES t "
-              + "where s.AUTHORIZATIONID<>'DBA' "
-                    + "and s.SCHEMAID=t.SCHEMAID "
-                    + "and t.TABLETYPE='T'";
+        = """
+        select t.TABLENAME \
+        from SYS.SYSSCHEMAS s, SYS.SYSTABLES t \
+        where s.AUTHORIZATIONID<>'DBA' \
+        and s.SCHEMAID=t.SCHEMAID \
+        and t.TABLETYPE='T'""";
 
 
     /**
@@ -392,7 +394,7 @@ public class DerbyDatabase
      * {@inheritDoc}
      */
     @Override
-    public long nextSequence(final ConnectionResource _con,
+    public long nextSequence(final Connection _con,
                              final String _name)
         throws SQLException
     {

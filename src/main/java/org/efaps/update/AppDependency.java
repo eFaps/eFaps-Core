@@ -70,7 +70,7 @@ public final class AppDependency
         if (this.met == null) {
             Connection con = null;
             try {
-                con = Context.getConnection();
+                con = Context.readOnlyConnection();
                 if (Context.getDbType().existsView(con, "V_ADMINTYPE") && CIAdminCommon.ApplicationVersion
                                 .getType() != null) {
                     final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.Application);

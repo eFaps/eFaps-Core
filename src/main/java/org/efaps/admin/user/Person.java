@@ -43,7 +43,6 @@ import org.efaps.db.Instance;
 import org.efaps.db.PrintQuery;
 import org.efaps.db.Update;
 import org.efaps.db.Update.Status;
-import org.efaps.db.transaction.ConnectionResource;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.jaas.AppAccessHandler;
@@ -649,7 +648,7 @@ public final class Person
             if (attrUpdated.size() > 0) {
                 Connection con = null;
                 try {
-                    con = Context.getConnection();
+                    con = Context.readWriteConnection();
 
                     final StringBuilder cmd = new StringBuilder();
                     PreparedStatement stmt = null;
@@ -786,7 +785,7 @@ public final class Person
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
 
             Statement stmt = null;
             final StringBuilder cmd = new StringBuilder();
@@ -840,13 +839,12 @@ public final class Person
         }
         final Update update = new Update(type, "" + getId());
         final Status status = update.add(CIAdminUser.Person.Password, _newPasswd);
-        if (status.isOk()) {
-            update.execute();
-            update.close();
-        } else {
+        if (!status.isOk()) {
             Person.LOG.error("Password could not be set by the Update, due to restrictions " + "e.g. length???");
             throw new EFapsException(getClass(), "TODO");
         }
+        update.execute();
+        update.close();
         return status;
     }
 
@@ -889,7 +887,7 @@ public final class Person
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             Statement stmt = null;
             try {
                 stmt = con.createStatement();
@@ -950,7 +948,7 @@ public final class Person
         Connection con = null;
         try {
             final List<Long> associationIds = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             Statement stmt = null;
 
@@ -1021,7 +1019,7 @@ public final class Person
         Connection con = null;
         try {
             final List<Long> companyIds = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             PreparedStatement stmt = null;
             try {
@@ -1167,58 +1165,41 @@ public final class Person
      * @return set of all found roles for given JAAS system
      * @throws EFapsException on error
      */
-    public Set<Role> getRolesFromDB(final JAASSystem _jaasSystem)
+    public Set<Role> getRolesFromDB(final JAASSystem jaasSystem)
         throws EFapsException
     {
 
         final Set<Role> ret = new HashSet<>();
-        Connection con = null;
-        try {
-            final List<Long> roleIds = new ArrayList<>();
-            con = Context.getConnection();
-            PreparedStatement stmt = null;
-            try {
-                if (_jaasSystem == null) {
-                    stmt = con.prepareStatement(Person.SQL_ROLE);
-                } else {
-                    stmt = con.prepareStatement(Person.SQL_ROLEJAASKEY);
-                    stmt.setObject(2, _jaasSystem.getId());
-                }
-                stmt.setObject(1, getId());
-                final ResultSet resultset = stmt.executeQuery();
-                while (resultset.next()) {
-                    roleIds.add(resultset.getLong(1));
-                }
-                resultset.close();
+        final List<Long> roleIds = new ArrayList<>();
+        String sql;
+        if (jaasSystem == null) {
+            sql = Person.SQL_ROLE;
+        } else {
+            sql = Person.SQL_ROLEJAASKEY;
+        }
 
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "getRolesFromDB.SQLException", e, getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "getRolesFromDB.SQLException", e, getName());
-                }
-            }
+        try (Connection con = Context.readOnlyConnection();
+            PreparedStatement stmt = con.prepareStatement(sql)) {
 
-            final Set<UUID> roleUUIDs = AppAccessHandler.getLoginRoles();
-            for (final Long roleId : roleIds) {
-                final Role role = Role.get(roleId);
-                if (!AppAccessHandler.excludeMode()
-                                || AppAccessHandler.excludeMode() && roleUUIDs.contains(role.getUUID())) {
-                    ret.add(role);
-                }
+            if (jaasSystem != null) {
+                stmt.setObject(2, jaasSystem.getId());
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
+            stmt.setObject(1, getId());
+            final ResultSet resultset = stmt.executeQuery();
+            while (resultset.next()) {
+                roleIds.add(resultset.getLong(1));
+            }
+            resultset.close();
+        } catch (final SQLException e) {
+            throw new EFapsException(Context.class, "getRolesFromDB.SQLException", e);
+        }
+
+        final Set<UUID> roleUUIDs = AppAccessHandler.getLoginRoles();
+        for (final Long roleId : roleIds) {
+            final Role role = Role.get(roleId);
+            if (!AppAccessHandler.excludeMode()
+                            || AppAccessHandler.excludeMode() && roleUUIDs.contains(role.getUUID())) {
+                ret.add(role);
             }
         }
         return ret;
@@ -1317,7 +1298,7 @@ public final class Person
         Connection con = null;
         try {
             final List<Long> groupIds = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
 
             PreparedStatement stmt = null;
             try {
@@ -1444,7 +1425,7 @@ public final class Person
     {
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
 
             Statement stmt = null;
             final StringBuilder cmd = new StringBuilder();
@@ -1705,7 +1686,7 @@ public final class Person
         Person ret = null;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -1718,7 +1699,7 @@ public final class Person
                     final String name = rs.getString(3);
                     final boolean status = rs.getBoolean(4);
                     ret = new Person(id, uuid, name.trim(), status);
-                    //Person.cachePerson(ret);
+                    // Person.cachePerson(ret);
                     Person.LOG.debug("read from DB Person:{} ", ret);
                 }
                 rs.close();
@@ -1773,7 +1754,7 @@ public final class Person
         long personId = 0;
         Connection con = null;
         try {
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(Person.SQL_JAASKEY);
@@ -1836,7 +1817,7 @@ public final class Person
         Connection con = null;
         try {
             final Context context = Context.getThreadContext();
-            con = Context.getConnection();
+            con = Context.readWriteConnection();
             PreparedStatement stmt = null;
             try {
                 StringBuilder cmd = new StringBuilder();
@@ -1845,8 +1826,7 @@ public final class Person
                     cmd.append("insert into ").append(persType.getMainTable().getSqlTable()).append(
                                     "(TYPEID,NAME,UUID,CREATOR,CREATED,MODIFIER,MODIFIED) ").append("values (");
                 } else {
-                    persId = Context.getDbType().getNewId(new ConnectionResource(con),
-                                    persType.getMainTable().getSqlTable(), "ID");
+                    persId = Context.getDbType().getNewId(con, persType.getMainTable().getSqlTable(), "ID");
                     cmd.append("insert into ").append(persType.getMainTable().getSqlTable())
                                     .append("(ID,TYPEID,NAME,UUID,STATUS,CREATOR,CREATED,MODIFIER,MODIFIED) ")
                                     .append("values (").append(persId).append(",");

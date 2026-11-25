@@ -442,7 +442,7 @@ public final class Status
         Connection con = null;
         try {
             final List<Object[]> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -519,7 +519,7 @@ public final class Status
         Connection con = null;
         try {
             final List<Object[]> values = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);

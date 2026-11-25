@@ -316,7 +316,7 @@ public final class Consortium
         Connection con = null;
         try {
             Consortium consortium = null;
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(_sql);
@@ -368,7 +368,7 @@ public final class Consortium
         Connection con = null;
         try {
             final List<Long> companyIds = new ArrayList<>();
-            con = Context.getConnection();
+            con = Context.readOnlyConnection();
             PreparedStatement stmt = null;
             try {
                 stmt = con.prepareStatement(Consortium.SQL_SELECTREL);
