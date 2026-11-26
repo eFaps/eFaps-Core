@@ -15,13 +15,13 @@
  */
 package org.efaps.db.wrapper;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.efaps.db.Context;
+import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,14 +79,14 @@ public class SQLInsert
      *         generated id is returned
      * @throws SQLException if insert failed
      */
-    public Long execute(final Connection con)
+    public Long execute()
         throws SQLException
     {
         final boolean supGenKey = Context.getDbType().supportsGetGeneratedKeys();
 
         Long ret = null;
         if (this.newId && !supGenKey)  {
-            ret = Context.getDbType().getNewId(con, getTableName(), getIdColumn());
+            ret = Context.getDbType().getNewId(getTableName(), getIdColumn());
             this.column(getIdColumn(), ret);
         }
 
@@ -138,16 +138,16 @@ public class SQLInsert
             .append(Context.getDbType().getSQLPart(SQLPart.PARENTHESIS_CLOSE));
 
         SQLInsert.LOG.debug("Executing SQL: {}", cmd.toString());
-
+        try {
         final PreparedStatement stmt;
         if (this.newId && supGenKey) {
             if (Context.getDbType().supportsMultiGeneratedKeys()) {
-                stmt = con.prepareStatement(cmd.toString(), new String[]{ getIdColumn() });
+                stmt = Context.readWriteConnection().prepareStatement(cmd.toString(), new String[]{ getIdColumn() });
             } else {
-                stmt = con.prepareStatement(cmd.toString(), Statement.RETURN_GENERATED_KEYS);
+                stmt = Context.readWriteConnection().prepareStatement(cmd.toString(), Statement.RETURN_GENERATED_KEYS);
             }
         } else {
-            stmt = con.prepareStatement(cmd.toString());
+            stmt = Context.readWriteConnection().prepareStatement(cmd.toString());
         }
 
         int index = 1;
@@ -158,7 +158,7 @@ public class SQLInsert
             col.set(index++, stmt);
         }
 
-        try {
+
             final int rows = stmt.executeUpdate();
             if (rows == 0) {
                 throw new SQLException("Object for SQL table '" + getTableName()
@@ -173,8 +173,9 @@ public class SQLInsert
                 }
                 resultset.close();
             }
-        } finally  {
-            stmt.close();
+        } catch (final EFapsException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         if (this.newId && SQLInsert.LOG.isDebugEnabled()) {

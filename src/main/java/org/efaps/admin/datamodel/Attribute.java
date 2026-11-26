@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.datamodel;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -942,36 +940,18 @@ public class Attribute
         throws CacheReloadException
     {
         long ret = 0;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(Attribute.SQL_ATTR);
-                stmt.setObject(1, _attrId);
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    ret = rs.getLong(1);
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+
+        try (var stmt = Context.readOnlyConnection().prepareStatement(Attribute.SQL_ATTR)) {
+            stmt.setObject(1, _attrId);
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ret = rs.getLong(1);
             }
-            con.commit();
+            rs.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("Cannot read a type for an attribute.", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("Cannot read a type for an attribute.", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }
@@ -985,8 +965,7 @@ public class Attribute
     {
         final List<Object[]> values = new ArrayList<>();
 
-        try (var con = Context.readOnlyConnection();
-                        var stmt = con.prepareStatement(Attribute.SQL_TYPE)) {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(Attribute.SQL_TYPE)) {
             stmt.setObject(1, type.getId());
             final ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -1005,7 +984,6 @@ public class Attribute
                 });
             }
             rs.close();
-            con.commit();
         } catch (final SQLException | EFapsException e) {
             throw new CacheReloadException("Cannot read attributes.", e);
         }

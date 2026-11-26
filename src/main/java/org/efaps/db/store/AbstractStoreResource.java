@@ -18,11 +18,8 @@ package org.efaps.db.store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -46,7 +43,6 @@ import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
@@ -290,10 +286,10 @@ public abstract class AbstractStoreResource
     public void clean()
         throws EFapsException
     {
-        try(var con = Context.readWriteConnection()) {
+        try {
             final var del = new DeleteDefintion(AbstractStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(con);
+            delete.execute();
             getCache().remove(instance.getOid());
         } catch (final SQLException e) {
             throw new EFapsException("clean", e);
@@ -309,13 +305,13 @@ public abstract class AbstractStoreResource
         throws EFapsException
     {
         if (!getExist()[0] && getGeneralID() != null) {
-            try (var con = Context.readWriteConnection()){
+            try {
                 Context.getDbType().newInsert(AbstractStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
                                 .column(AbstractStoreResource.COLNAME_FILENAME, "TMP")
                                 .column(AbstractStoreResource.COLNAME_FILELENGTH, 0)
                                 .column(AbstractStoreResource.COLNAME_MODIFIED, getTimestamp())
-                                .execute(con);
+                                .execute();
                 this.fileName = "TMP";
                 this.fileLength = 0L;
                 getCache().remove(instance.getOid());
@@ -338,28 +334,26 @@ public abstract class AbstractStoreResource
     {
         if (!_filename.equals(this.fileName) || _fileLength != this.fileLength) {
 
-            try(var con = Context.readWriteConnection()) {
-                final AbstractDatabase<?> db = Context.getDbType();
-                final StringBuilder cmd = new StringBuilder().append(db.getSQLPart(SQLPart.UPDATE)).append(" ")
-                                .append(db.getTableQuote()).append(AbstractStoreResource.TABLENAME_STORE)
-                                .append(db.getTableQuote())
-                                .append(" ").append(db.getSQLPart(SQLPart.SET)).append(" ")
-                                .append(db.getColumnQuote())
-                                .append(AbstractStoreResource.COLNAME_FILENAME)
-                                .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
-                                .append(db.getSQLPart(SQLPart.COMMA))
-                                .append(db.getColumnQuote())
-                                .append(AbstractStoreResource.COLNAME_FILELENGTH)
-                                .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
-                                .append(db.getSQLPart(SQLPart.COMMA))
-                                .append(db.getColumnQuote())
-                                .append(AbstractStoreResource.COLNAME_MODIFIED)
-                                .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
-                                .append(db.getSQLPart(SQLPart.WHERE)).append(" ")
-                                .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
-                                .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
-
-                final PreparedStatement stmt = con.prepareStatement(cmd.toString());
+            final AbstractDatabase<?> db = Context.getDbType();
+            final StringBuilder cmd = new StringBuilder().append(db.getSQLPart(SQLPart.UPDATE)).append(" ")
+                            .append(db.getTableQuote()).append(AbstractStoreResource.TABLENAME_STORE)
+                            .append(db.getTableQuote())
+                            .append(" ").append(db.getSQLPart(SQLPart.SET)).append(" ")
+                            .append(db.getColumnQuote())
+                            .append(AbstractStoreResource.COLNAME_FILENAME)
+                            .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
+                            .append(db.getSQLPart(SQLPart.COMMA))
+                            .append(db.getColumnQuote())
+                            .append(AbstractStoreResource.COLNAME_FILELENGTH)
+                            .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
+                            .append(db.getSQLPart(SQLPart.COMMA))
+                            .append(db.getColumnQuote())
+                            .append(AbstractStoreResource.COLNAME_MODIFIED)
+                            .append(db.getColumnQuote()).append(db.getSQLPart(SQLPart.EQUAL)).append("? ")
+                            .append(db.getSQLPart(SQLPart.WHERE)).append(" ")
+                            .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
+                            .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
                 try {
                     stmt.setString(1, _filename);
                     stmt.setLong(2, _fileLength);
@@ -400,11 +394,7 @@ public abstract class AbstractStoreResource
     private void getGeneralID(final String complStmt)
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-
-            final Statement stmt = con.createStatement();
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
 
             final ResultSet rs = stmt.executeQuery(complStmt.toString());
 
@@ -426,18 +416,8 @@ public abstract class AbstractStoreResource
             }
             rs.close();
             stmt.close();
-            con.commit();
-            con.close();
         } catch (final SQLException e) {
             throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Could not close connection.", e);
-            }
         }
     }
 

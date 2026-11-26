@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
@@ -183,49 +181,33 @@ public class Association
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getAssociationFromDB(final String _sql,
+    private static boolean getAssociationFromDB(final String sql,
                                                 final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
 
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final long roleId = rs.getLong(2);
-                    final long groupId = rs.getLong(3);
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
 
-                    Association.LOG.debug("read association id: {}, roleId: {}, groupId: {}", id, roleId, groupId);
-                    final Association association = new Association(id, roleId, groupId);
-                    Association.cacheAssociation(association);
-                    ret = true;
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final long roleId = rs.getLong(2);
+                final long groupId = rs.getLong(3);
+
+                Association.LOG.debug("read association id: {}, roleId: {}, groupId: {}", id, roleId, groupId);
+                final Association association = new Association(id, roleId, groupId);
+                Association.cacheAssociation(association);
+                ret = true;
             }
-            con.commit();
+            rs.close();
+
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read Association", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read Association", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
+
         }
         return ret;
     }

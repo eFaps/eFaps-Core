@@ -16,7 +16,6 @@
 package org.efaps.db.databases;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,7 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.dbutils.RowProcessor;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.efaps.db.Context;
 import org.efaps.db.databases.information.TableInformation;
 import org.efaps.db.wrapper.SQLDelete;
@@ -160,7 +159,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return true if this database is connected
      * @throws SQLException on error
      */
-    public abstract boolean isConnected(Connection _connection)
+    public abstract boolean isConnected()
         throws SQLException;
 
     /**
@@ -377,7 +376,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _con sql connection
      * @throws SQLException if delete of the SQL data model failed
      */
-    public abstract void deleteAll(Connection _con)
+    public abstract void deleteAll()
         throws SQLException;
 
     /**
@@ -388,28 +387,31 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return <i>true</i> if view exists, otherwise <i>false</i>
      * @throws SQLException if the exist check failed
      */
-    public boolean existsView(final Connection _con,
-                              final String _viewName)
+    public boolean existsView(final String _viewName)
         throws SQLException
     {
         boolean ret = false;
 
-        final DatabaseMetaData metaData = _con.getMetaData();
+        try {
+            final DatabaseMetaData metaData = Context.readOnlyConnection().getMetaData();
 
-        // first test with lower case
-        final ResultSet rs = metaData.getTables(null, null, _viewName.toLowerCase(), new String[] { "VIEW" });
-        if (rs.next()) {
-            ret = true;
-        }
-        rs.close();
-
-        // then test with upper case
-        if (!ret) {
-            final ResultSet rsUC = metaData.getTables(null, null, _viewName.toUpperCase(), new String[] { "VIEW" });
-            if (rsUC.next()) {
+            // first test with lower case
+            final ResultSet rs = metaData.getTables(null, null, _viewName.toLowerCase(), new String[] { "VIEW" });
+            if (rs.next()) {
                 ret = true;
             }
-            rsUC.close();
+            rs.close();
+
+            // then test with upper case
+            if (!ret) {
+                final ResultSet rsUC = metaData.getTables(null, null, _viewName.toUpperCase(), new String[] { "VIEW" });
+                if (rsUC.next()) {
+                    ret = true;
+                }
+                rsUC.close();
+            }
+        } catch (EFapsException | SQLException e) {
+            throw new SQLException(e);
         }
 
         return ret;
@@ -423,8 +425,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if delete of the sequence failed
      */
-    public abstract T deleteView(Connection _con,
-                                 String _name)
+    public abstract T deleteView(String _name)
         throws SQLException;
 
     /**
@@ -435,16 +436,17 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return <i>true</i> if SQL table exists, otherwise <i>false</i>
      * @throws SQLException if the exist check for the table failed
      */
-    public boolean existsTable(final Connection _con,
-                               final String _tableName)
+    public boolean existsTable(final String tableName)
         throws SQLException
     {
         boolean ret = false;
+        DatabaseMetaData metaData;
+        try {
+            metaData = Context.readOnlyConnection().getMetaData();
 
-        final DatabaseMetaData metaData = _con.getMetaData();
 
         // first test with lower case
-        final ResultSet rs = metaData.getTables(null, null, _tableName.toLowerCase(), new String[] { "TABLE" });
+        final ResultSet rs = metaData.getTables(null, null, tableName.toLowerCase(), new String[] { "TABLE" });
         if (rs.next()) {
             ret = true;
         }
@@ -452,11 +454,14 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
 
         // then test with upper case
         if (!ret) {
-            final ResultSet rsUC = metaData.getTables(null, null, _tableName.toUpperCase(), new String[] { "TABLE" });
+            final ResultSet rsUC = metaData.getTables(null, null, tableName.toUpperCase(), new String[] { "TABLE" });
             if (rsUC.next()) {
                 ret = true;
             }
             rsUC.close();
+        }
+        } catch (final EFapsException  e) {
+            throw new SQLException(e);
         }
         return ret;
     }
@@ -487,20 +492,20 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _tableName name of SQL table for which the information is fetched
      * @return instance of {@link TableInformation} with table information
      * @throws SQLException if information about the table could not be fetched
+     * @throws EFapsException
      * @see TableInformation
      * @see #getCachedTableInformation(String)
      */
-    public TableInformation getRealTableInformation(final Connection _con,
-                                                    final String _tableName)
-        throws SQLException
+    public TableInformation getRealTableInformation(final String _tableName)
+        throws SQLException, EFapsException
     {
         final TableInformation tableInfo = new TableInformation(_tableName.toUpperCase());
 
         final Map<String, TableInformation> tableInfos = new HashMap<>(1);
         tableInfos.put(_tableName.toUpperCase(), tableInfo);
-        this.initTableInfoColumns(_con, null, tableInfos);
-        this.initTableInfoUniqueKeys(_con, null, tableInfos);
-        this.initTableInfoForeignKeys(_con, null, tableInfos);
+        this.initTableInfoColumns(null, tableInfos);
+        this.initTableInfoUniqueKeys(null, tableInfos);
+        this.initTableInfoForeignKeys(null, tableInfos);
 
         return tableInfo;
     }
@@ -516,16 +521,14 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      *             neeeded? not referenced anymore...
      */
     @SuppressWarnings("unchecked")
-    public T createView(final Connection _con,
-                        final String _view)
+    public T createView(final String _view)
         throws SQLException
     {
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()){
             stmt.executeUpdate(new StringBuilder().append("create view ").append(_view)
                             .append(" as select 1").toString());
-        } finally {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return (T) this;
     }
@@ -542,8 +545,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException on error
      */
-    public abstract T createSequence(Connection _con,
-                                     String _name,
+    public abstract T createSequence(String _name,
                                      long _startValue)
         throws SQLException;
 
@@ -555,8 +557,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if delete of the sequence failed
      */
-    public abstract T deleteSequence(Connection _con,
-                                     String _name)
+    public abstract T deleteSequence(String _name)
         throws SQLException;
 
     /**
@@ -567,8 +568,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return true if exists, else false
      * @throws SQLException on error
      */
-    public abstract boolean existsSequence(Connection _con,
-                                           String _name)
+    public abstract boolean existsSequence(String _name)
         throws SQLException;
 
     /**
@@ -579,8 +579,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return next value in sequence
      * @throws SQLException on error
      */
-    public abstract long nextSequence(Connection con,
-                                      String name)
+    public abstract long nextSequence(String name)
         throws SQLException;
 
     /**
@@ -595,8 +594,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException on error
      */
-    public abstract T setSequence(Connection _con,
-                                  String _name,
+    public abstract T setSequence(String _name,
                                   long _value)
         throws SQLException;
 
@@ -608,8 +606,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return name of the table as it is insert into the database
      * @throws SQLException if the create of the table failed
      */
-    public abstract T createTable(Connection _con,
-                                  String _table)
+    public abstract T createTable(String _table)
         throws SQLException;
 
     /**
@@ -622,12 +619,11 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws InstallationException if the update of the table failed
      */
-    public T defineTableParent(final Connection _con,
-                               final String _table,
+    public T defineTableParent(final String _table,
                                final String _parentTable)
         throws InstallationException
     {
-        return addForeignKey(_con, _table, _table + "_FK_ID", "ID", _parentTable + "(ID)", false);
+        return addForeignKey(_table, _table + "_FK_ID", "ID", _parentTable + "(ID)", false);
     }
 
     /**
@@ -638,8 +634,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if the update of the table failed
      */
-    public abstract T defineTableAutoIncrement(Connection _con,
-                                               String _table)
+    public abstract T defineTableAutoIncrement(String _table)
         throws SQLException;
 
     /**
@@ -657,8 +652,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @throws SQLException if the column could not be added to the tables
      */
     // CHECKSTYLE:OFF
-    public T addTableColumn(final Connection _con,
-                            final String _tableName,
+    public T addTableColumn(final String _tableName,
                             final String _columnName,
                             final ColumnType _columnType,
                             final String _defaultValue,
@@ -685,11 +679,11 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
 
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
 
-        final Statement stmt = _con.createStatement();
-        try {
+
+        try (var stmt = Context.readWriteConnection().createStatement()){
             stmt.execute(cmd.toString());
-        } finally {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
 
         @SuppressWarnings("unchecked")
@@ -705,8 +699,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if the column could not be added to the tables
      */
-    public T updateColumnIsNotNull(final Connection _con,
-                                   final String _tableName,
+    public T updateColumnIsNotNull(final String _tableName,
                                    final String _columnName,
                                    final boolean _isNotNull)
         throws SQLException
@@ -714,7 +707,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
         // to set not null it must be checked that there are no null values!
         boolean executable = true;
         if (_isNotNull) {
-            executable = !check4NullValues(_con, _tableName, _columnName);
+            executable = !check4NullValues(_tableName, _columnName);
         }
 
         if (executable) {
@@ -725,11 +718,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
             AbstractDatabase.LOG.debug("    ..SQL> {}", cmd);
 
             // excecute statement
-            final Statement stmt = _con.createStatement();
-            try {
+            try (var stmt = Context.readWriteConnection().createStatement()){
                 stmt.execute(cmd.toString());
-            } finally {
-                stmt.close();
+            }  catch (final EFapsException e) {
+                throw new SQLException(e);
             }
         } else {
             AbstractDatabase.LOG.warn("Could not alter \"Not NUll\" on table '{}' column '{}'. "
@@ -756,8 +748,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return true if the column contains nulls, else false
      * @throws SQLException on error
      */
-    protected abstract boolean check4NullValues(Connection _con,
-                                                String _tableName,
+    protected abstract boolean check4NullValues(String _tableName,
                                                 String _columnName)
         throws SQLException;
 
@@ -773,8 +764,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if the column could not be added to the tables
      */
-    public T updateColumn(final Connection _con,
-                          final String _tableName,
+    public T updateColumn(final String _tableName,
                           final String _columnName,
                           final ColumnType _columnType,
                           final int _length,
@@ -793,11 +783,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
         }
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
 
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             stmt.execute(cmd.toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         @SuppressWarnings("unchecked")
         final T ret = (T) this;
@@ -823,8 +812,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @return this instance
      * @throws SQLException if the unique key could not be created
      */
-    public T addUniqueKey(final Connection _con,
-                          final String _tableName,
+    public T addUniqueKey(final String _tableName,
                           final String _uniqueKeyName,
                           final String _columns)
         throws SQLException
@@ -836,11 +824,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
 
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
 
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             stmt.execute(cmd.toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
 
         @SuppressWarnings("unchecked") final T ret = (T) this;
@@ -861,8 +848,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @throws InstallationException if foreign key could not be defined for SQL
      *             table
      */
-    public T addForeignKey(final Connection _con,
-                           final String _tableName,
+    public T addForeignKey(final String _tableName,
                            final String _foreignKeyName,
                            final String _key,
                            final String _reference,
@@ -879,14 +865,9 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
         }
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
 
-        try {
-            final Statement stmt = _con.createStatement();
-            try {
-                stmt.execute(cmd.toString());
-            } finally {
-                stmt.close();
-            }
-        } catch (final SQLException e) {
+        try (var stmt = Context.readWriteConnection().createStatement()) {
+            stmt.execute(cmd.toString());
+        } catch (final SQLException | EFapsException e) {
             throw new InstallationException("Foreign key could not be created. SQL statement was:\n"
                             + cmd.toString(), e);
         }
@@ -905,8 +886,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _condition condition of the check key
      * @throws SQLException if check key could not be defined for SQL table
      */
-    public void addCheckKey(final Connection _con,
-                            final String _tableName,
+    public void addCheckKey(final String _tableName,
                             final String _checkKeyName,
                             final String _condition)
         throws SQLException
@@ -917,17 +897,14 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
                         .append("check(").append(_condition).append(")");
 
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
-        // excecute statement
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             stmt.execute(cmd.toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
     }
 
-    public void upsertIndex(final Connection con,
-                            final String tableName,
+    public void upsertIndex(final String tableName,
                             final String indexName,
                             final String columns)
         throws SQLException
@@ -938,12 +915,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
                         .append(columns).append(")");
 
         AbstractDatabase.LOG.debug("    ..SQL> " + cmd.toString());
-        // excecute statement
-        final Statement stmt = con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             stmt.execute(cmd.toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
     }
 
@@ -982,7 +957,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      */
     public String escapeForWhere(final String _value)
     {
-        return "'" + StringUtils.replace(_value, "'", "''") + "'";
+        return "'" + Strings.CS.replace(_value, "'", "''") + "'";
     }
 
     /**
@@ -992,10 +967,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
     public String prepare4Match(final String _value)
     {
         // Remove double escapes
-        String ret = StringUtils.replace(_value, "\\\\", "\\");
+        String ret = Strings.CS.replace(_value, "\\\\", "\\");
         // escape '%' percent and '_' underscore
-        ret = StringUtils.replace(ret, "%", "\\%");
-        ret = StringUtils.replace(ret, "_", "\\_");
+        ret = Strings.CS.replace(ret, "%", "\\%");
+        ret = Strings.CS.replace(ret, "_", "\\_");
         // replace any '*' that is not escaped by a '\'
         ret = ret.replaceAll("(?<!\\\\)\\" + AbstractDatabase.WILDCARDPATTERN, "%");
         // remove the escapecharacter from the '\*' and replace with a simple '*'
@@ -1039,8 +1014,7 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @throws SQLException always, because method itself is not implemented not
      *             not allowed to call
      */
-    public long getNewId(final Connection con,
-                         final String _table,
+    public long getNewId(final String _table,
                          final String _column)
         throws SQLException
     {
@@ -1174,18 +1148,18 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      *            related table information
      * @throws SQLException if information could not be fetched from the data
      *             base
+     * @throws EFapsException
      */
-    protected void initTableInfo(final Connection _con,
-                                 final String _sql,
+    protected void initTableInfo(final String _sql,
                                  final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
         Statement stmt = null;
         final ResultSet rs;
         if (_sql == null) {
-            rs = _con.getMetaData().getTables(null, null, "%", new String[] { "TABLE", "VIEW" });
+            rs = Context.readOnlyConnection().getMetaData().getTables(null, null, "%", new String[] { "TABLE", "VIEW" });
         } else        {
-            stmt = _con.createStatement();
+            stmt = Context.readOnlyConnection().createStatement();
             rs = stmt.executeQuery(_sql);
         }
         try {
@@ -1227,23 +1201,23 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _cache4Name map used to cache depending on the table name the
      *            related table information
      * @throws SQLException if column information could not be fetched
+     * @throws EFapsException
      */
-    protected void initTableInfoColumns(final Connection _con,
-                                        final String _sql,
+    protected void initTableInfoColumns(final String _sql,
                                         final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
         Statement stmt = null;
         final ResultSet rs;
         if (_sql == null) {
             if (_cache4Name.size() == 1) {
-                rs = _con.getMetaData().getColumns(null, null,
+                rs = Context.readOnlyConnection().getMetaData().getColumns(null, null,
                                 _cache4Name.keySet().iterator().next().toLowerCase(), null);
             } else {
-                rs = _con.getMetaData().getColumns(null, null, null, null);
+                rs = Context.readOnlyConnection().getMetaData().getColumns(null, null, null, null);
             }
         } else {
-            stmt = _con.createStatement();
+            stmt = Context.readOnlyConnection().createStatement();
             rs = stmt.executeQuery(_sql);
         }
         try {
@@ -1296,18 +1270,18 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _cache4Name map used to fetch depending on the table name the
      *            related table information
      * @throws SQLException if unique keys could not be fetched
+     * @throws EFapsException
      */
-    protected void initTableInfoUniqueKeys(final Connection _con,
-                                           final String _sql,
+    protected void initTableInfoUniqueKeys(final String _sql,
                                            final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
         Statement stmt = null;
         final ResultSet rs;
         if (_sql == null) {
-            rs = _con.getMetaData().getIndexInfo(null, null, "%", true, false);
+            rs = Context.readOnlyConnection().getMetaData().getIndexInfo(null, null, "%", true, false);
         } else        {
-            stmt = _con.createStatement();
+            stmt = Context.readOnlyConnection().createStatement();
             rs = stmt.executeQuery(_sql);
         }
         try {
@@ -1357,18 +1331,18 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
      * @param _cache4Name map used to fetch depending on the table name the
      *            related table information
      * @throws SQLException if foreign keys could not be fetched
+     * @throws EFapsException
      */
-    protected void initTableInfoForeignKeys(final Connection _con,
-                                            final String _sql,
+    protected void initTableInfoForeignKeys(final String _sql,
                                             final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
         Statement stmt = null;
         final ResultSet rs;
         if (_sql == null) {
-            rs = _con.getMetaData().getImportedKeys(null, null, "%");
+            rs = Context.readOnlyConnection().getMetaData().getImportedKeys(null, null, "%");
         } else        {
-            stmt = _con.createStatement();
+            stmt = Context.readOnlyConnection().createStatement();
             if (_cache4Name.size() == 1) {
                 rs = stmt.executeQuery(String.format(_sql, _cache4Name.keySet().iterator().next().toLowerCase()));
             } else {
@@ -1423,13 +1397,10 @@ public abstract class AbstractDatabase<T extends AbstractDatabase<?>>
             throws CacheReloadException
         {
             try {
-                final Connection con = Context.readOnlyConnection();
-                AbstractDatabase.this.initTableInfo(con, null, _cache4Name);
-                AbstractDatabase.this.initTableInfoColumns(con, null, _cache4Name);
-                AbstractDatabase.this.initTableInfoUniqueKeys(con, null, _cache4Name);
-                AbstractDatabase.this.initTableInfoForeignKeys(con, null, _cache4Name);
-                con.commit();
-                con.close();
+                AbstractDatabase.this.initTableInfo(null, _cache4Name);
+                AbstractDatabase.this.initTableInfoColumns(null, _cache4Name);
+                AbstractDatabase.this.initTableInfoUniqueKeys(null, _cache4Name);
+                AbstractDatabase.this.initTableInfoForeignKeys(null, _cache4Name);
             } catch (final SQLException e) {
                 throw new CacheReloadException("cache for table information could not be read", e);
             } catch (final EFapsException e) {

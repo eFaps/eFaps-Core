@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.access;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -235,46 +233,27 @@ public final class AccessType
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getAccessTypeFromDB(final String _sql,
+    private static boolean getAccessTypeFromDB(final String sql,
                                                final Object _criteria)
         throws CacheReloadException
     {
         final boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3);
-                    AccessType.LOG.debug("read AccessType  '{}' (id = {}))", name, id);
-                    final AccessType accessType = new AccessType(id, uuid, name);
-                    AccessType.cacheAccessType(accessType);
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3);
+                AccessType.LOG.debug("read AccessType  '{}' (id = {}))", name, id);
+                final AccessType accessType = new AccessType(id, uuid, name);
+                AccessType.cacheAccessType(accessType);
             }
-            con.commit();
+            rs.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read access types", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read access types", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
         }
         return ret;
     }

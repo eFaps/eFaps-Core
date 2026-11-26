@@ -17,8 +17,6 @@ package org.efaps.admin.user;
 
 import java.lang.reflect.Method;
 import java.security.Principal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -47,6 +45,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class JAASSystem
     extends AbstractAdminObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -96,7 +95,7 @@ public final class JAASSystem
                     .from("V_USERJAASSYSTEM", 0)
                     .addPart(SQLPart.WHERE).addColumnPart(0, "ID").addPart(SQLPart.EQUAL).addValuePart("?").toString();
 
-  /**
+    /**
      * This is the SQL select statement to select a JAASSystem from the database
      * by Name.
      */
@@ -128,8 +127,8 @@ public final class JAASSystem
     private static String NAMECACHE = JAASSystem.class.getName() + ".Name";
 
     /**
-     * The class used as principle for persons for this JAAS system is stored
-     * in this instance variable.
+     * The class used as principle for persons for this JAAS system is stored in
+     * this instance variable.
      *
      * @see #getPersonJAASPrincipleClass
      */
@@ -148,8 +147,7 @@ public final class JAASSystem
     /**
      * Map between person attributes the the method of the JAAS.
      */
-    private final Map<Person.AttrName, Method> personMethodAttributes
-        = new HashMap<>();
+    private final Map<Person.AttrName, Method> personMethodAttributes = new HashMap<>();
 
     /**
      * The class used as principle for roles for this JAAS system is stored in
@@ -180,11 +178,11 @@ public final class JAASSystem
     /**
      * Constructor to set the id and name of the user object.
      *
-     * @param _id       id to set
-     * @param _name     name to set
+     * @param _id id to set
+     * @param _name name to set
      */
     protected JAASSystem(final long _id,
-                       final String _name)
+                         final String _name)
     {
         super(_id, null, _name);
     }
@@ -242,7 +240,8 @@ public final class JAASSystem
      * This is the getter method for instance variable
      * {@link #roleJAASPrincipleClass}.
      *
-     * @return the value of the instance variable {@link #roleJAASPrincipleClass}.
+     * @return the value of the instance variable
+     *         {@link #roleJAASPrincipleClass}.
      * @see #roleJAASPrincipleClass
      */
     public Class<Principal> getRoleJAASPrincipleClass()
@@ -286,13 +285,15 @@ public final class JAASSystem
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cacheJAASSystem(this);
     }
 
     /**
      * Method to initialize the cache of JAAS systems.
+     *
      * @throws CacheReloadException on error
      */
     public static void initialize()
@@ -308,7 +309,7 @@ public final class JAASSystem
      * Returns for given parameter <i>_id</i> the instance of class
      * {@link JAASSystem}.
      *
-     * @param _id       id to search in the cache
+     * @param _id id to search in the cache
      * @return instance of class {@link JAASSystem}
      * @throws CacheReloadException on error
      */
@@ -362,11 +363,11 @@ public final class JAASSystem
      * If the checks fails or the method is not found, an error log is written
      * and <code>null</code> is returned.
      *
-     * @param _class        class on which the method is searched
-     * @param _method       method name
-     * @param _type         text string for which the method is searched
-     * @param _jaasName     name of the JAAS system
-     * @param _jaasId       id of the JAAS system
+     * @param _class class on which the method is searched
+     * @param _method method name
+     * @param _type text string for which the method is searched
+     * @param _jaasName name of the JAAS system
+     * @param _jaasId id of the JAAS system
      * @return found method, or <code>null</code> if no method found
      * @see #initialize()
      */
@@ -383,18 +384,20 @@ public final class JAASSystem
                 ret = _class.getMethod(_method.trim(), new Class[] {});
             } catch (final NoSuchMethodException e) {
                 JAASSystem.LOG.error("could not get a " + _type
-                    + " method for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")", e);
+                                + " method for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")", e);
             } catch (final SecurityException e) {
                 JAASSystem.LOG.error("could not get a " + _type
-                    + " method for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")", e);
+                                + " method for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")", e);
             }
             if (!ret.getReturnType().equals(String.class)) {
                 JAASSystem.LOG.error("could not get a " + _type
-                    + " method returning java.lang.String for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")");
+                                + " method returning java.lang.String for JAAS System '" + _jaasName + "' (id = "
+                                + _jaasId + ")");
                 ret = null;
             } else if (ret.getParameterTypes() != null && ret.getParameterTypes().length > 0) {
                 JAASSystem.LOG.error("could not get a " + _type
-                    + " method returning java.lang.String for JAAS System '" + _jaasName + "' (id = " + _jaasId + ")");
+                                + " method returning java.lang.String for JAAS System '" + _jaasName + "' (id = "
+                                + _jaasId + ")");
                 ret = null;
             }
         }
@@ -415,116 +418,95 @@ public final class JAASSystem
     }
 
     /**
-     * @param _sql      SQL Statment to be execuetd
+     * @param _sql SQL Statment to be execuetd
      * @param _criteria filter criteria
      * @throws CacheReloadException on error
      */
-    private static void getJAASSystemFromDB(final String _sql,
+    private static void getJAASSystemFromDB(final String sql,
                                             final Object _criteria)
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            if (!sql.equals(JAASSystem.SQL_SELECT)) {
+                stmt.setObject(1, _criteria);
+            }
+            final ResultSet rs = stmt.executeQuery();
 
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                if (!_sql.equals(JAASSystem.SQL_SELECT)) {
-                    stmt.setObject(1, _criteria);
-                }
-                final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                final long id = rs.getLong(1);
+                final String name = rs.getString(2).trim();
+                final String personClassName = rs.getString(3);
+                final String personMethodKey = rs.getString(4);
+                final String personMethodName = rs.getString(5);
+                final String personMethodFirstName = rs.getString(6);
+                final String personMethodLastName = rs.getString(7);
+                final String personMethodEmail = rs.getString(8);
+                final String roleClassName = rs.getString(9);
+                final String roleMethodKey = rs.getString(10);
+                final String groupClassName = rs.getString(11);
+                final String groupMethodKey = rs.getString(12);
 
-                while (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String name = rs.getString(2).trim();
-                    final String personClassName = rs.getString(3);
-                    final String personMethodKey = rs.getString(4);
-                    final String personMethodName = rs.getString(5);
-                    final String personMethodFirstName = rs.getString(6);
-                    final String personMethodLastName = rs.getString(7);
-                    final String personMethodEmail = rs.getString(8);
-                    final String roleClassName = rs.getString(9);
-                    final String roleMethodKey = rs.getString(10);
-                    final String groupClassName = rs.getString(11);
-                    final String groupMethodKey = rs.getString(12);
+                JAASSystem.LOG.debug("read JAAS System '{}' (id = {})", name, id);
 
-                    JAASSystem.LOG.debug("read JAAS System '{}' (id = {})", name, id);
-
-                    try {
-                        final JAASSystem system = new JAASSystem(id, name);
-                        @SuppressWarnings("unchecked")
-                        final Class<Principal> forName = (Class<Principal>) Class.forName(personClassName.trim());
-                        system.personJAASPrincipleClass = forName;
-                        system.personMethodKey = JAASSystem.getMethod(system.personJAASPrincipleClass,
-                                        personMethodKey,
-                                        "person key", name, id);
-                        system.personMethodName = JAASSystem.getMethod(system.personJAASPrincipleClass,
-                                        personMethodName,
-                                        "person name", name, id);
-                        Method method = JAASSystem.getMethod(system.personJAASPrincipleClass,
-                                        personMethodFirstName,
-                                        "person first name", name, id);
-                        if (method != null) {
-                            system.personMethodAttributes.put(Person.AttrName.FIRSTNAME,
-                                            method);
-                        }
-                        method = JAASSystem.getMethod(system.personJAASPrincipleClass,
-                                        personMethodLastName,
-                                        "person last name", name, id);
-                        if (method != null) {
-                            system.personMethodAttributes.put(Person.AttrName.LASTNAME,
-                                            method);
-                        }
-                        method = JAASSystem.getMethod(system.personJAASPrincipleClass,
-                                        personMethodEmail,
-                                        "person email", name, id);
-                        if (method != null) {
-                            JAASSystem.LOG.debug("method '{}' not implemented yet.", method);
-                            // TODO: person email method
-                        }
-                        if (roleClassName != null && roleClassName.trim().length() > 0) {
-                            @SuppressWarnings("unchecked")
-                            final Class<Principal> fn = (Class<Principal>) Class.forName(roleClassName.trim());
-                            system.roleJAASPrincipleClass = fn;
-                            system.roleMethodKey = JAASSystem.getMethod(system.roleJAASPrincipleClass,
-                                            roleMethodKey,
-                                            "role key", name, id);
-                        }
-                        if (groupClassName != null && groupClassName.trim().length() > 0) {
-                            @SuppressWarnings("unchecked")
-                            final Class<Principal> fn = (Class<Principal>) Class.forName(groupClassName.trim());
-                            system.groupJAASPrincipleClass = fn;
-                            system.groupMethodKey = JAASSystem.getMethod(system.groupJAASPrincipleClass,
-                                            groupMethodKey,
-                                            "group key", name, id);
-                        }
-                        JAASSystem.cacheJAASSystem(system);
-                    } catch (final ClassNotFoundException e) {
-                        JAASSystem.LOG.error("read JAAS System '{}' (id = {})", name, id, e);
+                try {
+                    final JAASSystem system = new JAASSystem(id, name);
+                    @SuppressWarnings("unchecked") final Class<Principal> forName = (Class<Principal>) Class
+                                    .forName(personClassName.trim());
+                    system.personJAASPrincipleClass = forName;
+                    system.personMethodKey = JAASSystem.getMethod(system.personJAASPrincipleClass,
+                                    personMethodKey,
+                                    "person key", name, id);
+                    system.personMethodName = JAASSystem.getMethod(system.personJAASPrincipleClass,
+                                    personMethodName,
+                                    "person name", name, id);
+                    Method method = JAASSystem.getMethod(system.personJAASPrincipleClass,
+                                    personMethodFirstName,
+                                    "person first name", name, id);
+                    if (method != null) {
+                        system.personMethodAttributes.put(Person.AttrName.FIRSTNAME,
+                                        method);
                     }
-                }
-                rs.close();
-                con.commit();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
+                    method = JAASSystem.getMethod(system.personJAASPrincipleClass,
+                                    personMethodLastName,
+                                    "person last name", name, id);
+                    if (method != null) {
+                        system.personMethodAttributes.put(Person.AttrName.LASTNAME,
+                                        method);
+                    }
+                    method = JAASSystem.getMethod(system.personJAASPrincipleClass,
+                                    personMethodEmail,
+                                    "person email", name, id);
+                    if (method != null) {
+                        JAASSystem.LOG.debug("method '{}' not implemented yet.", method);
+                        // TODO: person email method
+                    }
+                    if (roleClassName != null && roleClassName.trim().length() > 0) {
+                        @SuppressWarnings("unchecked") final Class<Principal> fn = (Class<Principal>) Class
+                                        .forName(roleClassName.trim());
+                        system.roleJAASPrincipleClass = fn;
+                        system.roleMethodKey = JAASSystem.getMethod(system.roleJAASPrincipleClass,
+                                        roleMethodKey,
+                                        "role key", name, id);
+                    }
+                    if (groupClassName != null && groupClassName.trim().length() > 0) {
+                        @SuppressWarnings("unchecked") final Class<Principal> fn = (Class<Principal>) Class
+                                        .forName(groupClassName.trim());
+                        system.groupJAASPrincipleClass = fn;
+                        system.groupMethodKey = JAASSystem.getMethod(system.groupJAASPrincipleClass,
+                                        groupMethodKey,
+                                        "group key", name, id);
+                    }
+                    JAASSystem.cacheJAASSystem(system);
+                } catch (final ClassNotFoundException e) {
+                    JAASSystem.LOG.error("read JAAS System '{}' (id = {})", name, id, e);
                 }
             }
-        } catch (final SQLException e) {
+            rs.close();
+        } catch (final SQLException | EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } catch (final EFapsException e) {
-            throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
+
 
     @Override
     public boolean equals(final Object _obj)
@@ -541,6 +523,6 @@ public final class JAASSystem
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 }

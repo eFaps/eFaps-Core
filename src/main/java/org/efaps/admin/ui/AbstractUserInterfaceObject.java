@@ -17,10 +17,8 @@ package org.efaps.admin.ui;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -149,8 +147,7 @@ public abstract class AbstractUserInterfaceObject
     private void readFromDB4Access()
         throws CacheReloadException
     {
-        try (Connection con  = Context.readOnlyConnection();
-             Statement stmt = con.createStatement()) {
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
             final ResultSet resultset = stmt.executeQuery("select "
                             + "T_UIACCESS.USERABSTRACT "
                             + "from T_UIACCESS "

@@ -15,7 +15,6 @@
  */
 package org.efaps.db;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -73,7 +72,8 @@ public class Insert
      * @see #addTables
      * @throws EFapsException on error
      */
-    public Insert(final Type _type) throws EFapsException
+    public Insert(final Type _type)
+        throws EFapsException
     {
         super(_type, null);
         addCreateUpdateAttributes();
@@ -85,17 +85,19 @@ public class Insert
      * @see #Insert(Type)
      * @throws EFapsException on error
      */
-    public Insert(final String _type) throws EFapsException
+    public Insert(final String _type)
+        throws EFapsException
     {
         this(Type.get(_type));
     }
 
     /**
-     * @param _ciType  CIType to be inserted
+     * @param _ciType CIType to be inserted
      * @see #Insert(Type)
      * @throws EFapsException on error
      */
-    public Insert(final CIType _ciType) throws EFapsException
+    public Insert(final CIType _ciType)
+        throws EFapsException
     {
         this(_ciType.uuid);
     }
@@ -105,7 +107,8 @@ public class Insert
      * @see #Insert(Type)
      * @throws EFapsException on error
      */
-    public Insert(final UUID _uuid) throws EFapsException
+    public Insert(final UUID _uuid)
+        throws EFapsException
     {
         this(Type.get(_uuid));
     }
@@ -129,7 +132,8 @@ public class Insert
      *
      * @throws EFapsException from called method
      */
-    private void addCreateUpdateAttributes() throws EFapsException
+    private void addCreateUpdateAttributes()
+        throws EFapsException
     {
         final Iterator<?> iter = getType().getAttributes().entrySet().iterator();
         while (iter.hasNext()) {
@@ -147,8 +151,9 @@ public class Insert
 
     /**
      * Set the exchangeids for the new object.
+     *
      * @param _exchangeSystemId exchange system id
-     * @param _exchangeId       exhange id
+     * @param _exchangeId exhange id
      * @return this
      */
     public Insert setExchangeIds(final Long _exchangeSystemId,
@@ -212,31 +217,24 @@ public class Insert
     public void executeWithoutTrigger()
         throws EFapsException
     {
-        Context.getThreadContext();
 
-        try(var con = Context.readWriteConnection()) {
+        final SQLTable mainTable = getType().getMainTable();
+        final long id = executeOneStatement(mainTable, getTable2values().get(mainTable), 0);
 
-            final SQLTable mainTable = getType().getMainTable();
+        setInstance(Instance.get(getInstance().getType(), id));
 
-            final long id = executeOneStatement(con, mainTable, getTable2values().get(mainTable), 0);
+        getInstance().setExchangeId(exchangeId);
+        getInstance().setExchangeSystemId(exchangeSystemId);
 
-            setInstance(Instance.get(getInstance().getType(), id));
+        GeneralInstance.insert(getInstance());
 
-            getInstance().setExchangeId(exchangeId);
-            getInstance().setExchangeSystemId(exchangeSystemId);
-
-            GeneralInstance.insert(getInstance(), con);
-
-            for (final Entry<SQLTable, List<Value>> entry :  getTable2values().entrySet()) {
-                final SQLTable table = entry.getKey();
-                if (!table.equals(mainTable) && !table.isReadOnly()) {
-                    executeOneStatement(con, table, entry.getValue(), id);
-                }
+        for (final Entry<SQLTable, List<Value>> entry : getTable2values().entrySet()) {
+            final SQLTable table = entry.getKey();
+            if (!table.equals(mainTable) && !table.isReadOnly()) {
+                executeOneStatement(table, entry.getValue(), id);
             }
-            Queue.registerUpdate(getInstance());
-        } catch (final SQLException e) {
-            LOG.error("Catched", e);
         }
+        Queue.registerUpdate(getInstance());
 
         if (getType().isCheckStatus()) {
             Long statusId = 0L;
@@ -251,7 +249,8 @@ public class Insert
                     } else if (statusValue instanceof String) {
                         statusId = NumberUtils.toLong((String) statusValue, 0);
                     } else {
-                        LOG.error("Cannot retrieve value for statusId on StatusChange for attribute {]", entry.getKey());
+                        LOG.error("Cannot retrieve value for statusId on StatusChange for attribute {]",
+                                        entry.getKey());
                     }
                     break;
                 }
@@ -284,16 +283,15 @@ public class Insert
      * used, otherwise method {@link org.efaps.db.databases#getNewId} is used to
      * retrieve a new id value.
      *
-     * @param _con      connection resource
-     * @param _table    sql table used to insert
-     * @param _values   values to be inserted
-     * @param _id       new created id
+     * @param _con connection resource
+     * @param _table sql table used to insert
+     * @param _values values to be inserted
+     * @param _id new created id
      * @return new created id if parameter <i>_id</i> is set to <code>0</code>
      * @see #createOneStatement
      * @throws EFapsException on error
      */
-    private long executeOneStatement(final Connection _con,
-                                     final SQLTable _table,
+    private long executeOneStatement(final SQLTable _table,
                                      final List<Value> _values,
                                      final long _id)
         throws EFapsException
@@ -302,8 +300,8 @@ public class Insert
         long ret = _id;
         try {
             final SQLInsert insert = Context.getDbType().newInsert(_table.getSqlTable(),
-                                                                   _table.getSqlColId(),
-                                                                   _id == 0);
+                            _table.getSqlColId(),
+                            _id == 0);
 
             if (_id != 0) {
                 insert.column(_table.getSqlColId(), _id);
@@ -323,8 +321,8 @@ public class Insert
                     added.add(colKey);
                 }
             }
-            final Long bck = insert.execute(_con);
-            if (bck != null)  {
+            final Long bck = insert.execute();
+            if (bck != null) {
                 ret = bck;
             }
         } catch (final SQLException e) {

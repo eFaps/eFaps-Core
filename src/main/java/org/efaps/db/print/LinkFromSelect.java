@@ -15,10 +15,8 @@
  */
 package org.efaps.db.print;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public class LinkFromSelect
     extends AbstractPrintQuery
 {
+
     /**
      * Logging instance used in this class.
      */
@@ -154,7 +153,7 @@ public class LinkFromSelect
     {
         this.hasResult = executeOneCompleteStmt(createSQLStatement(_onesel), getAllSelects());
         if (this.hasResult) {
-            for (final OneSelect onesel :  getAllSelects()) {
+            for (final OneSelect onesel : getAllSelects()) {
                 if (onesel.getFromSelect() != null && !onesel.getFromSelect().equals(this)) {
                     onesel.getFromSelect().execute(onesel);
                 }
@@ -181,11 +180,11 @@ public class LinkFromSelect
         }
 
         final SQLSelect select = new SQLSelect()
-                .column(0, "ID")
-                .column(0, attr.getSqlColNames().get(0))
-                .from(this.type.getMainTable().getSqlTable(), 0);
+                        .column(0, "ID")
+                        .column(0, attr.getSqlColNames().get(0))
+                        .from(this.type.getMainTable().getSqlTable(), 0);
 
-        // on a from  select only one table is the base
+        // on a from select only one table is the base
         getAllSelects().get(0).append2SQLFrom(select);
 
         int colIndex = select.getColumns().size() + 1;
@@ -194,8 +193,8 @@ public class LinkFromSelect
             colIndex += oneSel.append2SQLSelect(select, colIndex);
         }
         select.addPart(SQLPart.WHERE)
-            .addColumnPart(0, attr.getSqlColNames().get(0))
-            .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
+                        .addColumnPart(0, attr.getSqlColNames().get(0))
+                        .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
 
         if (_parentOnesel.isMultiple()) {
             boolean first = true;
@@ -218,8 +217,8 @@ public class LinkFromSelect
         // in a subquery the type must also be set
         if (this.type.getMainTable().getSqlColType() != null) {
             select.addPart(SQLPart.AND)
-                .addColumnPart(0, this.type.getMainTable().getSqlColType())
-                .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
+                            .addColumnPart(0, this.type.getMainTable().getSqlColType())
+                            .addPart(SQLPart.IN).addPart(SQLPart.PARENTHESIS_OPEN);
             boolean first = true;
             if (this.type.isAbstract()) {
                 for (final Type atype : getAllChildTypes(this.type)) {
@@ -273,25 +272,23 @@ public class LinkFromSelect
         throws EFapsException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            LinkFromSelect.LOG.debug("Executing SQLL: {}", _complStmt);
-            List<Object[]> rows = null;
-            boolean cached = false;
-            if (isCacheEnabled()) {
-                final QueryKey querykey = QueryKey.get(getKey(), _complStmt);
-                final var cache = QueryCache.get();
-                if (cache.containsKey(querykey)) {
-                    final var queryValue = cache.get(querykey);
-                    if (queryValue.getContent() instanceof List) {
-                        rows = (List<Object[]>) queryValue.getContent();
-                    }
-                    cached = true;
+
+        LinkFromSelect.LOG.debug("Executing SQLL: {}", _complStmt);
+        List<Object[]> rows = null;
+        boolean cached = false;
+        if (isCacheEnabled()) {
+            final QueryKey querykey = QueryKey.get(getKey(), _complStmt);
+            final var cache = QueryCache.get();
+            if (cache.containsKey(querykey)) {
+                final var queryValue = cache.get(querykey);
+                if (queryValue.getContent() instanceof List) {
+                    rows = (List<Object[]>) queryValue.getContent();
                 }
+                cached = true;
             }
-            if (!cached) {
-                con = Context.readOnlyConnection();
-                final Statement stmt = con.createStatement();
+        }
+        if (!cached) {
+            try (var stmt = Context.readOnlyConnection().createStatement()) {
 
                 final ResultSet rs = stmt.executeQuery(_complStmt.toString());
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
@@ -304,24 +301,20 @@ public class LinkFromSelect
                     final var cache = QueryCache.get();
                     cache.put(querykey, queryvalue);
                 }
-            }
-            for (final Object[] row : rows) {
-                for (final OneSelect onesel : _oneSelects) {
-                    onesel.addObject(row);
-                }
-                ret = true;
-            }
-            con.commit();
-        } catch (final SQLException e) {
-            throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
-        }finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
             } catch (final SQLException e) {
-                throw new CacheReloadException("Could not close connection.", e);
+                throw new EFapsException(InstanceQuery.class, "executeOneCompleteStmt", e);
             }
+        }
+        for (final Object[] row : rows) {
+            for (final OneSelect onesel : _oneSelects) {
+                try {
+                    onesel.addObject(row);
+                } catch (final SQLException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            ret = true;
         }
         return ret;
     }
@@ -375,7 +368,8 @@ public class LinkFromSelect
         return getType();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override

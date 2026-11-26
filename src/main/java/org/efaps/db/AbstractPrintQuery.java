@@ -18,7 +18,6 @@ package org.efaps.db;
 import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -919,18 +918,18 @@ public abstract class AbstractPrintQuery
      */
 
     @SuppressWarnings("unchecked")
-    protected boolean executeOneCompleteStmt(final String _complStmt,
+    protected boolean executeOneCompleteStmt(final String sql,
                                              final List<OneSelect> _oneSelects)
         throws EFapsException
     {
         boolean ret = false;
 
-        AbstractPrintQuery.LOG.debug("Executing SQL: {}", _complStmt);
+        AbstractPrintQuery.LOG.debug("Executing SQL: {}", sql);
 
         List<Object[]> rows = null;
         boolean cached = false;
         if (isCacheEnabled()) {
-            final QueryKey querykey = QueryKey.get(getKey(), _complStmt);
+            final QueryKey querykey = QueryKey.get(getKey(), sql);
             AbstractPrintQuery.LOG.debug("Searching for QueryKey: {}", querykey);
             final var cache = QueryCache.get();
             if (cache.containsKey(querykey)) {
@@ -944,17 +943,15 @@ public abstract class AbstractPrintQuery
         }
 
         if (!cached) {
-            try (var con = Context.readOnlyConnection()) {
+            try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
                 AbstractPrintQuery.LOG.debug("Executing against database");
-                final Statement stmt = con.createStatement();
-                final ResultSet rs = stmt.executeQuery(_complStmt);
+
+                final ResultSet rs = stmt.executeQuery();
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
                 rows = handler.handle(rs);
                 rs.close();
-                stmt.close();
-                con.commit();
                 if (isCacheEnabled()) {
-                    final var querykey = QueryKey.get(getKey(), _complStmt);
+                    final var querykey = QueryKey.get(getKey(), sql);
                     final var queryValue = QueryValue.get(getKey(), rows);
                     AbstractPrintQuery.LOG.debug("Caching with QueryKey: {}", querykey);
                     QueryCache.put((ICacheDefinition) this, querykey, queryValue);

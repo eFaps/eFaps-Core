@@ -18,11 +18,8 @@ package org.efaps.db.store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 
 import javax.transaction.xa.Xid;
@@ -36,7 +33,6 @@ import org.efaps.db.wrapper.SQLDelete.DeleteDefintion;
 import org.efaps.db.wrapper.SQLPart;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
-import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,10 +96,10 @@ public class JDBCStoreResource
     {
         super.insertDefaults();
         if (!getExist()[1] && getGeneralID() != null) {
-            try (var con = Context.readWriteConnection()) {
+            try {
                 Context.getDbType().newInsert(JDBCStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
-                                .execute(con);
+                                .execute();
             } catch (final SQLException e) {
                 throw new EFapsException(JDBCStoreResource.class, "insertDefaults", e);
             }
@@ -129,7 +125,7 @@ public class JDBCStoreResource
         throws EFapsException
     {
         long size = 0;
-        try(var con = Context.readWriteConnection()) {
+
             final AbstractDatabase<?> db = Context.getDbType();
             final StringBuilder cmd = new StringBuilder().append(db.getSQLPart(SQLPart.UPDATE)).append(" ")
                             .append(db.getTableQuote()).append(JDBCStoreResource.TABLENAME_STORE)
@@ -141,14 +137,10 @@ public class JDBCStoreResource
                             .append(db.getSQLPart(SQLPart.WHERE)).append(" ")
                             .append(db.getColumnQuote()).append("ID").append(db.getColumnQuote())
                             .append(db.getSQLPart(SQLPart.EQUAL)).append(getGeneralID());
-
-            final PreparedStatement stmt = con.prepareStatement(cmd.toString());
-            try {
+            try(var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
                 stmt.setBinaryStream(1, _in, ((Long) _size).intValue());
                 stmt.execute();
-            } finally {
-                stmt.close();
-            }
+
             size = _size;
         } catch (final EFapsException e) {
             throw e;
@@ -174,10 +166,10 @@ public class JDBCStoreResource
     public void clean()
         throws EFapsException
     {
-        try (var con = Context.readWriteConnection()) {
+        try {
             final var del = new DeleteDefintion(JDBCStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(con);
+            delete.execute();
         } catch (final SQLException e) {
             throw new EFapsException("clean", e);
         }
@@ -194,12 +186,8 @@ public class JDBCStoreResource
         throws EFapsException
     {
         StoreResourceInputStream in = null;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-
-            final Statement stmt = con.createStatement();
-            final StringBuffer cmd = new StringBuffer()
+        try (var stmt = Context.readOnlyConnection().createStatement()){
+                        final StringBuffer cmd = new StringBuffer()
                             .append("select ").append(JDBCStoreResource.COLNAME_FILECONTENT).append(" ")
                             .append("from ").append(JDBCStoreResource.TABLENAME_STORE).append(" ")
                             .append("where ID =").append(getGeneralID());
@@ -215,21 +203,12 @@ public class JDBCStoreResource
             }
             resultSet.close();
             stmt.close();
-            con.commit();
         } catch (final IOException e) {
             JDBCStoreResource.LOG.error("read of content failed", e);
             throw new EFapsException(JDBCStoreResource.class, "read.SQLException", e);
         } catch (final SQLException e) {
             JDBCStoreResource.LOG.error("read of content failed", e);
             throw new EFapsException(JDBCStoreResource.class, "read.SQLException", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Could not close connection.", e);
-            }
         }
         return in;
     }

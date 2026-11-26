@@ -17,7 +17,6 @@ package org.efaps.db.stmt.runner;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -551,35 +550,36 @@ public class SQLRunner
     {
         final AbstractDelete delete = (AbstractDelete) runnable;
         for (final Instance instance : delete.getInstances()) {
-            try (var con = Context.readWriteConnection();) {
             // first remove the storeresource, because the information needed
             // from the general
             // instance to actually delete will be removed in the second step
 
-                if (instance.getType().hasStore()) {
-                    final var storeRsrc = Context.getThreadContext().getStoreResource(instance, Resource.StoreEvent.DELETE);
-                    storeRsrc.delete();
-                }
-
-                delete.triggerListeners();
-
-                final List<DeleteDefintion> defs = new ArrayList<>();
-                defs.addAll(GeneralInstance.getDeleteDefintion(instance, con));
-                final SQLTable mainTable = instance.getType().getMainTable();
-                for (final SQLTable curTable : instance.getType().getTables()) {
-                    if (!curTable.equals(mainTable) && !curTable.isReadOnly()) {
-                        defs.add(new DeleteDefintion(curTable.getSqlTable(), curTable.getSqlColId(), instance.getId()));
-                    }
-                }
-                defs.add(new DeleteDefintion(mainTable.getSqlTable(), mainTable.getSqlColId(), instance.getId()));
-                final SQLDelete sqlDelete = Context.getDbType().newDelete(defs.toArray(new DeleteDefintion[defs
-                                .size()]));
-                sqlDelete.execute(con);
-                AccessCache.registerUpdate(instance);
-                Queue.registerUpdate(instance);
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "executeWithoutAccessCheck.SQLException", e, instance);
+            if (instance.getType().hasStore()) {
+                final var storeRsrc = Context.getThreadContext().getStoreResource(instance, Resource.StoreEvent.DELETE);
+                storeRsrc.delete();
             }
+
+            delete.triggerListeners();
+
+            final List<DeleteDefintion> defs = new ArrayList<>();
+            defs.addAll(GeneralInstance.getDeleteDefintion(instance));
+            final SQLTable mainTable = instance.getType().getMainTable();
+            for (final SQLTable curTable : instance.getType().getTables()) {
+                if (!curTable.equals(mainTable) && !curTable.isReadOnly()) {
+                    defs.add(new DeleteDefintion(curTable.getSqlTable(), curTable.getSqlColId(), instance.getId()));
+                }
+            }
+            defs.add(new DeleteDefintion(mainTable.getSqlTable(), mainTable.getSqlColId(), instance.getId()));
+            final SQLDelete sqlDelete = Context.getDbType().newDelete(defs.toArray(new DeleteDefintion[defs
+                            .size()]));
+            try {
+                sqlDelete.execute();
+            } catch (final SQLException e) {
+                throw new EFapsException(SQLRunner.class, "executeDeletes", e);
+            }
+            AccessCache.registerUpdate(instance);
+            Queue.registerUpdate(instance);
+
         }
     }
 
@@ -591,9 +591,9 @@ public class SQLRunner
     private void executeUpdates()
         throws EFapsException
     {
-        try (var con = Context.readWriteConnection()) {
+        try {
             for (final Entry<SQLTable, AbstractSQLInsertUpdate<?>> entry : updatemap.entrySet()) {
-                ((SQLUpdate) entry.getValue()).execute(con);
+                ((SQLUpdate) entry.getValue()).execute();
             }
             if (runnable instanceof final ObjectUpdate update) {
                 update.triggerListeners();
@@ -604,7 +604,6 @@ public class SQLRunner
                     Queue.registerUpdate(instance);
                 });
             }
-            con.commit();
         } catch (final SQLException e) {
             throw new EFapsException(SQLRunner.class, "executeOneCompleteStmt", e);
         }
@@ -618,7 +617,7 @@ public class SQLRunner
     private void executeInserts()
         throws EFapsException
     {
-        try(var con  = Context.readWriteConnection()) {
+        try {
             final Insert insert = (Insert) runnable;
             long id = 0;
             for (final Entry<SQLTable, AbstractSQLInsertUpdate<?>> entry : updatemap.entrySet()) {
@@ -628,13 +627,13 @@ public class SQLRunner
                 if (entry.getKey().getSqlColType() != null) {
                     entry.getValue().column(entry.getKey().getSqlColType(), insert.getType().getId());
                 }
-                final Long created = ((SQLInsert) entry.getValue()).execute(con);
+                final Long created = ((SQLInsert) entry.getValue()).execute();
                 if (created != null) {
                     id = created;
                     insert.evaluateInstance(created);
                 }
             }
-            GeneralInstance.insert(insert.getInstance(), con);
+            GeneralInstance.insert(insert.getInstance());
             insert.triggerListeners();
             Queue.registerUpdate(insert.getInstance());
         } catch (final SQLException e) {
@@ -673,9 +672,8 @@ public class SQLRunner
             }
         }
         if (!cached) {
-            try (final var con = isPrint() ? Context.readOnlyConnection() : Context.readWriteConnection();
-                 final Statement stmt = con.createStatement()) {
-
+            try (final var stmt = isPrint() ? Context.readOnlyConnection().createStatement()
+                            : Context.readWriteConnection().createStatement()) {
                 final ResultSet rs = stmt.executeQuery(complStmt);
                 final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
                 rows = handler.handle(rs);

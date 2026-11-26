@@ -15,11 +15,11 @@
  */
 package org.efaps.db.wrapper;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.efaps.db.Context;
+import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,6 @@ public class SQLDelete
      */
     private final DeleteDefintion[] definitions;
 
-
     /**
      * @param _deleteDefintions defintion of a delete
      */
@@ -81,42 +80,39 @@ public class SQLDelete
      * @param _con Connection the delete will be executed in
      * @throws SQLException on error during deletion
      */
-    public void execute(final Connection con)
+    public void execute()
         throws SQLException
     {
-        final Statement stmt = con.createStatement();
+        try (final var stmt = Context.readWriteConnection().createStatement();) {
 
-        for (final DeleteDefintion def : getDefinitions()) {
-            final StringBuilder cmd = new StringBuilder();
-            cmd.append(Context.getDbType().getSQLPart(SQLPart.DELETE)).append(" ")
-                .append(Context.getDbType().getSQLPart(SQLPart.FROM)).append(" ")
-                .append(Context.getDbType().getTableQuote())
-                .append(def.getTablename())
-                .append(Context.getDbType().getTableQuote()).append(" ")
-                .append(Context.getDbType().getSQLPart(SQLPart.WHERE)).append(" ")
-                .append(Context.getDbType().getColumnQuote())
-                .append(def.getIdColumn())
-                .append(Context.getDbType().getColumnQuote())
-                .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
-                .append(def.getId());
-            stmt.addBatch(cmd.toString());
-            if (SQLDelete.LOG.isDebugEnabled()) {
-                SQLDelete.LOG.debug(cmd.toString());
+            for (final DeleteDefintion def : getDefinitions()) {
+                final StringBuilder cmd = new StringBuilder();
+                cmd.append(Context.getDbType().getSQLPart(SQLPart.DELETE)).append(" ")
+                                .append(Context.getDbType().getSQLPart(SQLPart.FROM)).append(" ")
+                                .append(Context.getDbType().getTableQuote())
+                                .append(def.getTablename())
+                                .append(Context.getDbType().getTableQuote()).append(" ")
+                                .append(Context.getDbType().getSQLPart(SQLPart.WHERE)).append(" ")
+                                .append(Context.getDbType().getColumnQuote())
+                                .append(def.getIdColumn())
+                                .append(Context.getDbType().getColumnQuote())
+                                .append(Context.getDbType().getSQLPart(SQLPart.EQUAL))
+                                .append(def.getId());
+                stmt.addBatch(cmd.toString());
+                if (SQLDelete.LOG.isDebugEnabled()) {
+                    SQLDelete.LOG.debug(cmd.toString());
+                }
             }
-        }
-
-        try  {
-            final int[] rows =  stmt.executeBatch();
+            final int[] rows = stmt.executeBatch();
             for (final int row : rows) {
                 if (Statement.EXECUTE_FAILED == row) {
                     throw new SQLException("Deletion of the '" + row + "' object was not executed successfully.");
                 }
             }
-        } finally  {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
     }
-
 
     /**
      * Defintion of a Delete.

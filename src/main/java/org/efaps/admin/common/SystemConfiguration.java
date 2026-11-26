@@ -21,8 +21,6 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.Provider;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -676,37 +674,28 @@ public final class SystemConfiguration
     private void readConfig()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+
+        try (var stmt = Context.readOnlyConnection().prepareStatement(SystemConfiguration.SQL_CONFIG)) {
             boolean closeContext = false;
             if (!Context.isThreadActive()) {
                 Context.begin();
                 closeContext = true;
             }
             final List<Object[]> dbValues = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(SystemConfiguration.SQL_CONFIG);
-                stmt.setObject(1, getId());
-                final ResultSet rs = stmt.executeQuery();
+            stmt.setObject(1, getId());
+            final ResultSet rs = stmt.executeQuery();
 
-                while (rs.next()) {
-                    dbValues.add(new Object[] {
-                                    rs.getLong(1),
-                                    rs.getString(2),
-                                    rs.getString(3),
-                                    rs.getLong(4),
-                                    rs.getString(5)
-                    });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            while (rs.next()) {
+                dbValues.add(new Object[] {
+                                rs.getLong(1),
+                                rs.getString(2),
+                                rs.getString(3),
+                                rs.getLong(4),
+                                rs.getString(5)
+                });
             }
-            con.commit();
+            rs.close();
+
             if (closeContext) {
                 Context.rollback();
             }
@@ -731,14 +720,6 @@ public final class SystemConfiguration
             throw new CacheReloadException("could not read SystemConfiguration attributes", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read SystemConfiguration attributes", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
@@ -804,7 +785,6 @@ public final class SystemConfiguration
     {
         LOG.info("Loading SystemConfiguration from db by: {}", _criteria);
         boolean ret = false;
-        Connection con = null;
         try {
             boolean closeContext = false;
             if (!Context.isThreadActive()) {
@@ -812,10 +792,8 @@ public final class SystemConfiguration
                 closeContext = true;
             }
             SystemConfiguration sysConfig = null;
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
+
+            try (var stmt = Context.readOnlyConnection().prepareStatement(_sql)) {
                 stmt.setObject(1, _criteria);
                 final ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
@@ -827,13 +805,8 @@ public final class SystemConfiguration
                 }
                 ret = true;
                 rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
             }
-            con.commit();
-            con.close();
+
             if (closeContext) {
                 Context.rollback();
             }
@@ -845,14 +818,6 @@ public final class SystemConfiguration
             throw new CacheReloadException("could not read SystemConfiguration", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read SystemConfiguration", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }

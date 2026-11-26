@@ -16,8 +16,6 @@
 package org.efaps.admin.common;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -295,37 +293,19 @@ public class Association
         throws EFapsException
     {
         Long ret = null;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(SQL);
-                stmt.setObject(1, _companyId);
-                stmt.setObject(2, _typeid);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    ret = rs.getLong(1);
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(SQL)) {
+            stmt.setObject(1, _companyId);
+            stmt.setObject(2, _typeid);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                ret = rs.getLong(1);
             }
-            con.commit();
+            rs.close();
+
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }

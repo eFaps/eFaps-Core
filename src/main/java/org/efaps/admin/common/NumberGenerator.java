@@ -16,8 +16,6 @@
 package org.efaps.admin.common;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Formatter;
@@ -191,8 +189,8 @@ public final class NumberGenerator
         throws EFapsException
     {
         final Object[] args = new Object[_args.length + 1];
-        try (var con = Context.readWriteConnection()){
-            final long val = Context.getDbType().nextSequence(con, getDBName());
+        try {
+            final long val = Context.getDbType().nextSequence(getDBName());
             args[0] = val;
         } catch (final SQLException e) {
             throw new EFapsException(NumberGenerator.class, " getNextVal()", e);
@@ -219,8 +217,8 @@ public final class NumberGenerator
         throws EFapsException
     {
         long ret = 0;
-        try (var con = Context.readWriteConnection()) {
-            ret = Context.getDbType().nextSequence(con, getDBName());
+        try {
+            ret = Context.getDbType().nextSequence(getDBName());
         } catch (final SQLException e) {
             throw new EFapsException(NumberGenerator.class, " getNextValAsLong()", e);
         }
@@ -238,21 +236,10 @@ public final class NumberGenerator
     public void setVal(final String _value)
         throws EFapsException
     {
-        Connection con = null;
         try {
-            con = Context.readWriteConnection();
-            Context.getDbType().setSequence(con, getDBName(), Long.parseLong(_value));
-            con.commit();
+            Context.getDbType().setSequence(getDBName(), Long.parseLong(_value));
         } catch (final SQLException e) {
             throw new EFapsException(NumberGenerator.class, "setVal()", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
         }
     }
 
@@ -382,49 +369,32 @@ public final class NumberGenerator
      * @throws CacheReloadException on error
      * @return false
      */
-    private static boolean getNumberGeneratorFromDB(final String _sql,
+    private static boolean getNumberGeneratorFromDB(final String sql,
                                                     final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String name = rs.getString(2).trim();
-                    final String uuid = rs.getString(3).trim();
-                    final String format = rs.getString(4).trim();
-                    NumberGenerator.LOG.debug("read NumberGenerator '{}' (id = {}), format = '{}'", name, id, format);
-                    final NumberGenerator generator = new NumberGenerator(id, name, uuid, format);
-                    NumberGenerator.cacheNumberGenerator(generator);
-                }
-                ret = true;
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String name = rs.getString(2).trim();
+                final String uuid = rs.getString(3).trim();
+                final String format = rs.getString(4).trim();
+                NumberGenerator.LOG.debug("read NumberGenerator '{}' (id = {}), format = '{}'", name, id, format);
+                final NumberGenerator generator = new NumberGenerator(id, name, uuid, format);
+                NumberGenerator.cacheNumberGenerator(generator);
             }
-            con.commit();
-        } catch (final SQLException e) {
+            ret = true;
+            rs.close();
+
+        } catch (final SQLException | EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } catch (final EFapsException e) {
-            throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
+
         return ret;
     }
 
@@ -443,6 +413,6 @@ public final class NumberGenerator
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 }

@@ -16,8 +16,6 @@
 package org.efaps.admin.datamodel;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -329,38 +327,27 @@ public class Dimension
      * @param _criteria filter criteria
      * @throws CacheReloadException on error
      */
-    private static void getUoMFromDB(final String _sql,
+    private static void getUoMFromDB(final String sql,
                                      final Object _criteria)
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             final List<Object[]> values = new ArrayList<>();
 
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(new Object[] {
-                                    rs.getLong(1),
-                                    rs.getLong(2),
-                                    rs.getString(3),
-                                    rs.getString(4),
-                                    rs.getString(5),
-                                    rs.getInt(6),
-                                    rs.getInt(7)
-                    });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(new Object[] {
+                                rs.getLong(1),
+                                rs.getLong(2),
+                                rs.getString(3),
+                                rs.getString(4),
+                                rs.getString(5),
+                                rs.getInt(6),
+                                rs.getInt(7)
+                });
             }
-            con.commit();
+            rs.close();
             final var cache = InfinispanCache.get().<Long, UoM>getCache(Dimension.IDCACHE4UOM);
             for (final Object[] row : values) {
                 final long id = (Long) row[0];
@@ -388,14 +375,6 @@ public class Dimension
             throw new CacheReloadException("could not read Dimension", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read Dimension", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
@@ -421,37 +400,26 @@ public class Dimension
      * @return false
      */
     @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
-    private static boolean getDimensionFromDB(final String _sql,
+    private static boolean getDimensionFromDB(final String sql,
                                               final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             Dimension dim = null;
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String name = rs.getString(2).trim();
-                    final String uuid = rs.getString(3).trim();
-                    final String descr = rs.getString(4).trim();
-                    final long baseuom = rs.getLong(5);
-                    Dimension.LOG.debug("read Dimension '" + name + "' (id = " + id + ")");
-                    dim = new Dimension(id, uuid, name, descr, baseuom);
-                }
-                ret = true;
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String name = rs.getString(2).trim();
+                final String uuid = rs.getString(3).trim();
+                final String descr = rs.getString(4).trim();
+                final long baseuom = rs.getLong(5);
+                Dimension.LOG.debug("read Dimension '" + name + "' (id = " + id + ")");
+                dim = new Dimension(id, uuid, name, descr, baseuom);
             }
-            con.commit();
+            ret = true;
+            rs.close();
             if (dim != null) {
                 Dimension.cacheDimension(dim);
                 Dimension.getUoMFromDB(Dimension.SQL_SELECT_UOM4DIMID, dim.getId());
@@ -460,14 +428,6 @@ public class Dimension
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }

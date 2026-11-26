@@ -16,8 +16,6 @@
 package org.efaps.admin.datamodel;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -229,7 +227,8 @@ public class AttributeType
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheAttributeType(this);
     }
@@ -342,65 +341,46 @@ public class AttributeType
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getAttributeTypeFromDB(final String _sql,
+    private static boolean getAttributeTypeFromDB(final String sql,
                                                   final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
 
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String name = rs.getString(2).trim();
-                    String uuid = rs.getString(3);
-                    uuid = uuid == null ? null : uuid.trim();
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
 
-                    if (AttributeType.LOG.isDebugEnabled()) {
-                        AttributeType.LOG.debug("read attribute type '" + name + "' " + "(id = " + id + ", uuid = '"
-                                        + uuid + "')");
-                    }
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String name = rs.getString(2).trim();
+                String uuid = rs.getString(3);
+                uuid = uuid == null ? null : uuid.trim();
 
-                    final AttributeType attrType = new AttributeType(id,
-                                    uuid,
-                                    name,
-                                    rs.getString(4).trim(),
-                                    rs.getString(5).trim());
-                    if (rs.getInt(6) != 0) {
-                        attrType.alwaysUpdate = true;
-                    }
-                    if (rs.getInt(7) != 0) {
-                        attrType.createUpdate = true;
-                    }
-                    AttributeType.cacheAttributeType(attrType);
+                if (AttributeType.LOG.isDebugEnabled()) {
+                    AttributeType.LOG.debug("read attribute type '" + name + "' " + "(id = " + id + ", uuid = '"
+                                    + uuid + "')");
                 }
-                ret = true;
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
+
+                final AttributeType attrType = new AttributeType(id,
+                                uuid,
+                                name,
+                                rs.getString(4).trim(),
+                                rs.getString(5).trim());
+                if (rs.getInt(6) != 0) {
+                    attrType.alwaysUpdate = true;
                 }
+                if (rs.getInt(7) != 0) {
+                    attrType.createUpdate = true;
+                }
+                AttributeType.cacheAttributeType(attrType);
             }
-            con.commit();
-            con.close();
+            ret = true;
+            rs.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read roles", e);
-            }
         }
         return ret;
     }

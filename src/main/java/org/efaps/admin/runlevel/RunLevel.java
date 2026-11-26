@@ -17,7 +17,6 @@ package org.efaps.admin.runlevel;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -190,10 +189,7 @@ public final class RunLevel
         throws EFapsException
     {
         try {
-            final Connection con = Context.readOnlyConnection();
-            final boolean ret = Context.getDbType().existsTable(Context.readOnlyConnection(), RunLevel.TABLE_TESTS);
-            con.commit();
-            con.close();
+            final boolean ret = Context.getDbType().existsTable(RunLevel.TABLE_TESTS);
             return ret;
         } catch (final SQLException e) {
             throw new EFapsException(RunLevel.class, "isInitialisable.SQLException", e);
@@ -270,8 +266,7 @@ public final class RunLevel
         throws EFapsException
     {
 
-        try (var con = Context.readOnlyConnection();
-                        var stmt = con.createStatement()) {
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
             long parentId = 0;
             // read run level itself
             ResultSet rs = stmt.executeQuery(sql);
@@ -308,7 +303,6 @@ public final class RunLevel
                 }
             }
             rs.close();
-            con.commit();
             RunLevel.ALL_RUNLEVELS.put(id, this);
             if (parentId != 0) {
                 parent = RunLevel.ALL_RUNLEVELS.get(parentId);

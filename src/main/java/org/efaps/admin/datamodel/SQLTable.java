@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.datamodel;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -461,43 +459,32 @@ public final class SQLTable
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getSQLTableFromDB(final String _sql,
+    private static boolean getSQLTableFromDB(final String sql,
                                              final Object _criteria)
         throws CacheReloadException
     {
         LOG.info("Loading SQLTable from db by: {}", _criteria);
         final boolean ret = false;
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             SQLTable table = null;
             long tableMainId = 0;
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String name = rs.getString(3).trim();
-                    table = new SQLTable(id,
-                                    rs.getString(2),
-                                    name,
-                                    rs.getString(4),
-                                    rs.getString(5),
-                                    rs.getString(6));
-                    tableMainId = rs.getLong(7);
-                    SQLTable.cacheSQLTable(table);
-                    SQLTable.LOG.debug("read SQLTable '{}' (id = {}))", name, id);
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String name = rs.getString(3).trim();
+                table = new SQLTable(id,
+                                rs.getString(2),
+                                name,
+                                rs.getString(4),
+                                rs.getString(5),
+                                rs.getString(6));
+                tableMainId = rs.getLong(7);
+                SQLTable.cacheSQLTable(table);
+                SQLTable.LOG.debug("read SQLTable '{}' (id = {}))", name, id);
             }
-            con.commit();
-            con.close();
+            rs.close();
+
             if (table != null) {
                 table.readFromDB4Properties();
                 if (tableMainId > 0) {
@@ -511,14 +498,6 @@ public final class SQLTable
             throw new CacheReloadException("could not read sql tables", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read sql tables", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }

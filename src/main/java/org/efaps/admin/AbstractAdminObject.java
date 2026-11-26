@@ -16,11 +16,8 @@
 package org.efaps.admin;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -60,6 +57,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractAdminObject
     implements CacheObjectInterface, Serializable
 {
+
     /**
      * Needed for serialization.
      */
@@ -273,13 +271,14 @@ public abstract class AbstractAdminObject
                 EventDefinition.addEvents(this);
                 this.updateCache();
             } catch (final EFapsException e) {
-                AbstractAdminObject.LOG.error("Could not read events for Name: '{}', UUID: {}",  name, uuid);
+                AbstractAdminObject.LOG.error("Could not read events for Name: '{}', UUID: {}", name, uuid);
             }
         }
         return events.get(_eventType);
     }
 
-    protected abstract void updateCache() throws EFapsException;
+    protected abstract void updateCache()
+        throws EFapsException;
 
     /**
      * Does this instance have Event, for the specified EventType ?
@@ -361,10 +360,7 @@ public abstract class AbstractAdminObject
     protected void readFromDB4Properties()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            final PreparedStatement stmt = con.prepareStatement(AbstractAdminObject.SELECT);
+        try (var stmt = Context.readOnlyConnection().prepareStatement(AbstractAdminObject.SELECT)) {
             stmt.setObject(1, getId());
             final ResultSet rs = stmt.executeQuery();
             AbstractAdminObject.LOG.debug("Reading Properties for '{}'", getName());
@@ -376,20 +372,10 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
-            con.commit();
-            con.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read properties for " + "'" + getName() + "'", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read properties for " + "'" + getName() + "'", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
@@ -403,9 +389,7 @@ public abstract class AbstractAdminObject
     protected void readFromDB4Links()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
             final SQLSelect select = new SQLSelect()
                             .column(0, "TYPEID")
                             .column(0, "TOID")
@@ -418,7 +402,6 @@ public abstract class AbstractAdminObject
                             .addPart(SQLPart.EQUAL)
                             .addValuePart(getId());
 
-            final Statement stmt = con.createStatement();
             final ResultSet rs = stmt.executeQuery(select.getSQL());
 
             AbstractAdminObject.LOG.debug("Reading Links for '{}'", getName());
@@ -433,8 +416,6 @@ public abstract class AbstractAdminObject
             }
             rs.close();
             stmt.close();
-            con.commit();
-            con.close();
             for (final Object[] row : values) {
                 final UUID conTypeUUID = Type.getUUID4Id((Long) row[0]);
                 AbstractAdminObject.LOG.debug("     Connection Type UUID: {}", conTypeUUID);
@@ -453,14 +434,6 @@ public abstract class AbstractAdminObject
             throw new CacheReloadException("could not read db links for " + "'" + getName() + "'", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read properties for " + "'" + getName() + "'", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 

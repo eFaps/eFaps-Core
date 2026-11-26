@@ -414,7 +414,7 @@ public class Update
         if (!Update.STATUSOK.getStati().isEmpty()) {
             throw new EFapsException(getClass(), "executeWithout.StatusInvalid", Update.STATUSOK.getStati());
         }
-        try (var con = Context.readWriteConnection())  {
+        try {
 
             for (final Entry<SQLTable, List<Value>> entry : table2values.entrySet()) {
                 final SQLUpdate update = Context.getDbType().newUpdate(entry.getKey().getSqlTable(),
@@ -433,7 +433,7 @@ public class Update
                         added.add(colKey);
                     }
                 }
-                final Set<String> updatedColumns = update.execute(con);
+                final Set<String> updatedColumns = update.execute();
                 final Iterator<Entry<Attribute, Value>> attrIter = trigRelevantAttr2values.entrySet()
                                 .iterator();
                 while (attrIter.hasNext()) {

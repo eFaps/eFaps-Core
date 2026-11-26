@@ -15,9 +15,8 @@
  */
 package org.efaps.update.schema.datamodel;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -574,17 +573,15 @@ public class SQLTableUpdate
                 if (SQLTableUpdate.LOG.isInfoEnabled())  {
                     SQLTableUpdate.LOG.info("    Execute Script for DB SQL '" + getValue("SQLTable") + "'");
                 }
-                Connection con = null;
-                try {
-                    con = Context.readWriteConnection();
+                try (var stmt = Context.readWriteConnection().createStatement()){
+
                     if (this.view) {
                         final String tableName = getValue("SQLTable");
-                        if (Context.getDbType().existsView(con, tableName)) {
-                            Context.getDbType().deleteView(con, tableName);
+                        if (Context.getDbType().existsView(tableName)) {
+                            Context.getDbType().deleteView(tableName);
                         }
                     }
 
-                    final Statement stmt = con.createStatement();
                     for (final String sql : this.sqls) {
                         if (SQLTableUpdate.LOG.isDebugEnabled()) {
                             SQLTableUpdate.LOG.debug("    ..SQL> " + sql);
@@ -592,19 +589,10 @@ public class SQLTableUpdate
                         stmt.execute(sql);
                     }
                     stmt.close();
-                    con.commit();
                 } catch (final EFapsException e) {
                     throw new InstallationException("SQLTable can not be updated", e);
                 } catch (final SQLException e) {
                     throw new InstallationException("SQLTable can not be updated", e);
-                } finally {
-                    try {
-                        if (con != null && !con.isClosed()) {
-                            con.close();
-                        }
-                    } catch (final SQLException e) {
-                        throw new InstallationException("SQLTable can not be updated", e);
-                    }
                 }
             }
         }
@@ -618,30 +606,18 @@ public class SQLTableUpdate
         protected void createSQLTable()
             throws EFapsException
         {
-            Connection con = null;
             final String tableName = getValue("SQLTable");
             try {
-                con = Context.readWriteConnection();
-
-                if (!Context.getDbType().existsTable(con, tableName)
-                        && !Context.getDbType().existsView(con, tableName))  {
+                if (!Context.getDbType().existsTable(tableName)
+                        && !Context.getDbType().existsView(tableName))  {
 
                     SQLTableUpdate.LOG.info("    Create DB SQL Table '{}' for '{}'", tableName, getValue("Name"));
-                    Context.getDbType().createTable(con, tableName);
+                    Context.getDbType().createTable(tableName);
                     SQLTableUpdate.this.created = true;
                 }
-                con.commit();
             } catch (final SQLException e) {
                 SQLTableUpdate.LOG.error("SQLTableUpdate.createSQLTable.EFapsException", e);
                 throw new EFapsException("SQLTableUpdate.createSQLTable.EFapsException", e);
-            } finally {
-                try {
-                    if (con != null && !con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new CacheReloadException("Cannot read a type for an attribute.", e);
-                }
             }
         }
 
@@ -660,7 +636,6 @@ public class SQLTableUpdate
         {
             if (SQLTableUpdate.this.created)  {
                 SQLTableUpdate.this.created = false;
-                Connection con = null;
                 final String tableName = getValue("SQLTable");
                 if (SQLTableUpdate.LOG.isInfoEnabled()) {
                     if (this.parentSQLTableName != null)  {
@@ -671,25 +646,15 @@ public class SQLTableUpdate
                     }
                 }
                 try {
-                    con = Context.readWriteConnection();
 
                     if (this.parentSQLTableName != null)  {
-                        Context.getDbType().defineTableParent(con, tableName, this.parentSQLTableName);
+                        Context.getDbType().defineTableParent(tableName, this.parentSQLTableName);
                     } else  {
-                        Context.getDbType().defineTableAutoIncrement(con, tableName);
+                        Context.getDbType().defineTableAutoIncrement(tableName);
                     }
-                    con.commit();
                 }  catch (final SQLException e) {
                     SQLTableUpdate.LOG.error("SQLTableUpdate.updateSQLTable.EFapsException", e);
                     throw new EFapsException(getClass(), "updateSQLTable.Throwable", e);
-                } finally {
-                    try {
-                        if (con != null && !con.isClosed()) {
-                            con.close();
-                        }
-                    } catch (final SQLException e) {
-                        throw new CacheReloadException("Cannot read a type for an attribute.", e);
-                    }
                 }
             }
         }
@@ -703,12 +668,10 @@ public class SQLTableUpdate
         protected void updateSQLTable()
             throws InstallationException
         {
-            Connection con = null;
             final String tableName = getValue("SQLTable");
             SQLTableUpdate.LOG.info("    Update DB SQL Table '{}'", tableName);
             try {
-                con = Context.readWriteConnection();
-                final TableInformation tableInfo = Context.getDbType().getRealTableInformation(con, tableName);
+                final TableInformation tableInfo = Context.getDbType().getRealTableInformation(tableName);
 
                 for (final Column column : this.columns)  {
                     final ColumnInformation colInfo = tableInfo.getColInfo(column.name);
@@ -716,14 +679,14 @@ public class SQLTableUpdate
                         SQLTableUpdate.LOG.debug("column '{}' already defined in table '{}'", column.name, tableName);
                         // null must be handeled sperately
                         if (colInfo.isNullable() == column.isNotNull) {
-                            Context.getDbType().updateColumnIsNotNull(con, tableName, column.name,
+                            Context.getDbType().updateColumnIsNotNull(tableName, column.name,
                                             column.isNotNull);
                         }
                         // the scale must never be made smaller, because it would lead to data loss
                         if (column.length > 0
                                         && colInfo.getSize() < column.length && colInfo.getScale() <= column.scale) {
                             try {
-                                Context.getDbType().updateColumn(con, tableName, column.name,
+                                Context.getDbType().updateColumn(tableName, column.name,
                                                 column.type, column.length, column.scale);
                             } catch (final SQLException e) {
                                 SQLTableUpdate.LOG
@@ -732,10 +695,10 @@ public class SQLTableUpdate
                             }
                         }
                     } else  {
-                        Context.getDbType().addTableColumn(con, tableName,
+                        Context.getDbType().addTableColumn(tableName,
                                 column.name, column.type, null, column.length, column.scale);
                         if (column.isNotNull) {
-                            Context.getDbType().updateColumnIsNotNull(con, tableName, column.name,
+                            Context.getDbType().updateColumnIsNotNull(tableName, column.name,
                                             column.isNotNull);
                         }
                     }
@@ -755,8 +718,7 @@ public class SQLTableUpdate
                         if (ukInfo2 != null)  {
                             SQLTableUpdate.LOG.error("unique key for columns " + uniqueKey.columns + " exists");
                         } else  {
-                            Context.getDbType().addUniqueKey(con, tableName,
-                                    uniqueKey.name, uniqueKey.columns);
+                            Context.getDbType().addUniqueKey(tableName, uniqueKey.name, uniqueKey.columns);
                         }
                     }
                 }
@@ -770,34 +732,25 @@ public class SQLTableUpdate
                                 + "table '" + tableName + "'");
                         }
                     } else  {
-                        Context.getDbType().addForeignKey(con, tableName,
+                        Context.getDbType().addForeignKey(tableName,
                                 foreignKey.name, foreignKey.key, foreignKey.reference,
                                 foreignKey.cascade);
                     }
                 }
                 // update check keys
                 for (final CheckKey checkKey : this.checkKeys) {
-                    Context.getDbType().addCheckKey(con, tableName,
-                            checkKey.name, checkKey.condition);
+                    Context.getDbType().addCheckKey(tableName, checkKey.name, checkKey.condition);
                 }
 
                 // add indexes
                 for (final var index: indexes) {
-                    Context.getDbType().upsertIndex(con, tableName, index.name, index.columns);
+                    Context.getDbType().upsertIndex(tableName, index.name, index.columns);
                 }
-                con.commit();
+
             } catch (final EFapsException e) {
                 throw new InstallationException("update of the SQL table failed", e);
             } catch (final SQLException e) {
                 throw new InstallationException("update of the SQL table failed", e);
-            } finally {
-                try {
-                    if (con != null && !con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new InstallationException("Cannot read a type for an attribute.", e);
-                }
             }
         }
     }

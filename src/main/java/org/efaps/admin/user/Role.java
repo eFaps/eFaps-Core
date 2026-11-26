@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -318,8 +316,7 @@ public final class Role
     {
         boolean ret = false;
 
-        try (Connection con = Context.readOnlyConnection();
-                        PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             stmt.setObject(1, criteria);
             final ResultSet rs = stmt.executeQuery();
 
@@ -362,41 +359,20 @@ public final class Role
         throws EFapsException
     {
         long roleId = 0;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
 
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(Role.SQL_JAASKEY);
-                stmt.setObject(1, _jaasKey);
-                stmt.setObject(2, _jaasSystem.getId());
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    roleId = rs.getLong(1);
-                }
-                rs.close();
-            } catch (final SQLException e) {
-                Role.LOG.warn("search for role for JAAS system '" + _jaasSystem.getName()
-                                + "' with key '" + _jaasKey + "' is not possible", e);
-                throw new EFapsException(Role.class, "getWithJAASKey.SQLException", e,
-                                _jaasSystem.getName(), _jaasKey);
-            } finally {
-                try {
-                    stmt.close();
-                    con.commit();
-                } catch (final SQLException e) {
-                    Role.LOG.warn("Catched SQLException in class " + Role.class);
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(Role.SQL_JAASKEY)) {
+            stmt.setObject(1, _jaasKey);
+            stmt.setObject(2, _jaasSystem.getId());
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                roleId = rs.getLong(1);
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
+            rs.close();
+        } catch (final SQLException e) {
+            Role.LOG.warn("search for role for JAAS system '" + _jaasSystem.getName()
+                            + "' with key '" + _jaasKey + "' is not possible", e);
+            throw new EFapsException(Role.class, "getWithJAASKey.SQLException", e,
+                            _jaasSystem.getName(), _jaasKey);
         }
         return Role.get(roleId);
     }

@@ -19,7 +19,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -207,11 +206,11 @@ public class JCRStoreResource
     {
         super.insertDefaults();
         if (!getExist()[1] && getGeneralID() != null) {
-            try (var con = Context.readWriteConnection()) {
+            try {
                 Context.getDbType().newInsert(JCRStoreResource.TABLENAME_STORE, "ID", false)
                                 .column("ID", getGeneralID())
                                 .column(JCRStoreResource.COLNAME_IDENTIFIER, "NEW")
-                                .execute(con);
+                                .execute();
             } catch (final SQLException e) {
                 throw new EFapsException(JCRStoreResource.class, "insertDefaults", e);
             }
@@ -332,20 +331,13 @@ public class JCRStoreResource
         throws EFapsException
     {
         if (!_identifier.equals(identifier)) {
-            try (var con = Context.readWriteConnection()) {
-
-                final StringBuffer cmd = new StringBuffer().append("update ")
-                                .append(JCRStoreResource.TABLENAME_STORE).append(" set ")
-                                .append(JCRStoreResource.COLNAME_IDENTIFIER).append("=? ")
-                                .append("where ID =").append(getGeneralID());
-
-                final PreparedStatement stmt = con.prepareStatement(cmd.toString());
-                try {
-                    stmt.setString(1, _identifier);
-                    stmt.execute();
-                } finally {
-                    stmt.close();
-                }
+            final StringBuffer cmd = new StringBuffer().append("update ")
+                            .append(JCRStoreResource.TABLENAME_STORE).append(" set ")
+                            .append(JCRStoreResource.COLNAME_IDENTIFIER).append("=? ")
+                            .append("where ID =").append(getGeneralID());
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+                stmt.setString(1, _identifier);
+                stmt.execute();
                 identifier = _identifier;
             } catch (final EFapsException e) {
                 throw e;
@@ -413,10 +405,10 @@ public class JCRStoreResource
     public void clean()
         throws EFapsException
     {
-        try (var con = Context.readWriteConnection()) {
+        try {
             final var del = new DeleteDefintion(JCRStoreResource.TABLENAME_STORE, "ID", getGeneralID());
             final SQLDelete delete = Context.getDbType().newDelete(del);
-            delete.execute(con);
+            delete.execute();
         } catch (final SQLException e) {
             throw new EFapsException("clean", e);
         }

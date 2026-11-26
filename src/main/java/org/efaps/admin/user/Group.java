@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -281,43 +279,21 @@ public final class Group
         throws EFapsException
     {
         long groupId = 0;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(Group.SQL_JAASKEY);
-                stmt.setObject(1, _jaasKey);
-                stmt.setObject(2, _jaasSystem.getId());
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    groupId = rs.getLong(1);
-                }
-                rs.close();
-                con.commit();
-            } catch (final SQLException e) {
-                Group.LOG.error("search for group for JAAS system '" + _jaasSystem.getName() + "' "
-                                + "with key '" + _jaasKey + "' is not possible", e);
-                throw new EFapsException(Group.class, "getWithJAASKey.SQLException", e,
-                                _jaasSystem.getName(), _jaasKey);
-            } finally {
-                try {
-                    stmt.close();
-                    con.commit();
-                } catch (final SQLException e) {
-                    Group.LOG.error("Statement could not be closed", e);
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(Group.SQL_JAASKEY)) {
+            stmt.setObject(1, _jaasKey);
+            stmt.setObject(2, _jaasSystem.getId());
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                groupId = rs.getLong(1);
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
+            rs.close();
+        } catch (final SQLException e) {
+            Group.LOG.error("search for group for JAAS system '" + _jaasSystem.getName() + "' "
+                            + "with key '" + _jaasKey + "' is not possible", e);
+            throw new EFapsException(Group.class, "getWithJAASKey.SQLException", e,
+                            _jaasSystem.getName(), _jaasKey);
         }
+
         return Group.get(groupId);
     }
 
@@ -342,48 +318,31 @@ public final class Group
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getGroupFromDB(final String _sql,
+    private static boolean getGroupFromDB(final String sql,
                                           final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3).trim();
-                    final boolean status = rs.getBoolean(4);
-                    Group.LOG.debug("read group '{}' (id = {}, uuid = {})", name, id, uuid);
-                    final Group group = new Group(id, uuid, name, status);
-                    Group.cacheGroup(group);
-                    ret = true;
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3).trim();
+                final boolean status = rs.getBoolean(4);
+                Group.LOG.debug("read group '{}' (id = {}, uuid = {})", name, id, uuid);
+                final Group group = new Group(id, uuid, name, status);
+                Group.cacheGroup(group);
+                ret = true;
             }
-            con.commit();
+            rs.close();
+
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read Groups", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read Groups", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }

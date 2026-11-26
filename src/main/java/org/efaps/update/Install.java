@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -285,10 +284,9 @@ public class Install
         throws InstallationException
     {
         final Map<String, Integer> versions = new HashMap<>();
-        Connection con = null;
+
         try {
-            con = Context.readOnlyConnection();
-            if (Context.getDbType().existsView(con, "V_ADMINTYPE") && CIAdminCommon.Application.getType() != null) {
+            if (Context.getDbType().existsView("V_ADMINTYPE") && CIAdminCommon.Application.getType() != null) {
                 final QueryBuilder queryBldr = new QueryBuilder(CIAdminCommon.ApplicationVersion);
                 final MultiPrintQuery multi = queryBldr.getPrint();
                 final SelectBuilder selName = SelectBuilder.get().linkto(
@@ -305,19 +303,10 @@ public class Install
                     }
                 }
             }
-            con.commit();
         } catch (final EFapsException e) {
             throw new InstallationException("Latest version could not be found", e);
         } catch (final SQLException e) {
             throw new InstallationException("Latest version could not be found", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                LOG.error("Catched", e);
-            }
         }
         return versions;
     }

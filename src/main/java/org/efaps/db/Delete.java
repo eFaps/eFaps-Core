@@ -163,7 +163,7 @@ public class Delete
             if (storeRsrc != null && storeRsrc.isOpened()) {
             }
         }
-        try(var con  = Context.readWriteConnection()) {
+        try {
             if (getInstance().getType().isCheckStatus()) {
                 for (final IStatusChangeListener listener : Listener.get()
                                 .<IStatusChangeListener>invoke(IStatusChangeListener.class)) {
@@ -171,7 +171,7 @@ public class Delete
                 }
             }
             final List<DeleteDefintion> defs = new ArrayList<>();
-            defs.addAll(GeneralInstance.getDeleteDefintion(getInstance(), con));
+            defs.addAll(GeneralInstance.getDeleteDefintion(getInstance()));
             final SQLTable mainTable = getInstance().getType().getMainTable();
             for (final SQLTable curTable : getInstance().getType().getTables()) {
                 if (!curTable.equals(mainTable) && !curTable.isReadOnly()) {
@@ -181,7 +181,7 @@ public class Delete
             }
             defs.add(new DeleteDefintion(mainTable.getSqlTable(), mainTable.getSqlColId(), getInstance().getId()));
             final SQLDelete delete = Context.getDbType().newDelete(defs.toArray(new DeleteDefintion[defs.size()]));
-            delete.execute(con);
+            delete.execute();
             AccessCache.registerUpdate(getInstance());
             Queue.registerUpdate(getInstance());
         } catch (final SQLException e) {

@@ -17,7 +17,6 @@ package org.efaps.admin.datamodel.attributetype;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 import org.efaps.admin.datamodel.Attribute;
@@ -78,8 +77,7 @@ public class PasswordType
                 .addPart(SQLPart.EQUAL)
                 .addValuePart(id);
 
-            try (var con = Context.readWriteConnection()) {
-                final Statement stmt = con.createStatement();
+            try (var stmt = Context.readOnlyConnection().createStatement()) {
                 final ResultSet rs = stmt.executeQuery(sel.getSQL());
                 if (rs.next()) {
                     this.currentValue = rs.getString(1);

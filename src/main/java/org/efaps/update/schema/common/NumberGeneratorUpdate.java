@@ -15,7 +15,6 @@
  */
 package org.efaps.update.schema.common;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -101,28 +100,13 @@ public class NumberGeneratorUpdate
                 throw new InstallationException("Format could not be defined", e);
             }
             super.createInDB(_insert);
-            final Connection con;
-            try {
-                con = Context.readWriteConnection();
-            } catch (final EFapsException e) {
-                throw new InstallationException("Connection resource could not be fetched", e);
-            }
             final String name = "numgen_" + Long.toString(getInstance().getId()) + "_seq";
             try {
-                if (!Context.getDbType().existsSequence(con, name)) {
-                    Context.getDbType().createSequence(con, name, this.startvalue);
+                if (!Context.getDbType().existsSequence(name)) {
+                    Context.getDbType().createSequence(name, this.startvalue);
                 }
-                con.commit();
             } catch (final SQLException e) {
                 throw new InstallationException("Sequence '" + name + "' could not be created", e);
-            } finally {
-                try {
-                    if (con != null && con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new InstallationException("Cannot read a type for an attribute.", e);
-                }
             }
         }
     }

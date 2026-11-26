@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -197,7 +195,8 @@ public final class Company
     }
 
     @Override
-    protected void updateCache() throws CacheReloadException
+    protected void updateCache()
+        throws CacheReloadException
     {
         cacheCompany(this);
     }
@@ -311,50 +310,33 @@ public final class Company
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getCompanyFromDB(final String _sql,
+    private static boolean getCompanyFromDB(final String sql,
                                             final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3).trim();
-                    final boolean status = rs.getBoolean(4);
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3).trim();
+                final boolean status = rs.getBoolean(4);
 
-                    Company.LOG.debug("read company '" + name + "' (id = " + id + ")");
-                    final Company role = new Company(id, uuid, name, status);
-                    Company.cacheCompany(role);
-                    ret = true;
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
-                con.commit();
+                Company.LOG.debug("read company '" + name + "' (id = " + id + ")");
+                final Company role = new Company(id, uuid, name, status);
+                Company.cacheCompany(role);
+                ret = true;
             }
+            rs.close();
+
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
         }
+
         return ret;
     }
 }

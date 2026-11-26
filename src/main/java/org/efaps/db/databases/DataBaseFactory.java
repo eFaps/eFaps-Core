@@ -16,7 +16,6 @@
 package org.efaps.db.databases;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,24 +47,20 @@ public abstract class DataBaseFactory
 
     static {
         DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.PostgreSQLDatabase");
-        DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.DerbyDatabase");
-        DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.MySQLDatabase");
-        DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.OracleDatabaseWithAutoSequence");
-        DataBaseFactory.CLAZZNAMES.add("org.efaps.db.databases.OracleDatabase");
     }
 
     /**
      * @param _connection Connection to be uesd
      * @return AbstractDatabase
      */
-    public static AbstractDatabase<?> getDatabase(final Connection _connection)
+    public static AbstractDatabase<?> getDatabase()
     {
         AbstractDatabase<?> ret = null;
         for (final String clazzName : DataBaseFactory.CLAZZNAMES) {
             try {
                 DataBaseFactory.LOG.debug("Checking for DataBase connetion with class: '{}'", clazzName);
                 ret = (AbstractDatabase<?>) Class.forName(clazzName).getConstructor().newInstance();
-                if (ret.isConnected(_connection)) {
+                if (ret.isConnected()) {
                     DataBaseFactory.LOG.debug("DataBase found: '{}'", clazzName);
                     break;
                 }

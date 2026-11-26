@@ -16,10 +16,7 @@
 package org.efaps.admin.user;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.UUID;
 
 import org.efaps.admin.AbstractAdminObject;
@@ -31,7 +28,6 @@ import org.efaps.db.MultiPrintQuery;
 import org.efaps.db.QueryBuilder;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
-import org.efaps.util.cache.CacheReloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +41,7 @@ public abstract class AbstractUserObject
     extends AbstractAdminObject
     implements Serializable
 {
+
     /**
      * Needed for serialization.
      */
@@ -63,10 +60,10 @@ public abstract class AbstractUserObject
     /**
      * Constructor to set instance variables of the user object.
      *
-     * @param _id       id to set
-     * @param _uuid     uuid to set
-     * @param _name     name to set
-     * @param _status   status to set
+     * @param _id id to set
+     * @param _uuid uuid to set
+     * @param _name name to set
+     * @param _status status to set
      */
     protected AbstractUserObject(final long _id,
                                  final String _uuid,
@@ -102,7 +99,7 @@ public abstract class AbstractUserObject
         try {
             ret = hasChildPerson(Context.getThreadContext().getPerson());
         } catch (final EFapsException e) {
-            LOG.atError().setMessage("could not read Person") .log();
+            LOG.atError().setMessage("could not read Person").log();
         }
         return ret;
     }
@@ -111,9 +108,8 @@ public abstract class AbstractUserObject
      * Assign this user object to the given JAAS system under the given JAAS
      * key.
      *
-     * @param _jaasSystem   JAAS system to which the person is assigned
-     * @param _jaasKey      key under which the person is know in the JAAS
-     *                      system
+     * @param _jaasSystem JAAS system to which the person is assigned
+     * @param _jaasKey key under which the person is know in the JAAS system
      * @throws EFapsException if the assignment could not be made
      */
     @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
@@ -121,75 +117,62 @@ public abstract class AbstractUserObject
                                    final String _jaasKey)
         throws EFapsException
     {
-        Connection con = null;
+
         try {
-            final Context context = Context.getThreadContext();
-            con = Context.readWriteConnection();
             final Type keyType = CIAdminUser.JAASKey.getType();
-
-            PreparedStatement stmt = null;
             final StringBuilder cmd = new StringBuilder();
-            try {
-                long keyId = 0;
-                if (Context.getDbType().supportsGetGeneratedKeys()) {
-                    cmd.append("insert into ").append(keyType.getMainTable().getSqlTable())
-                        .append("(JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,").append("USERABSTRACT,USERJAASSYSTEM) ")
-                                    .append("values (");
-                } else {
-                    keyId = Context.getDbType().getNewId(con, keyType.getMainTable().getSqlTable(), "ID");
-                    cmd.append("insert into ").append(keyType.getMainTable().getSqlTable()).append(
-                                    "(ID,JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
-                                    "USERABSTRACT,USERJAASSYSTEM) ").append("values (").append(keyId).append(",");
-                }
-                cmd.append("'").append(_jaasKey).append("',").append(context.getPersonId()).append(",").append(
-                                Context.getDbType().getCurrentTimeStamp()).append(",").append(context.getPersonId())
-                                .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",").append(
-                                                getId()).append(",").append(_jaasSystem.getId()).append(")");
 
-                stmt = con.prepareStatement(cmd.toString());
+            long keyId = 0;
+            final long personId = Context.getThreadContext().getPersonId();
+            if (Context.getDbType().supportsGetGeneratedKeys()) {
+                cmd.append("insert into ").append(keyType.getMainTable().getSqlTable())
+                                .append("(JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,")
+                                .append("USERABSTRACT,USERJAASSYSTEM) ")
+                                .append("values (");
+            } else {
+                keyId = Context.getDbType().getNewId(keyType.getMainTable().getSqlTable(), "ID");
+                cmd.append("insert into ").append(keyType.getMainTable().getSqlTable()).append(
+                                "(ID,JAASKEY,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
+                                                "USERABSTRACT,USERJAASSYSTEM) ")
+                                .append("values (").append(keyId).append(",");
+            }
+            cmd.append("'").append(_jaasKey).append("',").append(personId).append(",").append(
+                            Context.getDbType().getCurrentTimeStamp()).append(",").append(personId)
+                            .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",").append(
+                                            getId())
+                            .append(",").append(_jaasSystem.getId()).append(")");
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+
                 final int rows = stmt.executeUpdate();
                 if (rows == 0) {
                     AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                            + "' for JAAS system '" + _jaasSystem.getName()
-                            + "' for user object '" + toString() + "' with JAAS key '" + _jaasKey + "'");
+                                    + "' for JAAS system '" + _jaasSystem.getName()
+                                    + "' for user object '" + toString() + "' with JAAS key '" + _jaasKey + "'");
                     throw new EFapsException(getClass(), "assignToJAASSystem.NotInserted", _jaasSystem.getName(),
                                     _jaasKey, toString());
                 }
-                con.commit();
+
             } catch (final SQLException e) {
                 AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                        + "' to assign user object '" + toString()
-                        + "' with JAAS key '" + _jaasKey + "' to JAAS system '" + _jaasSystem.getName() + "'", e);
+                                + "' to assign user object '" + toString()
+                                + "' with JAAS key '" + _jaasKey + "' to JAAS system '" + _jaasSystem.getName() + "'",
+                                e);
                 throw new EFapsException(getClass(), "assignToJAASSystem.SQLException", e, cmd.toString(), _jaasSystem
                                 .getName(), _jaasKey, toString());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    AbstractUserObject.LOG.error("Could not close a statement.", e);
-                }
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                AbstractUserObject.LOG.error("Could not close a connection.", e);
-            }
+        } catch (final SQLException e) {
+            throw new EFapsException("", e);
         }
+
     }
 
     /**
      * Assign this user object to the given user object for given JAAS system.
      *
-     * @param _assignType   type used to assign (in other words the
-     *                      relationship type)
-     * @param _jaasSystem   JAAS system for which this user object is assigned
-     *                      to the given object
+     * @param _assignType type used to assign (in other words the relationship
+     *            type)
+     * @param _jaasSystem JAAS system for which this user object is assigned to
+     *            the given object
      * @param _object user object to which this user object is assigned
      * @throws EFapsException if assignment could not be done
      */
@@ -199,67 +182,52 @@ public abstract class AbstractUserObject
                                           final AbstractUserObject _object)
         throws EFapsException
     {
-        Connection con = null;
+
         try {
             final Context context = Context.getThreadContext();
-            con = Context.readWriteConnection();
 
-            Statement stmt = null;
             final StringBuilder cmd = new StringBuilder();
-            try {
 
-                cmd.append("insert into ").append(_assignType.getMainTable().getSqlTable()).append("(");
-                long keyId = 0;
-                if (!Context.getDbType().supportsGetGeneratedKeys()) {
-                    keyId = Context.getDbType().getNewId(con, _assignType.getMainTable().getSqlTable(), "ID");
-                    cmd.append("ID,");
-                }
-                cmd.append("TYPEID,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
-                                "USERABSTRACTFROM,USERABSTRACTTO,USERJAASSYSTEM) ").append("values (");
-                if (keyId != 0) {
-                    cmd.append(keyId).append(",");
-                }
-                cmd.append(_assignType.getId()).append(",").append(context.getPersonId()).append(",").append(
-                                Context.getDbType().getCurrentTimeStamp()).append(",").append(context.getPersonId())
-                                .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",").append(
-                                                getId()).append(",").append(_object.getId()).append(",").append(
-                                                _jaasSystem.getId()).append(")");
+            cmd.append("insert into ").append(_assignType.getMainTable().getSqlTable()).append("(");
+            long keyId = 0;
+            if (!Context.getDbType().supportsGetGeneratedKeys()) {
+                keyId = Context.getDbType().getNewId(_assignType.getMainTable().getSqlTable(), "ID");
+                cmd.append("ID,");
+            }
+            cmd.append("TYPEID,CREATOR,CREATED,MODIFIER,MODIFIED,").append(
+                            "USERABSTRACTFROM,USERABSTRACTTO,USERJAASSYSTEM) ").append("values (");
+            if (keyId != 0) {
+                cmd.append(keyId).append(",");
+            }
+            cmd.append(_assignType.getId()).append(",").append(context.getPersonId()).append(",").append(
+                            Context.getDbType().getCurrentTimeStamp()).append(",").append(context.getPersonId())
+                            .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",").append(
+                                            getId())
+                            .append(",").append(_object.getId()).append(",").append(
+                                            _jaasSystem.getId())
+                            .append(")");
 
-                stmt = con.createStatement();
+            try (var stmt = Context.readOnlyConnection().createStatement()) {
+
                 final int rows = stmt.executeUpdate(cmd.toString());
                 if (rows == 0) {
                     AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                            + "' to assign user object '" + toString()
-                            + "' to object '" + _object + "' for JAAS system '" + _jaasSystem + "' ");
+                                    + "' to assign user object '" + toString()
+                                    + "' to object '" + _object + "' for JAAS system '" + _jaasSystem + "' ");
                     throw new EFapsException(getClass(), "assignInDb.NotInserted", _jaasSystem.getName(), _object
                                     .getName(), getName());
                 }
-                con.commit();
+
             } catch (final SQLException e) {
                 AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                        + "' to assign user object '" + toString()
-                        + "' to object '" + _object + "' for JAAS system '" + _jaasSystem + "' ", e);
+                                + "' to assign user object '" + toString()
+                                + "' to object '" + _object + "' for JAAS system '" + _jaasSystem + "' ", e);
                 throw new EFapsException(getClass(), "assignInDb.SQLException", e, cmd.toString(), getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    AbstractUserObject.LOG.error("Could not close a statement.", e);
-                }
             }
-
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                AbstractUserObject.LOG.error("Could not close a connection.", e);
-            }
+        } catch (final SQLException e) {
+            throw new EFapsException("", e);
         }
+
     }
 
     /**
@@ -278,45 +246,20 @@ public abstract class AbstractUserObject
                                               final AbstractUserObject _object)
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readWriteConnection();
-            Statement stmt = null;
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             final StringBuilder cmd = new StringBuilder();
-            try {
-                cmd.append("delete from ").append(_unassignType.getMainTable().getSqlTable()).append(" ").append(
-                                "where USERJAASSYSTEM=").append(_jaasSystem.getId()).append(" ").append(
-                                "and USERABSTRACTFROM=").append(getId()).append(" ").append("and USERABSTRACTTO=")
-                                .append(_object.getId());
+            cmd.append("delete from ").append(_unassignType.getMainTable().getSqlTable()).append(" ").append(
+                            "where USERJAASSYSTEM=").append(_jaasSystem.getId()).append(" ").append(
+                                            "and USERABSTRACTFROM=")
+                            .append(getId()).append(" ").append("and USERABSTRACTTO=")
+                            .append(_object.getId());
 
-                stmt = con.createStatement();
-                stmt.executeUpdate(cmd.toString());
+            stmt.executeUpdate(cmd.toString());
 
-            } catch (final SQLException e) {
-                AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                        + "' to unassign user object '" + toString()
-                        + "' from object '" + _object + "' for JAAS system '" + _jaasSystem + "' ", e);
-                throw new EFapsException(getClass(), "unassignFromUserObjectInDb.SQLException", e, cmd.toString(),
-                                getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    AbstractUserObject.LOG.error("Could not close a statement.", e);
-                }
-            }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
+        } catch (final SQLException e) {
+            throw new EFapsException("", e);
         }
+
     }
 
     /**
@@ -340,8 +283,9 @@ public abstract class AbstractUserObject
     }
 
     /**
-     * Get the note belonging to this UserObject.
-     * <b>Careful. Executes Query against the Database and therefore might be slow.</b>
+     * Get the note belonging to this UserObject. <b>Careful. Executes Query
+     * against the Database and therefore might be slow.</b>
+     *
      * @return the note belonging to the UserObject
      * @throws EFapsException on error during reading
      */
@@ -378,54 +322,34 @@ public abstract class AbstractUserObject
     protected void setStatusInDB(final boolean _status)
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readWriteConnection();
 
-            PreparedStatement stmt = null;
-            final StringBuilder cmd = new StringBuilder();
-            try {
-                cmd.append(" update T_USERABSTRACT set STATUS=? where ID=").append(getId());
-                stmt = con.prepareStatement(cmd.toString());
-                stmt.setBoolean(1, _status);
-                final int rows = stmt.executeUpdate();
-                if (rows == 0) {
-                    AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                            + "' to update status information for person '" + toString() + "'");
-                    throw new EFapsException(getClass(), "setStatusInDB.NotUpdated", cmd.toString(), getName());
-                }
-            } catch (final SQLException e) {
+        final StringBuilder cmd = new StringBuilder();
+        cmd.append(" update T_USERABSTRACT set STATUS=? where ID=").append(getId());
+        try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+
+            stmt.setBoolean(1, _status);
+            final int rows = stmt.executeUpdate();
+            if (rows == 0) {
                 AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
-                        + "' to update status information for person '" + toString() + "'", e);
-                throw new EFapsException(getClass(), "setStatusInDB.SQLException", e, cmd.toString(), getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "setStatusInDB.SQLException", e, cmd.toString(), getName());
-                }
+                                + "' to update status information for person '" + toString() + "'");
+                throw new EFapsException(getClass(), "setStatusInDB.NotUpdated", cmd.toString(), getName());
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
+        } catch (final SQLException e) {
+            AbstractUserObject.LOG.error("could not execute '" + cmd.toString()
+                            + "' to update status information for person '" + toString() + "'", e);
+            throw new EFapsException(getClass(), "setStatusInDB.SQLException", e, cmd.toString(), getName());
+
         }
+
     }
 
     /**
      * Returns for given parameter <i>_uuid</i> the instance of class
      * {@link AbstractUserObject}. The returned AbstractUserObject can be a
-     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium}
-     * or {@link Person}. It is searched in the given sequence. User is searched last
-     * due to the reason that it is the only object that is not always stored
-     * in a cache an might produce queries against the DataBase
+     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium} or
+     * {@link Person}. It is searched in the given sequence. User is searched
+     * last due to the reason that it is the only object that is not always
+     * stored in a cache an might produce queries against the DataBase
      *
      * @param _uuid UUID to search in the cache
      * @return instance of class {@link AbstractUserObject}
@@ -453,10 +377,10 @@ public abstract class AbstractUserObject
     /**
      * Returns for given parameter <i>_id</i> the instance of class
      * {@link AbstractUserObject}. The returned AbstractUserObject can be a
-     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium}
-     * or {@link Person}. It is searched in the given sequence. User is searched last
-     * due to the reason that it is the only object that is not always stored
-     * in a cache an might produce queries against the DataBase
+     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium} or
+     * {@link Person}. It is searched in the given sequence. User is searched
+     * last due to the reason that it is the only object that is not always
+     * stored in a cache an might produce queries against the DataBase
      *
      * @param _id id to search in the cache
      * @return instance of class {@link AbstractUserObject}
@@ -484,10 +408,10 @@ public abstract class AbstractUserObject
     /**
      * Returns for given parameter <i>_name</i> the instance of class
      * {@link AbstractUserObject}.The returned AbstractUserObject can be a
-     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium}
-     * or {@link Person}. It is searched in the given sequence. User is searched
-     * last due to the reason that it is the only object that is not always stored
-     * in a cache an might produce queries against the DataBase
+     * {@link Role}, {@link Group}, {@link Company}, {@link Consortium} or
+     * {@link Person}. It is searched in the given sequence. User is searched
+     * last due to the reason that it is the only object that is not always
+     * stored in a cache an might produce queries against the DataBase
      *
      * @param _name name to search in the cache
      * @return instance of class {@link AbstractUserObject}

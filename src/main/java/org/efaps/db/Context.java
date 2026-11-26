@@ -17,7 +17,6 @@ package org.efaps.db;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -222,9 +221,13 @@ public final class Context
     @Named("readWrite")
     private XADataSource readWriteDs;
 
+    private DataBaseConnection readWriteCon;
+
     @Inject
     @Named("readOnly")
     private DataSource readOnlyDs;
+
+    private DataBaseConnection readOnlyCon;
 
     /**
      * Static variable storing the database type.
@@ -327,13 +330,6 @@ public final class Context
     public ConnectionResource getConnectionResource()
         throws EFapsException
     {
-        try {
-            if (connectionResource == null) {
-                connectionResource = new ConnectionResource(getReadWriteConnection());
-            }
-        } catch (final SQLException e) {
-            throw new EFapsException(getClass(), "getConnectionResource.SQLException", e);
-        }
         return connectionResource;
     }
 
@@ -671,14 +667,6 @@ public final class Context
     }
 
     /**
-     * @param _transaction Transaction to set
-     */
-    private void setTransaction(final Transaction _transaction)
-    {
-        transaction = _transaction;
-    }
-
-    /**
      * This is the getter method for instance variable {@link #transaction}.
      *
      * @return value of instance variable {@link #transaction}
@@ -815,40 +803,43 @@ public final class Context
         return fileParameters;
     }
 
-    private Connection getReadOnlyConnection()
+    private DataBaseConnection getReadOnlyConnection()
         throws EFapsException
     {
-        Connection con = null;
         try {
             if (hasTransaction()) {
                 return getReadWriteConnection();
             }
-            con = Context.getThreadContext().readOnlyDs.getConnection();
-            con.setAutoCommit(false);
-            con.setReadOnly(true);
+            if (readOnlyCon == null) {
+                final var con = Context.getThreadContext().readOnlyDs.getConnection();
+                con.setAutoCommit(false);
+                con.setReadOnly(true);
+                readOnlyCon = new DataBaseConnection(con);
+            }
         } catch (SystemException | SQLException e) {
             LOG.error("Catched error on getting readOnlyConnection", e);
             throw new EFapsException(Context.class, "getReadOnlyConnection", e);
         }
-        return con;
+        return readOnlyCon;
     }
 
-    private Connection getReadWriteConnection()
+    private DataBaseConnection getReadWriteConnection()
         throws EFapsException
     {
-        Connection con = null;
         try {
             if (!hasTransaction()) {
                 transactionManager.begin();
             }
-            final var xaCon = readWriteDs.getXAConnection();
-            transactionManager.getTransaction().enlistResource(xaCon.getXAResource());
-            con = xaCon.getConnection();
+            if (readWriteCon == null) {
+                final var xaCon = readWriteDs.getXAConnection();
+                transactionManager.getTransaction().enlistResource(xaCon.getXAResource());
+                readWriteCon = new DataBaseConnection(xaCon.getConnection());
+            }
         } catch (SystemException | NotSupportedException | SQLException | IllegalStateException | RollbackException e) {
             LOG.error("Catched error on getting readWriteConnection", e);
             throw new EFapsException(Context.class, "getReadWriteConnection", e);
         }
-        return con;
+        return readWriteCon;
     }
 
     private boolean hasTransaction()
@@ -857,13 +848,13 @@ public final class Context
         return transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION;
     }
 
-    public static Connection readOnlyConnection()
+    public static DataBaseConnection readOnlyConnection()
         throws EFapsException
     {
         return Context.getThreadContext().getReadOnlyConnection();
     }
 
-    public static Connection readWriteConnection()
+    public static DataBaseConnection readWriteConnection()
         throws EFapsException
     {
         return Context.getThreadContext().getReadWriteConnection();
@@ -1072,25 +1063,28 @@ public final class Context
         throws EFapsException
     {
         try {
+            Context.getThreadContext().commitAndCloseReadOnly();
             if (isTMActive()) {
-                Context.getThreadContext().transactionManager.commit();
+                Context.getThreadContext().transactionManager.rollback();
             }
-        } catch (final IllegalStateException e) {
-            throw new EFapsException(Context.class, "commit.IllegalStateException", e);
-        } catch (final SecurityException e) {
-            throw new EFapsException(Context.class, "commit.SecurityException", e);
-        } catch (final HeuristicMixedException e) {
-            throw new EFapsException(Context.class, "commit.HeuristicMixedException", e);
-        } catch (final HeuristicRollbackException e) {
-            throw new EFapsException(Context.class, "commit.HeuristicRollbackException", e);
-        } catch (final RollbackException e) {
-            throw new EFapsException(Context.class, "commit.RollbackException", e);
-        } catch (final SystemException e) {
-            throw new EFapsException(Context.class, "commit.SystemException", e);
+        } catch (SecurityException | IllegalStateException | SystemException | RollbackException
+                        | HeuristicMixedException | HeuristicRollbackException | SQLException e) {
+            LOG.error("Catched on commit", e);
         } finally {
             if (_close) {
                 Context.getThreadContext().close();
             }
+        }
+    }
+
+    private void commitAndCloseReadOnly()
+        throws SecurityException, IllegalStateException, SystemException, RollbackException, HeuristicMixedException,
+        HeuristicRollbackException, SQLException
+    {
+        if (readOnlyCon != null) {
+            readOnlyCon.connection.commit();
+            readOnlyCon.connection.close();
+            readOnlyCon = null;
         }
     }
 
@@ -1101,15 +1095,13 @@ public final class Context
         throws EFapsException
     {
         try {
+            Context.getThreadContext().commitAndCloseReadOnly();
             if (isTMActive()) {
                 Context.getThreadContext().transactionManager.rollback();
             }
-        } catch (final IllegalStateException e) {
-            throw new EFapsException(Context.class, "rollback.IllegalStateException", e);
-        } catch (final SecurityException e) {
-            throw new EFapsException(Context.class, "rollback.SecurityException", e);
-        } catch (final SystemException e) {
-            throw new EFapsException(Context.class, "rollback.SystemException", e);
+        } catch (SecurityException | IllegalStateException | SystemException | RollbackException
+                        | HeuristicMixedException | HeuristicRollbackException | SQLException e) {
+            LOG.error("Catched on rollback", e);
         } finally {
             Context.getThreadContext().close();
         }

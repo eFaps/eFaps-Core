@@ -15,7 +15,6 @@
  */
 package org.efaps.admin.dbproperty;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -316,8 +315,8 @@ public final class DBProperties
                 Context.begin();
                 closeContext = true;
             }
-            final Connection con = Context.readOnlyConnection();
-            final PreparedStatement stmt = con.prepareStatement(DBProperties.SQLSELECT);
+
+            final PreparedStatement stmt =  Context.readOnlyConnection().prepareStatement(DBProperties.SQLSELECT);
             stmt.setString(1, _key);
             stmt.setString(2, _language);
             final ResultSet resultset = stmt.executeQuery();
@@ -330,7 +329,7 @@ public final class DBProperties
                     ret = defaultValue.trim();
                 }
             } else {
-                final PreparedStatement stmt2 = con.prepareStatement(DBProperties.SQLSELECTDEF);
+                final PreparedStatement stmt2 =  Context.readOnlyConnection().prepareStatement(DBProperties.SQLSELECTDEF);
                 stmt2.setString(1, _key);
                 final ResultSet resultset2 = stmt2.executeQuery();
                 if (resultset2.next()) {
@@ -344,8 +343,6 @@ public final class DBProperties
             }
             resultset.close();
             stmt.close();
-            con.commit();
-            con.close();
             if (closeContext) {
                 Context.rollback();
             }
@@ -362,9 +359,8 @@ public final class DBProperties
      */
     private static void cacheOnStart()
     {
-        try (final var con = Context.readOnlyConnection();
-                        final var stmtLang = con.prepareStatement(DBProperties.SQLLANG);
-                        final var stmt = con.prepareStatement(DBProperties.SQLSELECTONSTART);) {
+        try (final var stmtLang = Context.readOnlyConnection().prepareStatement(DBProperties.SQLLANG);
+             final var stmt = Context.readOnlyConnection().prepareStatement(DBProperties.SQLSELECTONSTART)) {
             boolean closeContext = false;
             if (!Context.isThreadActive()) {
                 Context.begin();
@@ -400,8 +396,7 @@ public final class DBProperties
                 }
             }
             resultset.close();
-            stmt.close();
-            con.commit();
+
             if (closeContext) {
                 Context.rollback();
             }

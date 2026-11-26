@@ -15,8 +15,6 @@
  */
 package org.efaps.db;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -98,7 +96,6 @@ public final class GeneralInstance
         return InfinispanCache.get().<String, GenInstInfo>getCache(CACHE);
     }
 
-
     /**
      * To make a Singleton.
      */
@@ -112,8 +109,7 @@ public final class GeneralInstance
      * @return id of the new instance
      * @throws EFapsException on error
      */
-    public static long insert(final Instance instance,
-                              final Connection connection)
+    public static long insert(final Instance instance)
         throws EFapsException
     {
         long ret = 0;
@@ -126,7 +122,7 @@ public final class GeneralInstance
                 insert.column(GeneralInstance.ISIDCOLUMN, instance.getId());
                 insert.column(GeneralInstance.EXIDCOLUMN, instance.getExchangeId(false));
                 insert.column(GeneralInstance.EXSYSIDCOLUMN, instance.getExchangeSystemId(false));
-                ret = insert.execute(connection);
+                ret = insert.execute();
                 instance.setGeneralId(ret);
                 instance.setGeneralised(true);
             } catch (final SQLException e) {
@@ -150,12 +146,7 @@ public final class GeneralInstance
             final var cache = getCache();
             final var cachedInfo = cache.get(instance.getOid());
             if (cachedInfo == null) {
-                try (var con = Context.readOnlyConnection()) {
-                    GeneralInstance.generaliseInstance(instance, con);
-                } catch (final SQLException e) {
-                    LOG.error("generaliseInstance", e);
-                    throw new EFapsException(GeneralInstance.class, "create", e);
-                }
+                GeneralInstance.generaliseInstanceInternal(instance);
                 if (instance.isGeneralised()) {
                     final var info = new GenInstInfo();
                     info.setGeneralId(instance.getGeneralId());
@@ -183,41 +174,32 @@ public final class GeneralInstance
      * @param connection Connection the query will be executed in
      * @throws EFapsException on error
      */
-    private static void generaliseInstance(final Instance instance,
-                                           final Connection connection)
+    private static void generaliseInstanceInternal(final Instance instance)
         throws EFapsException
     {
         if (instance.isValid() && instance.getType().isGeneralInstance()) {
-            PreparedStatement stmt = null;
-            try {
-                try {
-                    stmt = connection.prepareStatement(GeneralInstance.SQL);
-                    stmt.setLong(1, instance.getId());
-                    stmt.setLong(2, instance.getType().getId());
 
-                    final ResultSet rs = stmt.executeQuery();
-                    while (rs.next()) {
-                        instance.setGeneralId(rs.getLong(1));
-                        instance.setExchangeSystemId(rs.getLong(2));
-                        instance.setExchangeId(rs.getLong(3));
-                        instance.setGeneralised(true);
-                    }
-                    rs.close();
+            try (var stmt = Context.readOnlyConnection().prepareStatement(GeneralInstance.SQL)) {
+                stmt.setLong(1, instance.getId());
+                stmt.setLong(2, instance.getType().getId());
 
-                    if (GeneralInstance.LOG.isDebugEnabled()) {
-                        GeneralInstance.LOG.debug(instance.toString());
-                    }
-                } catch (final SQLException e) {
-                    GeneralInstance.LOG.error("executeOneStatement", e);
-                    throw new EFapsException(GeneralInstance.class, "create", e);
-                } finally {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
+                final ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    instance.setGeneralId(rs.getLong(1));
+                    instance.setExchangeSystemId(rs.getLong(2));
+                    instance.setExchangeId(rs.getLong(3));
+                    instance.setGeneralised(true);
+                }
+                rs.close();
+
+                if (GeneralInstance.LOG.isDebugEnabled()) {
+                    GeneralInstance.LOG.debug(instance.toString());
                 }
             } catch (final SQLException e) {
-                throw new EFapsException("generaliseInstance", e);
+                GeneralInstance.LOG.error("executeOneStatement", e);
+                throw new EFapsException(GeneralInstance.class, "create", e);
             }
+
         }
     }
 
@@ -227,13 +209,12 @@ public final class GeneralInstance
      * @return List of DeleteDefintion
      * @throws EFapsException on error
      */
-    public static Collection<? extends DeleteDefintion> getDeleteDefintion(final Instance instance,
-                                                                           final Connection connection)
+    public static Collection<? extends DeleteDefintion> getDeleteDefintion(final Instance instance)
         throws EFapsException
     {
         final List<DeleteDefintion> ret = new ArrayList<>();
         if (instance.isValid() && instance.getType().isGeneralInstance() && !instance.getType().isHistory()) {
-            GeneralInstance.generaliseInstance(instance, connection);
+            GeneralInstance.generaliseInstance(instance);
             final long id = instance.getGeneralId();
             if (id > 0) {
                 if (instance.getType().getStoreId() > 0) {

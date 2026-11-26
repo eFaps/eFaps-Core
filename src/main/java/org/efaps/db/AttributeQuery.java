@@ -15,10 +15,8 @@
  */
 package org.efaps.db;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -30,7 +28,6 @@ import org.efaps.admin.datamodel.Type;
 import org.efaps.db.wrapper.SQLSelect;
 import org.efaps.util.EFapsException;
 import org.efaps.util.cache.CacheReloadException;
-
 
 /**
  * Query is used as a nested query for an attribute.
@@ -49,6 +46,7 @@ public class AttributeQuery
 
     /**
      * Constructor setting the type by his UUID.
+     *
      * @param _typeUUI UUID of the Type the query is based on
      * @throws CacheReloadException on error
      */
@@ -98,14 +96,15 @@ public class AttributeQuery
 
     /**
      * Constructor setting the type.
-     * @param _type         TYpe the query is based on
-     * @param _attribute    attribute the value is wanted for
+     *
+     * @param _type TYpe the query is based on
+     * @param _attribute attribute the value is wanted for
      */
     public AttributeQuery(final Type _type,
                           final Attribute _attribute)
     {
         super(_type);
-        this.attribute = _attribute == null ?  _type.getAttribute("ID") : _attribute;
+        this.attribute = _attribute == null ? _type.getAttribute("ID") : _attribute;
     }
 
     /**
@@ -120,9 +119,9 @@ public class AttributeQuery
 
     /**
      * Execute the Query.
+     *
      * @return this
-     * @throws EFapsException
-     * TODO Accesscheck
+     * @throws EFapsException TODO Accesscheck
      */
     @Override
     public List<Object> execute()
@@ -157,8 +156,9 @@ public class AttributeQuery
     {
         prepareQuery();
         final SQLSelect select = new SQLSelect("S" + _idx + "T")
-            .column(getSqlTable2Index().get(this.attribute.getTable()), this.attribute.getSqlColNames().get(0))
-            .from(getBaseType().getMainTable().getSqlTable(), 0);
+                        .column(getSqlTable2Index().get(this.attribute.getTable()),
+                                        this.attribute.getSqlColNames().get(0))
+                        .from(getBaseType().getMainTable().getSqlTable(), 0);
 
         // add child tables
         if (getSqlTable2Index().size() > 0) {
@@ -186,13 +186,15 @@ public class AttributeQuery
         throws EFapsException
     {
         super.prepareQuery();
-        // to be sure that the table the attribute is in, is part of the indexed tables
+        // to be sure that the table the attribute is in, is part of the indexed
+        // tables
         getIndex4SqlTable(this.attribute.getTable());
     }
 
     /**
      * Execute the actual statement against the database.
-     * @param _complStmt        Statment to be executed
+     *
+     * @param _complStmt Statment to be executed
      * @return true if executed with success
      * @throws EFapsException on error
      */
@@ -200,14 +202,11 @@ public class AttributeQuery
         throws EFapsException
     {
         final boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
+
             if (AbstractObjectQuery.LOG.isDebugEnabled()) {
                 AbstractObjectQuery.LOG.debug(_complStmt.toString());
             }
-
-            final Statement stmt = con.createStatement();
 
             final ResultSet rs = stmt.executeQuery(_complStmt.toString());
             new ArrayList<Instance>();
@@ -216,17 +215,8 @@ public class AttributeQuery
             }
             rs.close();
             stmt.close();
-            con.commit();
         } catch (final SQLException e) {
             throw new EFapsException(AttributeQuery.class, "executeOneCompleteStmt", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Could not close connection.", e);
-            }
         }
         return ret;
     }

@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.datamodel;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -1601,41 +1599,21 @@ public class Type
      * @throws CacheReloadException on error
      */
     private static List<Object[]> getChildTypeIDs(final long _parentID,
-                                                  final String _statement)
+                                                  final String sql)
         throws CacheReloadException
     {
         final List<Object[]> ret = new ArrayList<>();
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_statement);
-                stmt.setObject(1, _parentID);
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    ret.add(new Object[] { rs.getLong(1), rs.getInt(2) });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _parentID);
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ret.add(new Object[] { rs.getLong(1), rs.getInt(2) });
             }
-            con.commit();
-            con.close();
+            rs.close();
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read child type ids", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read child type ids", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
         }
         return ret;
     }
@@ -1646,16 +1624,13 @@ public class Type
      * @return Type instance
      * @throws CacheReloadException on error
      */
-    private static Type getTypeFromDB(final String _sql,
+    private static Type getTypeFromDB(final String sql,
                                       final Object _criteria)
         throws CacheReloadException
     {
         LOG.info("Loading Type from db by: {}", _criteria);
         Type ret = null;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            final PreparedStatement stmt = con.prepareStatement(_sql);
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             stmt.setObject(1, _criteria);
             final ResultSet rs = stmt.executeQuery();
             long parentTypeId = 0;
@@ -1694,9 +1669,6 @@ public class Type
                 }
             }
             rs.close();
-            stmt.close();
-            con.commit();
-            con.close();
             if (ret != null) {
                 if (!ret.checked4Children) {
                     ret.checked4Children = true;
@@ -1726,14 +1698,6 @@ public class Type
             Type.LOG.error("initialiseCache()", e);
         } catch (final SQLException e) {
             Type.LOG.error("initialiseCache()", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }
@@ -1757,38 +1721,18 @@ public class Type
         if (cache.containsKey(_typeId)) {
             ret = cache.get(_typeId).getUUID().equals(_typeUUID);
         } else {
-            Connection con = null;
             String uuidTmp = "";
-            try {
-                con = Context.readOnlyConnection();
-                PreparedStatement stmt = null;
-                try {
-                    stmt = con.prepareStatement(Type.SQL_ID);
-                    stmt.setObject(1, _typeId);
-                    final ResultSet rs = stmt.executeQuery();
-                    while (rs.next()) {
-                        uuidTmp = rs.getString(2).trim();
-                    }
-                    rs.close();
-                } finally {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
+            try (var stmt = Context.readOnlyConnection().prepareStatement(Type.SQL_ID)) {
+                stmt.setObject(1, _typeId);
+                final ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    uuidTmp = rs.getString(2).trim();
                 }
-                con.commit();
-                con.close();
+                rs.close();
             } catch (final SQLException e) {
                 throw new CacheReloadException("could not read child type ids", e);
             } catch (final EFapsException e) {
                 throw new CacheReloadException("could not read child type ids", e);
-            } finally {
-                try {
-                    if (con != null && !con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new CacheReloadException("could not read child type ids", e);
-                }
             }
             ret = StringUtils.isNotEmpty(uuidTmp) && UUID.fromString(uuidTmp).equals(_typeUUID);
         }
@@ -1811,36 +1755,18 @@ public class Type
         if (cache.containsKey(_typeUUID)) {
             ret = cache.get(_typeUUID).getId();
         } else {
-            Connection con = null;
-            try {
-                con = Context.readOnlyConnection();
-                PreparedStatement stmt = null;
-                try {
-                    stmt = con.prepareStatement(Type.SQL_UUID);
-                    stmt.setObject(1, _typeUUID.toString());
-                    final ResultSet rs = stmt.executeQuery();
-                    while (rs.next()) {
-                        ret = rs.getLong(1);
-                    }
-                    rs.close();
-                } finally {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
+            try (var stmt = Context.readOnlyConnection().prepareStatement(Type.SQL_UUID)) {
+                stmt.setObject(1, _typeUUID.toString());
+                final ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    ret = rs.getLong(1);
                 }
-                con.commit();
+                rs.close();
+
             } catch (final SQLException e) {
                 throw new CacheReloadException("could not read child type ids", e);
             } catch (final EFapsException e) {
                 throw new CacheReloadException("could not read child type ids", e);
-            } finally {
-                try {
-                    if (con != null && !con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new CacheReloadException("could not read child type ids", e);
-                }
             }
         }
         return ret;
@@ -1862,36 +1788,17 @@ public class Type
         if (cache.containsKey(_typeId)) {
             ret = cache.get(_typeId).getUUID();
         } else {
-            Connection con = null;
-            try {
-                con = Context.readOnlyConnection();
-                PreparedStatement stmt = null;
-                try {
-                    stmt = con.prepareStatement(Type.SQL_ID);
-                    stmt.setObject(1, _typeId);
-                    final ResultSet rs = stmt.executeQuery();
-                    while (rs.next()) {
-                        ret = UUID.fromString(rs.getString(2).trim());
-                    }
-                    rs.close();
-                } finally {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
+            try (var stmt = Context.readOnlyConnection().prepareStatement(Type.SQL_ID)) {
+                stmt.setObject(1, _typeId);
+                final ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    ret = UUID.fromString(rs.getString(2).trim());
                 }
-                con.commit();
+                rs.close();
             } catch (final SQLException e) {
                 throw new CacheReloadException("could not read child type ids", e);
             } catch (final EFapsException e) {
                 throw new CacheReloadException("could not read child type ids", e);
-            } finally {
-                try {
-                    if (con != null && !con.isClosed()) {
-                        con.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new CacheReloadException("Cannot read a type for an attribute.", e);
-                }
             }
         }
         return ret;

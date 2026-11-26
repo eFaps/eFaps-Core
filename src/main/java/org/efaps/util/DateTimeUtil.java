@@ -17,7 +17,6 @@ package org.efaps.util;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -84,9 +83,7 @@ public final class DateTimeUtil
         throws EFapsException
     {
         Timestamp now = null;
-        final Statement stmt;
-        try (var con = Context.readWriteConnection()) {
-            stmt = con.createStatement();
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
             final ResultSet resultset = stmt.executeQuery("SELECT " + Context.getDbType().getCurrentTimeStamp());
             resultset.next();
             now = resultset.getTimestamp(1);

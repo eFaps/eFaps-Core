@@ -16,11 +16,8 @@
 package org.efaps.db.wrapper;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.dbutils.handlers.ArrayListHandler;
 import org.efaps.db.Context;
+import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,11 +88,11 @@ public class SQLUpdate
      * @throws SQLException if update failed or the row for given {@link #id}
      *             does not exists
      */
-    public Set<String> execute(final Connection con)
+    public Set<String> execute()
         throws SQLException
     {
         final Set<String> ret = new HashSet<>();
-        if (getIds().length > 1 || checkUpdateRequired(con)) {
+        if (getIds().length > 1 || checkUpdateRequired()) {
             final StringBuilder cmd = new StringBuilder()
                             .append(Context.getDbType().getSQLPart(SQLPart.UPDATE)).append(" ")
                             .append(Context.getDbType().getTableQuote())
@@ -159,29 +157,27 @@ public class SQLUpdate
             if (SQLUpdate.LOG.isDebugEnabled()) {
                 SQLUpdate.LOG.debug(cmd.toString());
             }
-
-            final PreparedStatement stmt = con.prepareStatement(cmd.toString());
-            int index = 1;
-            for (final AbstractColumnWithValue<?> col : getColumnWithValues()) {
-                if (SQLUpdate.LOG.isDebugEnabled()) {
-                    SQLUpdate.LOG.debug("    " + index + " = " + col.getValue());
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+                int index = 1;
+                for (final AbstractColumnWithValue<?> col : getColumnWithValues()) {
+                    if (SQLUpdate.LOG.isDebugEnabled()) {
+                        SQLUpdate.LOG.debug("    " + index + " = " + col.getValue());
+                    }
+                    col.set(index++, stmt);
                 }
-                col.set(index++, stmt);
-            }
 
-            for (final long id : this.ids) {
-                SQLUpdate.LOG.debug("    " + index + " = " + id);
-                stmt.setLong(index++, id);
-            }
+                for (final long id : this.ids) {
+                    SQLUpdate.LOG.debug("    " + index + " = " + id);
+                    stmt.setLong(index++, id);
+                }
 
-            try {
                 final int rows = stmt.executeUpdate();
                 if (rows == 0) {
                     throw new SQLException("Object for SQL table '" + getTableName()
                                     + "' with ids '" + this.ids + "' does not exists and was not updated.");
                 }
-            } finally {
-                stmt.close();
+            } catch (final EFapsException e) {
+                throw new SQLException(e);
             }
         }
         return ret;
@@ -195,7 +191,7 @@ public class SQLUpdate
      * @return true if the execution of the update is necessary
      * @throws SQLException on error
      */
-    private boolean checkUpdateRequired(final Connection _con)
+    private boolean checkUpdateRequired()
         throws SQLException
     {
         final SQLSelect select = new SQLSelect();
@@ -205,67 +201,70 @@ public class SQLUpdate
         select.from(getTableName());
         select.addPart(SQLPart.WHERE).addColumnPart(null, "ID")
                         .addPart(SQLPart.EQUAL).addValuePart(getIds()[0]);
+        try (var stmt = Context.readWriteConnection().createStatement()) {
 
-        final Statement stmt = _con.createStatement();
-        final ResultSet rs = stmt.executeQuery(select.getSQL());
-        final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
-        final List<Object[]> rows = handler.handle(rs);
-        rs.close();
-        stmt.close();
-        if (rows.size() == 1) {
-            final Object[] values = rows.get(0);
-            int idx = 0;
-            final Iterator<AbstractColumnWithValue<?>> colIter = getColumnWithValues().iterator();
-            while (colIter.hasNext()) {
-                final AbstractColumnWithValue<?> colValue = colIter.next();
-                final Object dbValue = values[idx];
-                final Object newValue = colValue.getValue();
-                if (dbValue instanceof Long) {
-                    if (newValue instanceof Long) {
-                        if (dbValue.equals(newValue)) {
-                            colIter.remove();
+            final ResultSet rs = stmt.executeQuery(select.getSQL());
+            final ArrayListHandler handler = new ArrayListHandler(Context.getDbType().getRowProcessor());
+            final List<Object[]> rows = handler.handle(rs);
+            rs.close();
+            stmt.close();
+            if (rows.size() == 1) {
+                final Object[] values = rows.get(0);
+                int idx = 0;
+                final Iterator<AbstractColumnWithValue<?>> colIter = getColumnWithValues().iterator();
+                while (colIter.hasNext()) {
+                    final AbstractColumnWithValue<?> colValue = colIter.next();
+                    final Object dbValue = values[idx];
+                    final Object newValue = colValue.getValue();
+                    if (dbValue instanceof Long) {
+                        if (newValue instanceof Long) {
+                            if (dbValue.equals(newValue)) {
+                                colIter.remove();
+                            }
+                        } else if (newValue instanceof Integer) {
+                            if (dbValue.equals(Long.valueOf((Integer) newValue))) {
+                                colIter.remove();
+                            }
                         }
-                    } else if (newValue instanceof Integer) {
-                        if (dbValue.equals(Long.valueOf((Integer) newValue))) {
-                            colIter.remove();
+                    } else if (dbValue instanceof BigDecimal) {
+                        if (newValue instanceof BigDecimal) {
+                            if (((BigDecimal) dbValue).compareTo((BigDecimal) newValue) == 0) {
+                                colIter.remove();
+                            }
+                        } else if (newValue instanceof Long) {
+                            if (((BigDecimal) dbValue).compareTo(BigDecimal.valueOf((Long) newValue)) == 0) {
+                                colIter.remove();
+                            }
+                        } else if (newValue instanceof Integer) {
+                            if (((BigDecimal) dbValue)
+                                            .compareTo(BigDecimal.valueOf(Long.valueOf((Integer) newValue))) == 0) {
+                                colIter.remove();
+                            }
+                        }
+                    } else if (dbValue instanceof Timestamp) {
+                        if (newValue instanceof Timestamp) {
+                            if (((Timestamp) dbValue).equals((Timestamp) newValue)) {
+                                colIter.remove();
+                            }
+                        }
+                    } else if (dbValue instanceof Boolean) {
+                        if (newValue instanceof Boolean) {
+                            if (((Boolean) dbValue).equals(newValue)) {
+                                colIter.remove();
+                            }
+                        }
+                    } else if (dbValue instanceof String) {
+                        if (newValue instanceof String) {
+                            if (((String) dbValue).trim().equals(((String) newValue).trim())) {
+                                colIter.remove();
+                            }
                         }
                     }
-                } else if (dbValue instanceof BigDecimal) {
-                    if (newValue instanceof BigDecimal) {
-                        if (((BigDecimal) dbValue).compareTo((BigDecimal) newValue) == 0) {
-                            colIter.remove();
-                        }
-                    } else if (newValue instanceof Long) {
-                        if (((BigDecimal) dbValue).compareTo(BigDecimal.valueOf((Long) newValue)) == 0) {
-                            colIter.remove();
-                        }
-                    } else if (newValue instanceof Integer) {
-                        if (((BigDecimal) dbValue)
-                                        .compareTo(BigDecimal.valueOf(Long.valueOf((Integer) newValue))) == 0) {
-                            colIter.remove();
-                        }
-                    }
-                } else if (dbValue instanceof Timestamp) {
-                    if (newValue instanceof Timestamp) {
-                        if (((Timestamp) dbValue).equals((Timestamp) newValue)) {
-                            colIter.remove();
-                        }
-                    }
-                } else if (dbValue instanceof Boolean) {
-                    if (newValue instanceof Boolean) {
-                        if (((Boolean) dbValue).equals(newValue)) {
-                            colIter.remove();
-                        }
-                    }
-                } else if (dbValue instanceof String) {
-                    if (newValue instanceof String) {
-                        if (((String) dbValue).trim().equals(((String) newValue).trim())) {
-                            colIter.remove();
-                        }
-                    }
+                    idx++;
                 }
-                idx++;
             }
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return !getColumnWithValues().isEmpty();
     }

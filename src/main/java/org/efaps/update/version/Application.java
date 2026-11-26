@@ -655,7 +655,7 @@ public final class Application
     {
         try {
             Context.begin();
-            if (Context.getDbType().existsView(Context.readWriteConnection(), "V_ADMINTYPE")
+            if (Context.getDbType().existsView("V_ADMINTYPE")
                             && CIAdminCommon.ApplicationVersion.getType() != null
                             && CIAdminCommon.Application.getType() != null
                             && CIAdminCommon.Application.getType().getAttributes().size() > 4) {

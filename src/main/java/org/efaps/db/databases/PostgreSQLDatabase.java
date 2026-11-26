@@ -17,16 +17,16 @@ package org.efaps.db.databases;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.RowProcessor;
+import org.efaps.db.Context;
 import org.efaps.db.databases.information.TableInformation;
+import org.efaps.util.EFapsException;
 import org.joda.time.ReadableDateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.jvnet.hk2.annotations.Service;
@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * Database class for the PostgreSQL database.
  *
@@ -157,23 +156,21 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    public boolean isConnected(final Connection _connection)
+    public boolean isConnected()
         throws SQLException
     {
         boolean ret = false;
         final StringBuilder cmd = new StringBuilder();
         cmd.append(" SELECT version();");
-        PreparedStatement stmt = null;
-        stmt = _connection.prepareStatement(cmd.toString());
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(cmd.toString())){
             final ResultSet resultset = stmt.executeQuery();
             if (resultset.next()) {
                 final String str = resultset.getString(1);
                 ret = str.toUpperCase().contains("POSTGRESQL");
             }
             resultset.close();
-        } finally {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return ret;
     }
@@ -242,72 +239,22 @@ public class PostgreSQLDatabase
      */
     @Override
     @SuppressFBWarnings("SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-    public void deleteAll(final Connection _con)
+    public void deleteAll()
         throws SQLException
     {
-
-        final Statement stmtSel = _con.createStatement();
-        final Statement stmtExec = _con.createStatement();
-
-        try {
-            if (PostgreSQLDatabase.LOG.isInfoEnabled()) {
-                PostgreSQLDatabase.LOG.info("Remove all Tables");
-            }
-
-            final DatabaseMetaData metaData = _con.getMetaData();
-
-            // delete all views
-            final ResultSet rsViews = metaData.getTables(null, null, "%", new String[] { "VIEW" });
-            while (rsViews.next()) {
-                final String viewName = rsViews.getString("TABLE_NAME");
-                if (PostgreSQLDatabase.LOG.isDebugEnabled()) {
-                    PostgreSQLDatabase.LOG.debug("  - View '" + viewName + "'");
-                }
-                stmtExec.execute("drop view " + viewName);
-            }
-            rsViews.close();
-
-            // delete all tables
-            final ResultSet rsTables = metaData.getTables(null, null, "%", new String[] { "TABLE" });
-            while (rsTables.next()) {
-                final String tableName = rsTables.getString("TABLE_NAME");
-                if (PostgreSQLDatabase.LOG.isDebugEnabled()) {
-                    PostgreSQLDatabase.LOG.debug("  - Table '" + tableName + "'");
-                }
-                stmtExec.execute("drop table " + tableName + " cascade");
-            }
-            rsTables.close();
-
-            //delete all sequences
-            final ResultSet rsSeq = stmtSel.executeQuery("SELECT sequence_name FROM information_schema.sequences");
-            while (rsSeq.next()) {
-                final String seqName = rsSeq.getString("sequence_name");
-                if (PostgreSQLDatabase.LOG.isDebugEnabled()) {
-                    PostgreSQLDatabase.LOG.debug("  - Sequence '" + seqName + "'");
-                }
-                stmtExec.execute("drop sequence " + seqName);
-            }
-            rsSeq.close();
-
-        } finally {
-            stmtSel.close();
-            stmtExec.close();
-        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PostgreSQLDatabase deleteView(final Connection _con,
-                                    final String _name)
+    public PostgreSQLDatabase deleteView(final String _name)
         throws SQLException
     {
-        final Statement stmtExec = _con.createStatement();
-        try {
-            stmtExec.execute("drop view " + _name);
-        } finally {
-            stmtExec.close();
+        try (var stmt = Context.readWriteConnection().createStatement()) {
+            stmt.execute("drop view " + _name);
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return this;
     }
@@ -331,22 +278,20 @@ public class PostgreSQLDatabase
      * @throws SQLException if the table could not be created
      */
     @Override
-    public PostgreSQLDatabase createTable(final Connection _con,
-                                          final String _table)
+    public PostgreSQLDatabase createTable(final String _table)
         throws SQLException
     {
-        final Statement stmt = _con.createStatement();
-        try {
+
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             stmt.executeUpdate(new StringBuilder()
                 .append("create table ").append(_table).append(" (")
                     .append("ID bigint")
                     .append(",").append("constraint ").append(_table).append("_PK_ID primary key (ID)")
                 .append(") without OIDS;")
                 .toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
-
         return this;
     }
 
@@ -354,12 +299,11 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    public PostgreSQLDatabase defineTableAutoIncrement(final Connection _con,
-                                                       final String _table)
+    public PostgreSQLDatabase defineTableAutoIncrement(final String _table)
         throws SQLException
     {
-        final Statement stmt = _con.createStatement();
-        try {
+
+        try (var stmt = Context.readWriteConnection().createStatement()) {
             // create sequence
             stmt.execute(new StringBuilder()
                 .append("create sequence ").append(_table).append("_id_seq")
@@ -375,8 +319,8 @@ public class PostgreSQLDatabase
                 .append("alter sequence ").append(_table).append("_id_seq owned by ")
                 .append(_table).append(".id")
                 .toString());
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return this;
     }
@@ -394,16 +338,14 @@ public class PostgreSQLDatabase
      * @return new id for the sequence
      */
     @Override
-    public long getNewId(final Connection _con,
-                         final String _table,
+    public long getNewId(final String _table,
                          final String _column)
         throws SQLException
     {
 
         long ret = 0;
-        final Statement stmt = _con.createStatement();
 
-        try {
+        try (var stmt = Context.readOnlyConnection().createStatement()){
             final StringBuilder cmd = new StringBuilder();
             cmd.append("select nextval('").append(_table).append("_").append(_column).append("_SEQ')");
 
@@ -412,8 +354,8 @@ public class PostgreSQLDatabase
                 ret = rs.getLong(1);
             }
             rs.close();
-        } finally {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return ret;
     }
@@ -444,8 +386,7 @@ public class PostgreSQLDatabase
      * @see #nextSequence(Connection, String)
      */
     @Override
-    public PostgreSQLDatabase createSequence(final Connection _con,
-                                             final String _name,
+    public PostgreSQLDatabase createSequence(final String _name,
                                              final long _startValue)
         throws SQLException
     {
@@ -458,14 +399,10 @@ public class PostgreSQLDatabase
             .append(" START ").append(value)
             .append(" CACHE 1;");
 
-        final PreparedStatement stmt = _con.prepareStatement(cmd.toString());
-        try {
+        try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())){
             stmt.execute();
-        } finally {
-            stmt.close();
-        }
-        if (!_con.getAutoCommit()) {
-            _con.commit();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return this;
     }
@@ -474,18 +411,16 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    public PostgreSQLDatabase deleteSequence(final Connection _con,
-                                             final String _name)
+    public PostgreSQLDatabase deleteSequence(final String _name)
         throws SQLException
     {
         final String cmd = new StringBuilder()
                 .append("DROP SEQUENCE \"").append(_name.toLowerCase()).append("\" RESTRICT")
                 .toString();
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()){
             stmt.executeUpdate(cmd);
-        } finally {
-            stmt.close();
+        } catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return this;
     }
@@ -503,22 +438,20 @@ public class PostgreSQLDatabase
      */
     @Override
     @SuppressFBWarnings("SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-    public boolean existsSequence(final Connection _con,
-                                  final String _name)
+    public boolean existsSequence(final String _name)
         throws SQLException
     {
-        final boolean ret;
+        boolean ret = false;
         final String cmd = new StringBuilder()
                 .append("SELECT relname FROM pg_class WHERE relkind = 'S' AND relname='")
                 .append(_name.toLowerCase()).append("'")
                 .toString();
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readOnlyConnection().createStatement()){
             final ResultSet resultset = stmt.executeQuery(cmd);
             ret = resultset.next();
             resultset.close();
-        } finally {
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return ret;
     }
@@ -527,24 +460,22 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    public long nextSequence(final Connection _con,
-                             final String _name)
+    public long nextSequence(final String _name)
         throws SQLException
     {
-        final long ret;
+        long ret = 0;
         final String cmd = new StringBuilder()
                 .append("SELECT NEXTVAL('\"" + _name.toLowerCase() + "\"') ")
                 .toString();
-        final Statement stmt = _con.createStatement();
-        try {
+        try (var stmt = Context.readWriteConnection().createStatement()){
             final ResultSet resultset = stmt.executeQuery(cmd);
             if (!resultset.next()) {
                 throw new SQLException("fetching new value from sequence '" + _name + "' failed");
             }
             ret = resultset.getLong(1);
             resultset.close();
-        } finally {
-            stmt.close();
+        }   catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return ret;
     }
@@ -567,13 +498,12 @@ public class PostgreSQLDatabase
      * @see #createSequence(Connection, String, long)
      */
     @Override
-    public PostgreSQLDatabase setSequence(final Connection _con,
-                                          final String _name,
+    public PostgreSQLDatabase setSequence(final String _name,
                                           final long _value)
         throws SQLException
     {
-        deleteSequence(_con, _name);
-        createSequence(_con, _name, _value);
+        deleteSequence(_name);
+        createSequence(_name, _value);
         return this;
     }
 
@@ -596,15 +526,15 @@ public class PostgreSQLDatabase
      * @param _cache4Name   map used to fetch depending on the table name the
      *                      related table information
      * @throws SQLException if unique keys could not be fetched
+     * @throws EFapsException
      * @see #SQL_UNIQUE_KEYS
      */
     @Override
-    protected void initTableInfoUniqueKeys(final Connection _con,
-                                           final String _sql,
+    protected void initTableInfoUniqueKeys(final String _sql,
                                            final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
-        super.initTableInfoUniqueKeys(_con, PostgreSQLDatabase.SQL_UNIQUE_KEYS, _cache4Name);
+        super.initTableInfoUniqueKeys(PostgreSQLDatabase.SQL_UNIQUE_KEYS, _cache4Name);
     }
 
     /**
@@ -617,15 +547,15 @@ public class PostgreSQLDatabase
      * @param _cache4Name   map used to fetch depending on the table name the
      *                      related table information
      * @throws SQLException if foreign keys could not be fetched
+     * @throws EFapsException
      * @see #SQL_FOREIGN_KEYS
      */
     @Override
-    protected void initTableInfoForeignKeys(final Connection _con,
-                                            final String _sql,
+    protected void initTableInfoForeignKeys(final String _sql,
                                             final Map<String, TableInformation> _cache4Name)
-        throws SQLException
+        throws SQLException, EFapsException
     {
-        super.initTableInfoForeignKeys(_con, PostgreSQLDatabase.SQL_FOREIGN_KEYS, _cache4Name);
+        super.initTableInfoForeignKeys(PostgreSQLDatabase.SQL_FOREIGN_KEYS, _cache4Name);
     }
 
     /**
@@ -664,8 +594,7 @@ public class PostgreSQLDatabase
      * {@inheritDoc}
      */
     @Override
-    protected boolean check4NullValues(final Connection _con,
-                                       final String _tableName,
+    protected boolean check4NullValues(final String _tableName,
                                        final String _columnName)
         throws SQLException
     {
@@ -677,17 +606,13 @@ public class PostgreSQLDatabase
 
         PostgreSQLDatabase.LOG.debug("    ..SQL> {}", cmd);
 
-        final Statement stmt = _con.createStatement();
         ResultSet rs = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().createStatement()){
             rs = stmt.executeQuery(cmd.toString());
             rs.next();
             ret = rs.getInt(1) > 0;
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            stmt.close();
+        }  catch (final EFapsException e) {
+            throw new SQLException(e);
         }
         return ret;
     }

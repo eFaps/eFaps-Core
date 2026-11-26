@@ -15,11 +15,8 @@
  */
 package org.efaps.admin.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,7 +47,6 @@ import org.efaps.util.ChronologyType;
 import org.efaps.util.DateTimeUtil;
 import org.efaps.util.EFapsException;
 import org.efaps.util.UUIDUtil;
-import org.efaps.util.cache.CacheReloadException;
 import org.efaps.util.cache.InfinispanCache;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -646,69 +642,52 @@ public final class Person
     {
         synchronized (attrUpdated) {
             if (attrUpdated.size() > 0) {
-                Connection con = null;
-                try {
-                    con = Context.readWriteConnection();
 
-                    final StringBuilder cmd = new StringBuilder();
-                    PreparedStatement stmt = null;
-                    try {
-                        cmd.append("update T_USERPERSON set ");
-                        boolean first = true;
-                        for (final AttrName attrName : attrUpdated.keySet()) {
-                            if (first) {
-                                first = false;
-                            } else {
-                                cmd.append(",");
-                            }
-                            cmd.append(attrName.sqlColumn).append("=?");
-                        }
-                        cmd.append(" where ID=").append(getId());
-                        stmt = con.prepareStatement(cmd.toString());
+                final StringBuilder cmd = new StringBuilder();
 
-                        int col = 1;
-                        for (final AttrName attrName : attrUpdated.keySet()) {
-                            final String tmp = attrUpdated.get(attrName);
-                            if (attrName.integer) {
-                                stmt.setInt(col, tmp == null ? 0 : Integer.parseInt(tmp.trim()));
-                            } else {
-                                stmt.setString(col, tmp == null ? null : tmp.trim());
-                            }
-                            col++;
-                        }
-
-                        final int rows = stmt.executeUpdate();
-                        if (rows == 0) {
-                            Person.LOG.error("could not update '" + cmd.toString() + "' person with user name '"
-                                            + getName() + "' (id = " + getId() + ")");
-                            throw new EFapsException(Person.class, "commitAttrValuesInDB.NotUpdated", cmd.toString(),
-                                            getName(), getId());
-                        }
-                        // TODO: update modified date
-                    } catch (final SQLException e) {
-                        Person.LOG.error("could not update '" + cmd.toString() + "' person with user name '" + getName()
-                                        + "' (id = " + getId() + ")", e);
-                        throw new EFapsException(Person.class, "commitAttrValuesInDB.SQLException", e, cmd.toString(),
-                                        getName(), getId());
-                    } finally {
-                        try {
-                            if (stmt != null) {
-                                stmt.close();
-                            }
-                        } catch (final SQLException e) {
-                            throw new EFapsException(Person.class, "commitAttrValuesInDB.SQLException", e, cmd
-                                            .toString(), getName(), getId());
-                        }
+                cmd.append("update T_USERPERSON set ");
+                boolean first = true;
+                for (final AttrName attrName : attrUpdated.keySet()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        cmd.append(",");
                     }
-                    con.commit();
-                    con.close();
-                } catch (final SQLException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    cmd.append(attrName.sqlColumn).append("=?");
                 }
+                cmd.append(" where ID=").append(getId());
+                try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+
+                    int col = 1;
+                    for (final AttrName attrName : attrUpdated.keySet()) {
+                        final String tmp = attrUpdated.get(attrName);
+                        if (attrName.integer) {
+                            stmt.setInt(col, tmp == null ? 0 : Integer.parseInt(tmp.trim()));
+                        } else {
+                            stmt.setString(col, tmp == null ? null : tmp.trim());
+                        }
+                        col++;
+                    }
+
+                    final int rows = stmt.executeUpdate();
+                    if (rows == 0) {
+                        Person.LOG.error("could not update '" + cmd.toString() + "' person with user name '"
+                                        + getName() + "' (id = " + getId() + ")");
+                        throw new EFapsException(Person.class, "commitAttrValuesInDB.NotUpdated", cmd.toString(),
+                                        getName(), getId());
+                    }
+                    // TODO: update modified date
+                } catch (final SQLException e) {
+                    Person.LOG.error("could not update '" + cmd.toString() + "' person with user name '" + getName()
+                                    + "' (id = " + getId() + ")", e);
+                    throw new EFapsException(Person.class, "commitAttrValuesInDB.SQLException", e, cmd.toString(),
+                                    getName(), getId());
+                }
+
                 attrUpdated.clear();
             }
         }
+
     }
 
     /**
@@ -783,43 +762,25 @@ public final class Person
     private void updateFalseLoginDB(final int _tries)
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readWriteConnection();
 
-            Statement stmt = null;
-            final StringBuilder cmd = new StringBuilder();
-            try {
+        final StringBuilder cmd = new StringBuilder();
 
-                cmd.append("update T_USERPERSON ").append("set LOGINTRY=").append(
-                                Context.getDbType().getCurrentTimeStamp()).append(", LOGINTRIES=").append(_tries)
-                                .append(" where ID=").append(getId());
-                stmt = con.createStatement();
-                final int rows = stmt.executeUpdate(cmd.toString());
-                if (rows == 0) {
-                    Person.LOG.error("could not execute '" + cmd.toString()
-                                    + "' to update last login information for person '" + toString() + "'");
-                    throw new EFapsException(getClass(), "updateLastLogin.NotUpdated", cmd.toString(), getName());
-                }
-            } catch (final SQLException e) {
+        cmd.append("update T_USERPERSON ").append("set LOGINTRY=").append(
+                        Context.getDbType().getCurrentTimeStamp()).append(", LOGINTRIES=").append(_tries)
+                        .append(" where ID=").append(getId());
+        try (var stmt = Context.readWriteConnection().createStatement()) {
+            final int rows = stmt.executeUpdate(cmd.toString());
+            if (rows == 0) {
                 Person.LOG.error("could not execute '" + cmd.toString()
-                                + "' to update last login information for person '" + toString() + "'", e);
-                throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
-                }
+                                + "' to update last login information for person '" + toString() + "'");
+                throw new EFapsException(getClass(), "updateLastLogin.NotUpdated", cmd.toString(), getName());
             }
-            con.commit();
-            con.close();
         } catch (final SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Person.LOG.error("could not execute '" + cmd.toString()
+                            + "' to update last login information for person '" + toString() + "'", e);
+            throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
         }
+
     }
 
     /**
@@ -885,50 +846,29 @@ public final class Person
     private void readFromDBAttributes()
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            Statement stmt = null;
-            try {
-                stmt = con.createStatement();
 
-                final StringBuilder cmd = new StringBuilder("select ");
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
+
+            final StringBuilder cmd = new StringBuilder("select ");
+            for (final AttrName attrName : Person.AttrName.values()) {
+                cmd.append(attrName.sqlColumn).append(",");
+            }
+            cmd.append("0 as DUMMY ").append("from V_USERPERSON ").append("where V_USERPERSON.ID=").append(getId());
+
+            final ResultSet resultset = stmt.executeQuery(cmd.toString());
+            if (resultset.next()) {
                 for (final AttrName attrName : Person.AttrName.values()) {
-                    cmd.append(attrName.sqlColumn).append(",");
+                    final String tmp = resultset.getString(attrName.sqlColumn);
+                    setAttrValue(attrName, tmp == null ? null : tmp.trim());
                 }
-                cmd.append("0 as DUMMY ").append("from V_USERPERSON ").append("where V_USERPERSON.ID=").append(getId());
+            }
+            resultset.close();
 
-                final ResultSet resultset = stmt.executeQuery(cmd.toString());
-                if (resultset.next()) {
-                    for (final AttrName attrName : Person.AttrName.values()) {
-                        final String tmp = resultset.getString(attrName.sqlColumn);
-                        setAttrValue(attrName, tmp == null ? null : tmp.trim());
-                    }
-                }
-                resultset.close();
-                con.commit();
-            } catch (final SQLException e) {
-                Person.LOG.error("read attributes for person with SQL statement is not " + "possible", e);
-                throw new EFapsException(Person.class, "readFromDBAttributes.SQLException", e, getName(), getId());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    Person.LOG.error("close of SQL statement is not possible", e);
-                }
-            }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
+        } catch (final SQLException e) {
+            Person.LOG.error("read attributes for person with SQL statement is not " + "possible", e);
+            throw new EFapsException(Person.class, "readFromDBAttributes.SQLException", e, getName(), getId());
         }
+
     }
 
     /**
@@ -946,60 +886,37 @@ public final class Person
         throws EFapsException
     {
         final Set<Association> ret = new HashSet<>();
-        Connection con = null;
-        try {
-            final List<Long> associationIds = new ArrayList<>();
-            con = Context.readOnlyConnection();
 
-            Statement stmt = null;
+        final List<Long> associationIds = new ArrayList<>();
 
-            try {
-                final StringBuilder cmd = new StringBuilder();
-                cmd.append("select ").append("ID ")
-                                .append("from T_USERASSOC ")
-                                .append("where GROUPID in (")
-                                .append("select ").append("USERABSTRACTTO ")
-                                .append("from V_USERPERSON2GROUP ")
-                                .append("where USERABSTRACTFROM =").append(getId())
-                                .append(") and ROLEID in (")
-                                .append("select ").append("USERABSTRACTTO ")
-                                .append("from V_USERPERSON2ROLE ")
-                                .append("where USERABSTRACTFROM =").append(getId())
-                                .append(")");
+        try (var stmt = Context.readOnlyConnection().createStatement()) {
+            final StringBuilder cmd = new StringBuilder();
+            cmd.append("select ").append("ID ")
+                            .append("from T_USERASSOC ")
+                            .append("where GROUPID in (")
+                            .append("select ").append("USERABSTRACTTO ")
+                            .append("from V_USERPERSON2GROUP ")
+                            .append("where USERABSTRACTFROM =").append(getId())
+                            .append(") and ROLEID in (")
+                            .append("select ").append("USERABSTRACTTO ")
+                            .append("from V_USERPERSON2ROLE ")
+                            .append("where USERABSTRACTFROM =").append(getId())
+                            .append(")");
 
-                stmt = con.createStatement();
-                final ResultSet resultset = stmt.executeQuery(cmd.toString());
-                while (resultset.next()) {
-                    associationIds.add(resultset.getLong(1));
-                }
-                resultset.close();
-                con.commit();
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "getAssociationsFromDB.SQLException", e, getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                        con.commit();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "getAssociationsFromDB.SQLException", e, getName());
-                }
+            final ResultSet resultset = stmt.executeQuery(cmd.toString());
+            while (resultset.next()) {
+                associationIds.add(resultset.getLong(1));
             }
-
-            for (final Long associationId : associationIds) {
-                final Association association = Association.get(associationId);
-                ret.add(association);
-            }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
+            resultset.close();
+        } catch (final SQLException e) {
+            throw new EFapsException(getClass(), "getAssociationsFromDB.SQLException", e, getName());
         }
+
+        for (final Long associationId : associationIds) {
+            final Association association = Association.get(associationId);
+            ret.add(association);
+        }
+
         return ret;
     }
 
@@ -1017,52 +934,34 @@ public final class Person
         throws EFapsException
     {
         final Set<Company> ret = new HashSet<>();
-        Connection con = null;
-        try {
-            final List<Long> companyIds = new ArrayList<>();
-            con = Context.readOnlyConnection();
 
-            PreparedStatement stmt = null;
-            try {
-                if (_jaasSystem == null) {
-                    stmt = con.prepareStatement(Person.SQL_COMPANY);
-                } else {
-                    stmt = con.prepareStatement(Person.SQL_COMPANYJAASKEY);
-                    stmt.setObject(2, _jaasSystem.getId());
-                }
-                stmt.setObject(1, getId());
-                final ResultSet resultset = stmt.executeQuery();
-                while (resultset.next()) {
-                    companyIds.add(resultset.getLong(1));
-                }
-                resultset.close();
-                con.commit();
-                con.close();
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "getCompaniesFromDB.SQLException", e, getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "getCompaniesFromDB.SQLException", e, getName());
-                }
-            }
-            for (final Long companyId : companyIds) {
-                final Company company = Company.get(companyId);
-                ret.add(company);
-            }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        final List<Long> companyIds = new ArrayList<>();
+        String sql;
+        if (_jaasSystem == null) {
+            sql = Person.SQL_COMPANY;
+        } else {
+            sql = Person.SQL_COMPANYJAASKEY;
         }
+
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            if (_jaasSystem != null) {
+                stmt.setObject(2, _jaasSystem.getId());
+            }
+            stmt.setObject(1, getId());
+            final ResultSet resultset = stmt.executeQuery();
+            while (resultset.next()) {
+                companyIds.add(resultset.getLong(1));
+            }
+            resultset.close();
+
+        } catch (final SQLException e) {
+            throw new EFapsException(getClass(), "getCompaniesFromDB.SQLException", e, getName());
+        }
+        for (final Long companyId : companyIds) {
+            final Company company = Company.get(companyId);
+            ret.add(company);
+        }
+
         return ret;
     }
 
@@ -1179,8 +1078,7 @@ public final class Person
             sql = Person.SQL_ROLEJAASKEY;
         }
 
-        try (Connection con = Context.readOnlyConnection();
-            PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
 
             if (jaasSystem != null) {
                 stmt.setObject(2, jaasSystem.getId());
@@ -1292,53 +1190,35 @@ public final class Person
      * @throws EFapsException on error
      * @return set of all found groups for given JAAS system
      */
-    public Set<Group> getGroupsFromDB(final JAASSystem _jaasSystem)
+    public Set<Group> getGroupsFromDB(final JAASSystem jaasSystem)
         throws EFapsException
     {
         final Set<Group> ret = new HashSet<>();
-        Connection con = null;
-        try {
-            final List<Long> groupIds = new ArrayList<>();
-            con = Context.readOnlyConnection();
+        final List<Long> groupIds = new ArrayList<>();
 
-            PreparedStatement stmt = null;
-            try {
-                if (_jaasSystem == null) {
-                    stmt = con.prepareStatement(Person.SQL_GROUP);
-                } else {
-                    stmt = con.prepareStatement(Person.SQL_GROUPJAASKEY);
-                    stmt.setObject(2, _jaasSystem.getId());
-                }
-                stmt.setObject(1, getId());
-                final ResultSet resultset = stmt.executeQuery();
-                while (resultset.next()) {
-                    groupIds.add(resultset.getLong(1));
-                }
-                resultset.close();
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "getGroupsFromDB.SQLException", e, getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    con.commit();
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "getGroupsFromDB.SQLException", e, getName());
-                }
-            }
-            for (final Long groupId : groupIds) {
-                ret.add(Group.get(groupId));
-            }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
+        String sql;
+        if (jaasSystem == null) {
+            sql = Person.SQL_GROUP;
+        } else {
+            sql = Person.SQL_GROUPJAASKEY;
         }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            if (jaasSystem != null) {
+                stmt.setObject(2, jaasSystem.getId());
+            }
+            stmt.setObject(1, getId());
+            final ResultSet resultset = stmt.executeQuery();
+            while (resultset.next()) {
+                groupIds.add(resultset.getLong(1));
+            }
+            resultset.close();
+        } catch (final SQLException e) {
+            throw new EFapsException(getClass(), "getGroupsFromDB.SQLException", e, getName());
+        }
+        for (final Long groupId : groupIds) {
+            ret.add(Group.get(groupId));
+        }
+
         return ret;
     }
 
@@ -1424,48 +1304,24 @@ public final class Person
     public void updateLastLogin()
         throws EFapsException
     {
-        Connection con = null;
-        try {
-            con = Context.readWriteConnection();
+        final StringBuilder cmd = new StringBuilder();
+        try (var stmt = Context.readWriteConnection().createStatement()) {
 
-            Statement stmt = null;
-            final StringBuilder cmd = new StringBuilder();
-            try {
-
-                cmd.append("update T_USERPERSON ").append("set LASTLOGIN=").append(
-                                Context.getDbType().getCurrentTimeStamp()).append(", LOGINTRIES=0 ")
-                                .append("where ID=").append(getId());
-                stmt = con.createStatement();
-                final int rows = stmt.executeUpdate(cmd.toString());
-                if (rows == 0) {
-                    Person.LOG.error("could not execute '" + cmd.toString()
-                                    + "' to update last login information for person '" + toString() + "'");
-                    throw new EFapsException(getClass(), "updateLastLogin.NotUpdated", cmd.toString(), getName());
-                }
-                con.commit();
-            } catch (final SQLException e) {
+            cmd.append("update T_USERPERSON ").append("set LASTLOGIN=").append(
+                            Context.getDbType().getCurrentTimeStamp()).append(", LOGINTRIES=0 ")
+                            .append("where ID=").append(getId());
+            final int rows = stmt.executeUpdate(cmd.toString());
+            if (rows == 0) {
                 Person.LOG.error("could not execute '" + cmd.toString()
-                                + "' to update last login information for person '" + toString() + "'", e);
-                throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                        con.commit();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
-                }
+                                + "' to update last login information for person '" + toString() + "'");
+                throw new EFapsException(getClass(), "updateLastLogin.NotUpdated", cmd.toString(), getName());
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, getName());
-            }
+        } catch (final SQLException e) {
+            Person.LOG.error("could not execute '" + cmd.toString()
+                            + "' to update last login information for person '" + toString() + "'", e);
+            throw new EFapsException(getClass(), "updateLastLogin.SQLException", e, cmd.toString(), getName());
         }
+
     }
 
     /**
@@ -1681,55 +1537,31 @@ public final class Person
      * @throws EFapsException on error
      */
     @SuppressFBWarnings("SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING")
-    private static Person getPersonFromDB(final String _sql,
+    private static Person getPersonFromDB(final String sql,
                                           final Object _criteria)
         throws EFapsException
     {
         Person ret = null;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
 
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3);
-                    final boolean status = rs.getBoolean(4);
-                    ret = new Person(id, uuid, name.trim(), status);
-                    // Person.cachePerson(ret);
-                    Person.LOG.debug("read from DB Person:{} ", ret);
-                }
-                rs.close();
-                con.commit();
-            } catch (final SQLException e) {
-                Person.LOG.error("search for person with SQL statement '" + _sql + "' is not possible", e);
-                throw new EFapsException(Person.class, "getFromDB.SQLException", e, _sql);
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                    }
-                    if (con != null) {
-                        con.commit();
-                    }
-                } catch (final SQLException e) {
-                    Person.LOG.error("Catched error on closing statement", e);
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3);
+                final boolean status = rs.getBoolean(4);
+                ret = new Person(id, uuid, name.trim(), status);
+                // Person.cachePerson(ret);
+                Person.LOG.debug("read from DB Person:{} ", ret);
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
+            rs.close();
+        } catch (final SQLException e) {
+            Person.LOG.error("search for person with SQL statement '" + sql + "' is not possible", e);
+            throw new EFapsException(Person.class, "getFromDB.SQLException", e, sql);
         }
+
         if (ret != null) {
             ret.readFromDB();
             Person.cachePerson(ret);
@@ -1755,44 +1587,19 @@ public final class Person
         throws EFapsException
     {
         long personId = 0;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(Person.SQL_JAASKEY);
-                stmt.setObject(1, _jaasKey);
-                stmt.setObject(2, _jaasSystem.getId());
-                final ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    personId = rs.getLong(1);
-                }
-                rs.close();
-                con.commit();
-            } catch (final SQLException e) {
-                Person.LOG.error("search for person for JAAS system '" + _jaasSystem.getName() + "' with key '"
-                                + _jaasKey + "' is not possible", e);
-                throw new EFapsException(Person.class, "getWithJAASKey.SQLException", e, _jaasSystem.getName(),
-                                _jaasKey);
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                        con.commit();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(Person.class, "getWithJAASKey.SQLException", e, _jaasSystem.getName(),
-                                    _jaasKey);
-                }
+        try (var stmt = Context.readOnlyConnection().prepareStatement(Person.SQL_JAASKEY)) {
+            stmt.setObject(1, _jaasKey);
+            stmt.setObject(2, _jaasSystem.getId());
+            final ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                personId = rs.getLong(1);
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new EFapsException(Person.class, "updateLastLogin.SQLException", e);
-            }
+            rs.close();
+        } catch (final SQLException e) {
+            Person.LOG.error("search for person for JAAS system '" + _jaasSystem.getName() + "' with key '"
+                            + _jaasKey + "' is not possible", e);
+            throw new EFapsException(Person.class, "getWithJAASKey.SQLException", e, _jaasSystem.getName(),
+                            _jaasKey);
         }
         return Person.get(personId);
     }
@@ -1818,39 +1625,32 @@ public final class Person
     {
         long persId = 0;
         final Type persType = CIAdminUser.Person.getType();
-        Connection con = null;
         try {
-            final Context context = Context.getThreadContext();
-            con = Context.readWriteConnection();
-            PreparedStatement stmt = null;
-            try {
-                StringBuilder cmd = new StringBuilder();
-                // TODO: check for uniqueness!
-                if (Context.getDbType().supportsGetGeneratedKeys()) {
-                    cmd.append("insert into ").append(persType.getMainTable().getSqlTable()).append(
-                                    "(TYPEID,NAME,UUID,CREATOR,CREATED,MODIFIER,MODIFIED) ").append("values (");
-                } else {
-                    persId = Context.getDbType().getNewId(con, persType.getMainTable().getSqlTable(), "ID");
-                    cmd.append("insert into ").append(persType.getMainTable().getSqlTable())
-                                    .append("(ID,TYPEID,NAME,UUID,STATUS,CREATOR,CREATED,MODIFIER,MODIFIED) ")
-                                    .append("values (").append(persId).append(",");
-                }
-                cmd.append(persType.getId()).append(",")
-                                .append("'").append(_userName).append("',")
-                                .append("'").append(_uuid == null ? "" : _uuid).append("',")
-                                .append("").append(_active).append(",")
-                                .append(context.getPersonId())
-                                .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",")
-                                .append(context.getPersonId()).append(",")
-                                .append(Context.getDbType().getCurrentTimeStamp()).append(")");
 
-                if (persId == 0) {
-                    stmt = con.prepareStatement(cmd.toString(), new String[] { "ID" });
-                } else {
-                    stmt = con.prepareStatement(cmd.toString());
-                }
+            StringBuilder cmd = new StringBuilder();
+            // TODO: check for uniqueness!
+            if (Context.getDbType().supportsGetGeneratedKeys()) {
+                cmd.append("insert into ").append(persType.getMainTable().getSqlTable()).append(
+                                "(TYPEID,NAME,UUID,CREATOR,CREATED,MODIFIER,MODIFIED) ").append("values (");
+            } else {
+                persId = Context.getDbType().getNewId(persType.getMainTable().getSqlTable(), "ID");
+                cmd.append("insert into ").append(persType.getMainTable().getSqlTable())
+                                .append("(ID,TYPEID,NAME,UUID,STATUS,CREATOR,CREATED,MODIFIER,MODIFIED) ")
+                                .append("values (").append(persId).append(",");
+            }
+            final var personId = Context.getThreadContext().getPersonId();
+            cmd.append(persType.getId()).append(",")
+                            .append("'").append(_userName).append("',")
+                            .append("'").append(_uuid == null ? "" : _uuid).append("',")
+                            .append("").append(_active).append(",")
+                            .append(personId)
+                            .append(",").append(Context.getDbType().getCurrentTimeStamp()).append(",")
+                            .append(personId).append(",")
+                            .append(Context.getDbType().getCurrentTimeStamp()).append(")");
 
-                int rows = stmt.executeUpdate();
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString(), new String[] { "ID" })) {
+
+                final int rows = stmt.executeUpdate();
                 if (rows == 0) {
                     Person.LOG.error("could not execute '" + cmd.toString() + "' for JAAS system '"
                                     + _jaasSystem.getName() + "' person with key '" + _jaasKey
@@ -1864,14 +1664,15 @@ public final class Person
                         persId = resultset.getLong(1);
                     }
                 }
-
                 stmt.close();
+            }
 
-                cmd = new StringBuilder();
-                cmd.append("insert into T_USERPERSON").append("(ID,FIRSTNAME,LASTNAME) ")
-                                .append("values (").append(persId).append(",'-','-')");
-                stmt = con.prepareStatement(cmd.toString());
-                rows = stmt.executeUpdate();
+            cmd = new StringBuilder();
+            cmd.append("insert into T_USERPERSON").append("(ID,FIRSTNAME,LASTNAME) ")
+                            .append("values (").append(persId).append(",'-','-')");
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
+
+                final int rows = stmt.executeUpdate();
                 if (rows == 0) {
                     Person.LOG.error("could not execute '" + cmd.toString() + "' for JAAS system '"
                                     + _jaasSystem.getName()
@@ -1879,35 +1680,19 @@ public final class Person
                     throw new EFapsException(Person.class, "createPerson.NotInserted", cmd.toString(), _jaasSystem
                                     .getName(), _jaasKey, _userName);
                 }
-                cmd = new StringBuilder();
-                cmd.append("insert into T_CMGENINST").append("(INSTTYPEID,INSTID,EXID,EXSYSID) ")
-                                .append("values (").append(persType.getId()).append(",").append(persId).append(",0,0)");
-                stmt = con.prepareStatement(cmd.toString());
+            }
+
+            cmd = new StringBuilder();
+            cmd.append("insert into T_CMGENINST").append("(INSTTYPEID,INSTID,EXID,EXSYSID) ")
+                            .append("values (").append(persType.getId()).append(",").append(persId).append(",0,0)");
+            try (var stmt = Context.readWriteConnection().prepareStatement(cmd.toString())) {
                 stmt.executeUpdate();
-            } catch (final SQLException e) {
-                Person.LOG.error("could not create for JAAS system '" + _jaasSystem.getName() + "' person with key '"
-                                + _jaasKey + "' and user name '" + _userName + "'", e);
-                throw new EFapsException(Person.class, "createPerson.SQLException", e, _jaasSystem.getName(), _jaasKey,
-                                _userName);
-            } finally {
-                try {
-                    if (stmt != null) {
-                        stmt.close();
-                        con.commit();
-                    }
-                } catch (final SQLException e) {
-                    throw new EFapsException(Person.class, "createPerson.SQLException", e, _jaasSystem.getName(),
-                                    _jaasKey);
-                }
             }
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new EFapsException(Person.class, "updateLastLogin.SQLException", e);
-            }
+        } catch (final SQLException e) {
+            Person.LOG.error("could not create for JAAS system '" + _jaasSystem.getName() + "' person with key '"
+                            + _jaasKey + "' and user name '" + _userName + "'", e);
+            throw new EFapsException(Person.class, "createPerson.SQLException", e, _jaasSystem.getName(), _jaasKey,
+                            _userName);
         }
 
         final Person ret = Person.get(persId);

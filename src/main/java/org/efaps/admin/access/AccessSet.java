@@ -15,8 +15,6 @@
  */
 package org.efaps.admin.access;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -44,6 +42,7 @@ import org.slf4j.LoggerFactory;
 public final class AccessSet
     extends AbstractAdminObject
 {
+
     /**
      * Needed for serialization.
      */
@@ -252,37 +251,27 @@ public final class AccessSet
 
     /**
      * Read the related {@link org.efaps.admin.access.AccessTypes}.
+     *
      * @throws CacheReloadException on error
      */
     private void readLinks2AccessTypes()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(AccessSet.SQL_SET2TYPE)) {
             final List<Long> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(AccessSet.SQL_SET2TYPE);
-                stmt.setObject(1, getId());
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(rs.getLong(1));
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, getId());
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(rs.getLong(1));
             }
-            con.commit();
+            rs.close();
             for (final Long accessTypeId : values) {
                 final AccessType accessType = AccessType.getAccessType(accessTypeId);
                 if (accessType == null) {
                     AccessSet.LOG.error("could not found access type with id " + "'" + accessTypeId + "'");
                 } else {
                     AccessSet.LOG.debug(
-                            "read link from AccessSet '{}' (id = {}, uuid = {}) to AccessType '{}' (id = {} uuid = {})",
+                                    "read link from AccessSet '{}' (id = {}, uuid = {}) to AccessType '{}' (id = {} uuid = {})",
                                     getName(), getId(), getUUID(), accessType.getName(), accessType.getId(),
                                     accessType.getUUID());
                     getAccessTypes().add(accessType);
@@ -292,50 +281,32 @@ public final class AccessSet
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
     /**
      * Read the related {@link org.efaps.admin.datamodel.Type}.
+     *
      * @throws CacheReloadException on error
      */
     private void readLinks2DMTypes()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(AccessSet.SQL_SET2DMTYPE)) {
             final List<Long> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(AccessSet.SQL_SET2DMTYPE);
-                stmt.setObject(1, getId());
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(rs.getLong(1));
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, getId());
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(rs.getLong(1));
             }
-            con.commit();
+            rs.close();
             for (final Long dataModelTypeId : values) {
                 final Type dataModelType = Type.get(dataModelTypeId);
                 if (dataModelType == null) {
                     AccessSet.LOG.error("could not found data model type with id " + "'" + dataModelTypeId + "'");
                 } else {
                     AccessSet.LOG.debug(
-                         "read link from AccessSet '{}' (id = {}, uuid = {}) to DataModelType '{}' (id = {} uuid = {})",
+                                    "read link from AccessSet '{}' (id = {}, uuid = {}) to DataModelType '{}' (id = {} uuid = {})",
                                     getName(), getId(), getUUID(), dataModelType.getName(), dataModelType.getId(),
                                     dataModelType.getUUID());
                     this.dataModelTypes.add(dataModelType.getId());
@@ -346,50 +317,32 @@ public final class AccessSet
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
     /**
      * Read the related {@link org.efaps.admin.datamodel.Status}.
+     *
      * @throws CacheReloadException on error
      */
     private void readLinks2Status()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(AccessSet.SQL_SET2STATUS)) {
             final List<Long> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(AccessSet.SQL_SET2STATUS);
-                stmt.setObject(1, getId());
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(rs.getLong(1));
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, getId());
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(rs.getLong(1));
             }
-            con.commit();
+            rs.close();
             for (final Long statusId : values) {
                 final Status status = Status.get(statusId);
                 if (status == null) {
                     AccessSet.LOG.error("could not found status with id " + "'" + statusId + "'");
                 } else {
                     AccessSet.LOG.debug(
-                                "read link from AccessSet '{}' (id = {}, uuid = {}) to status '{}' (id = {})",
+                                    "read link from AccessSet '{}' (id = {}, uuid = {}) to status '{}' (id = {})",
                                     getName(), getId(), getUUID(), status.getKey(), status.getId());
                     getStatuses().add(status);
                 }
@@ -398,49 +351,32 @@ public final class AccessSet
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
     @Override
-    protected void updateCache() throws EFapsException
+    protected void updateCache()
+        throws EFapsException
     {
         cacheAccessSet(this);
     }
 
     /**
      * Read the related Abstract Person (Role, Person).
+     *
      * @throws CacheReloadException on error
      */
     private void readLinks2Person()
         throws CacheReloadException
     {
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(AccessSet.SQL_SET2PERSON)) {
             final List<Long> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(AccessSet.SQL_SET2PERSON);
-                stmt.setObject(1, getId());
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(rs.getLong(1));
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, getId());
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(rs.getLong(1));
             }
-            con.commit();
+            rs.close();
             for (final Long personId : values) {
                 AccessSet.LOG.debug(
                                 "read link from AccessSet '{}' (id = {}, uuid = {}) to abstract person (id = {})",
@@ -451,14 +387,6 @@ public final class AccessSet
             throw new CacheReloadException("could not read persons for accessset", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read persons for accessset", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
     }
 
@@ -545,61 +473,44 @@ public final class AccessSet
 
     /**
      * Read the AccessSet from the DataBase.
-     * @param _sql  SQL Statement to be executed
+     *
+     * @param _sql SQL Statement to be executed
      * @param _criteria filter criteria
      * @return true if founr
      * @throws CacheReloadException on error
      */
-    private static boolean getAccessSetFromDB(final String _sql,
+    private static boolean getAccessSetFromDB(final String sql,
                                               final Object _criteria)
         throws CacheReloadException
     {
         boolean ret = false;
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             AccessSet accessSet = null;
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
 
-                if (rs.next()) {
-                    final long id = rs.getLong(1);
-                    final String uuid = rs.getString(2);
-                    final String name = rs.getString(3);
-                    AccessSet.LOG.debug("read AccessSet '{}' (id = {}, uuid ={})", name, id, uuid);
-                    accessSet = new AccessSet(id, uuid, name);
-                }
-                ret = true;
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            if (rs.next()) {
+                final long id = rs.getLong(1);
+                final String uuid = rs.getString(2);
+                final String name = rs.getString(3);
+                AccessSet.LOG.debug("read AccessSet '{}' (id = {}, uuid ={})", name, id, uuid);
+                accessSet = new AccessSet(id, uuid, name);
             }
-            con.commit();
+            ret = true;
+            rs.close();
             if (accessSet != null) {
                 accessSet.readLinks2AccessTypes();
                 accessSet.readLinks2DMTypes();
                 accessSet.readLinks2Status();
                 accessSet.readLinks2Person();
-                // needed due to cluster serialization that does not update automatically
+                // needed due to cluster serialization that does not update
+                // automatically
                 AccessSet.cacheAccessSet(accessSet);
             }
         } catch (final SQLException e) {
             throw new CacheReloadException("could not read roles", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read roles", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("could not read child type ids", e);
-            }
         }
         return ret;
     }
@@ -619,6 +530,6 @@ public final class AccessSet
     @Override
     public int hashCode()
     {
-        return  Long.valueOf(getId()).intValue();
+        return Long.valueOf(getId()).intValue();
     }
 }

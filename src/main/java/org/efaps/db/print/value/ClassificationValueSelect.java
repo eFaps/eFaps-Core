@@ -15,10 +15,8 @@
  */
 package org.efaps.db.print.value;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -254,18 +252,13 @@ public class ClassificationValueSelect
      * @return true it values where found
      * @throws EFapsException on error
      */
-    protected boolean executeOneCompleteStmt(final String _complStmt,
+    protected boolean executeOneCompleteStmt(final String sql,
                                              final List<Instance> _instances)
         throws EFapsException
     {
         final boolean ret = false;
-        Connection con = null;
-        try {
-            con = Context.readOnlyConnection();
-
-            final Statement stmt = con.createStatement();
-
-            final ResultSet rs = stmt.executeQuery(_complStmt.toString());
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
+            final ResultSet rs = stmt.executeQuery(sql);
             final Map<Long, List<Long>> link2clazz = new HashMap<>();
             while (rs.next()) {
                 final long linkId = rs.getLong(2);
@@ -283,19 +276,8 @@ public class ClassificationValueSelect
                 this.instances2classId.put(instance, link2clazz.get(instance.getId()));
             }
             rs.close();
-            stmt.close();
-            con.commit();
-            con.close();
         } catch (final SQLException e) {
             throw new EFapsException(ClassificationValueSelect.class, "executeOneCompleteStmt", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Could not close connection.", e);
-            }
         }
         return ret;
     }

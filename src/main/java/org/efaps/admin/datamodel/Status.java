@@ -16,8 +16,6 @@
 package org.efaps.admin.datamodel;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -433,36 +431,26 @@ public final class Status
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getStatusGroupFromDB(final String _sql,
+    private static boolean getStatusGroupFromDB(final String sql,
                                                 final Object _criteria)
         throws CacheReloadException
     {
         LOG.info("Loading StatusGroup from db by: {}", _criteria);
         boolean ret = false;
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             final List<Object[]> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(new Object[] {
-                                    rs.getLong(1),
-                                    rs.getLong(2),
-                                    rs.getString(3).trim(),
-                                    rs.getString(4).trim()
-                    });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(new Object[] {
+                                rs.getLong(1),
+                                rs.getLong(2),
+                                rs.getString(3).trim(),
+                                rs.getString(4).trim()
+                });
             }
-            con.commit();
+            rs.close();
+
             for (final Object[] row : values) {
                 final long id = (Long) row[0];
                 final long typeid = (Long) row[1];
@@ -491,14 +479,6 @@ public final class Status
             throw new CacheReloadException("could not read types", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read types", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }
@@ -509,37 +489,28 @@ public final class Status
      * @return true if successful
      * @throws CacheReloadException on error
      */
-    private static boolean getStatusFromDB(final String _sql,
+    private static boolean getStatusFromDB(final String sql,
                                            final Object _criteria)
         throws CacheReloadException
     {
         LOG.info("Loading Status from db by: {}", _criteria);
 
         final boolean ret = false;
-        Connection con = null;
-        try {
+        try (var stmt = Context.readOnlyConnection().prepareStatement(sql)) {
             final List<Object[]> values = new ArrayList<>();
-            con = Context.readOnlyConnection();
-            PreparedStatement stmt = null;
-            try {
-                stmt = con.prepareStatement(_sql);
-                stmt.setObject(1, _criteria);
-                final ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    values.add(new Object[] {
-                                    rs.getLong(1),
-                                    rs.getLong(2),
-                                    rs.getString(3).trim(),
-                                    rs.getString(4).trim()
-                    });
-                }
-                rs.close();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
+
+            stmt.setObject(1, _criteria);
+            final ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                values.add(new Object[] {
+                                rs.getLong(1),
+                                rs.getLong(2),
+                                rs.getString(3).trim(),
+                                rs.getString(4).trim()
+                });
             }
-            con.commit();
+            rs.close();
+
             for (final Object[] row : values) {
                 final long id = (Long) row[0];
                 final long typeid = (Long) row[1];
@@ -554,14 +525,6 @@ public final class Status
             throw new CacheReloadException("could not read types", e);
         } catch (final EFapsException e) {
             throw new CacheReloadException("could not read types", e);
-        } finally {
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.close();
-                }
-            } catch (final SQLException e) {
-                throw new CacheReloadException("Cannot read a type for an attribute.", e);
-            }
         }
         return ret;
     }
