@@ -1065,7 +1065,7 @@ public final class Context
         try {
             Context.getThreadContext().commitAndCloseReadOnly();
             if (isTMActive()) {
-                Context.getThreadContext().transactionManager.rollback();
+                Context.getThreadContext().transactionManager.commit();
             }
         } catch (SecurityException | IllegalStateException | SystemException | RollbackException
                         | HeuristicMixedException | HeuristicRollbackException | SQLException e) {
