@@ -345,7 +345,7 @@ public class PostgreSQLDatabase
 
         long ret = 0;
 
-        try (var stmt = Context.readOnlyConnection().createStatement()){
+        try (var stmt = Context.readWriteConnection().createStatement()){
             final StringBuilder cmd = new StringBuilder();
             cmd.append("select nextval('").append(_table).append("_").append(_column).append("_SEQ')");
 
