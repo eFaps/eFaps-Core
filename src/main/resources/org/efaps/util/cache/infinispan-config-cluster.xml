@@ -696,17 +696,6 @@
       <encoding media-type="application/x-protostream" />
     </local-cache>
     <local-cache
-      name="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache">
-      <persistence passivation="false">
-        <remote-store
-          xmlns="urn:infinispan:config:store:remote:16.2"
-          cache="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache-persistence"
-          remote-cache-container="remote-cache" shared="true">
-        </remote-store>
-      </persistence>
-      <encoding media-type="application/x-protostream" />
-    </local-cache>
-    <local-cache
       name="${prefix:}org.efaps.esjp.pos.MonitoringService.ReqCache">
       <persistence passivation="false">
         <remote-store
@@ -728,6 +717,18 @@
       </persistence>
       <encoding media-type="application/x-protostream" />
     </local-cache>
+
+    <distributed-cache
+      name="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache">
+      <persistence passivation="false">
+        <remote-store
+          xmlns="urn:infinispan:config:store:remote:16.2"
+          cache="${prefix:}org.efaps.esjp.promotions.PromotionService.Cache-persistence"
+          remote-cache-container="remote-cache" shared="true">
+        </remote-store>
+      </persistence>
+      <encoding media-type="application/x-protostream" />
+    </distributed-cache>
   </cache-container>
 </infinispan>
 
