@@ -26,8 +26,8 @@
 
   <cache-container default-cache="eFaps-Default"
     name="eFaps-Cache-Container" statistics="true">
-    <!-- <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:jgroups}"
-      node-name="${infinispan.node.name:}" /> -->
+    <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:jgroups}"
+        node-name="${infinispan.node.name:}" />
     <serialization>
       <context-initializer
         class="org.efaps.util.cache.LibraryInitializerImpl"></context-initializer>
