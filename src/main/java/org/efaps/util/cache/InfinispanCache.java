@@ -27,6 +27,7 @@ import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.RemoteCacheConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
+import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.configuration.io.xml.XmlConfigurationWriter;
 import org.infinispan.configuration.cache.CacheMode;
@@ -61,10 +62,16 @@ public final class InfinispanCache
      */
     private static InfinispanCache CACHEINSTANCE;
 
+    private static String TEMPLATE_NAME = "dist-cache-template";
+
     /**
      * The manager for Infinspan.
      */
     private EmbeddedCacheManager container;
+
+    private RemoteCacheManager remoteCacheManager;
+
+    private boolean clustered;
 
     private String prefix = "";
 
@@ -85,7 +92,7 @@ public final class InfinispanCache
     private void init()
     {
         final var config = ConfigProvider.getConfig();
-        final boolean clustered = config.getOptionalValue("core.cache.cluster.active", Boolean.class).orElse(false);
+        clustered = config.getOptionalValue("core.cache.cluster.active", Boolean.class).orElse(false);
         LOG.info("Cache clustering active: {}", clustered);
 
         if (clustered) {
@@ -110,20 +117,17 @@ public final class InfinispanCache
 
             if (clustered) {
                 final var remoteCacheManager = getRemoteCacheManager();
+
+                final var templateConfig = new ConfigurationBuilder()
+                                .template(true)
+                                .statistics().enabled(true)
+                                .clustering().cacheMode(CacheMode.DIST_SYNC)
+                                .build();
+                remoteCacheManager.administration().removeTemplate(getCacheName(TEMPLATE_NAME));
+                remoteCacheManager.administration().createTemplate(getCacheName(TEMPLATE_NAME), templateConfig);
+
                 for (final var cacheName : this.container.getCacheNames()) {
                     final var cacheConfig = container.getCacheConfiguration(cacheName);
-
-                    if (cacheConfig.clustering() != null && cacheConfig.clustering().cacheMode() != CacheMode.LOCAL) {
-                        final var xml = cacheConfig.toStringConfiguration(cacheName);
-                        LOG.info("Registering clustered cache: {}", xml);
-                        final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
-                                        .configuration(xml)
-                                        .transactionMode(TransactionMode.NONE);
-
-                        final var remoteConfig = remoteCacheManager.getConfiguration();
-                        remoteConfig.addRemoteCache(cacheName, consumer);
-                        remoteCacheManager.getCache(cacheName);
-                    }
                     if (cacheConfig.persistence() != null && cacheConfig.persistence().usingStores()) {
                         final var storeConfig = cacheConfig.persistence().stores().get(0);
                         final var persitenceCacheName = storeConfig.attributes().<String>attribute("cache").get();
@@ -147,10 +151,10 @@ public final class InfinispanCache
                                         writer.toString()
                                         +
                                         """
-                                            <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
-                                            <state-transfer timeout=\"60000\"/>
-                                        </replicated-cache>
-                                                                                """;
+                                                            <locking concurrency-level=\"1000\" acquire-timeout=\"15000\" striping=\"false\"/>
+                                                            <state-transfer timeout=\"60000\"/>
+                                                        </replicated-cache>
+                                                                                                """;
 
                         final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
                                         .configuration(template)
@@ -291,6 +295,36 @@ public final class InfinispanCache
             ret = prefix + "-" + ret;
         }
         return ret;
+    }
+
+    public synchronized <K, V> BasicCache<K, V> getDistributedCache(final String name)
+    {
+        BasicCache<K, V> cache;
+        if (clustered) {
+            if (clustered && remoteCacheManager == null) {
+                remoteCacheManager = getRemoteCacheManager();
+            }
+            cache = remoteCacheManager.getCache(getCacheName(name));
+            if (cache == null) {
+                cache = registerDistributedCache(name);
+            }
+        } else {
+            cache = getCache(name);
+            if (cache == null) {
+                cache = initCache(name);
+            }
+        }
+        return cache;
+    }
+
+    private <K, V> BasicCache<K, V> registerDistributedCache(final String name)
+    {
+        final var consumer = (Consumer<RemoteCacheConfigurationBuilder>) bldr -> bldr
+                        .templateName(getCacheName(TEMPLATE_NAME))
+                        .transactionMode(TransactionMode.NONE);
+        final var remoteConfig = remoteCacheManager.getConfiguration();
+        remoteConfig.addRemoteCache(getCacheName(name), consumer);
+        return remoteCacheManager.getCache(getCacheName(name));
     }
 
     public static void clear()
